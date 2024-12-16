@@ -1,0 +1,26 @@
+library(zeallot)         # %<-%
+
+# Paths
+data_path <- file.path(getwd(), 'data')
+func_path <- file.path(getwd(), 'functions')
+manual_path <- file.path(data_path, 'HEP - Manual.csv')
+pubmed_path <- file.path(data_path, 'HEP - Pubmed Results.csv')
+prisma_template_path <- file.path(data_path, 'PRISMA_template.csv')
+prisma_path <- file.path(data_path, 'PRISMA.csv')
+results_path <- file.path(getwd(), 'results')
+dir.create(results_path, showWarnings = F)
+
+# Imports
+source(file.path(func_path, 'figures.R'))
+source(file.path(func_path, 'preprocess.R'))
+source(file.path(func_path, 'prisma.R'))
+source(file.path(func_path, 'validate.R'))
+
+# Main analysis
+# TODO: download the data from OSF / wherever we put it?
+df_full <- load_data(pubmed_path, manual_path)
+validate_data(df_full)
+c(df_screening, df_included) %<-% preprocess(df_full)
+# TODO: uncomment when prisma generation is implemented
+#p_prisma <- generate_prisma(df_screening, prisma_path, plot_path)
+make_plots(df_included, plot_path)

@@ -23,4 +23,4 @@ validate_data(df_full)
 c(df_screening, df_included) %<-% preprocess(df_full)
 # TODO: uncomment when prisma generation is implemented
 #p_prisma <- generate_prisma(df_screening, prisma_path, plot_path)
-make_plots(df_included, plot_path)
+make_figures(df_included, plot_path)

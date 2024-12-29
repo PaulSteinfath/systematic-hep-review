@@ -1,2 +1,6 @@
-data
+data/derivatives
+data/HEP - Pubmed Results.csv
+data/HEP - Manual.csv
 results
+
+.Rhistory

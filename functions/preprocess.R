@@ -53,7 +53,8 @@ column_mapping <- c(
   "controls" = "Controls",
   "other_notes" = "Other.notes..unclassified.",
   "motivation" = "Motivation",
-  "sample_size" = "Sample.size"
+  "sample_size" = "Sample.size",
+  "stats_permutation" = "Cluster.based.Permutation"
 
   # NOTE: add other columns here
 )

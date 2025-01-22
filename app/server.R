@@ -4,8 +4,6 @@ library(ggplot2)
 library(palmerpenguins)
 library(shiny)
 
-source("../functions/figures.R")
-
 function(input, output) {
   output$table <- 
     renderDT(

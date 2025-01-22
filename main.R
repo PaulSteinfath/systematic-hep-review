@@ -28,5 +28,3 @@ c(df_screening, df_included) %<-% preprocess(df_full)
 #p_prisma <- generate_prisma(df_screening, prisma_template_path, 
 #                            derivatives_path, results_path)
 make_figures(df_included, results_path)
-
-df = df_included

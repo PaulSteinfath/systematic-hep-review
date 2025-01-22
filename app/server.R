@@ -15,18 +15,17 @@ function(input, output) {
     )
   
   output$yearPlot <- renderPlot({
-    df_selected <- df_included[input$table_rows_all,]
-    ggplot(df_included, aes(x = Year)) +
+    ggplot(df_included[input$table_rows_all,], aes(x = Year)) +
       geom_histogram(binwidth = 1, color = "white", fill = "lightgray") +
-      geom_histogram(data = df_selected, binwidth = 1, color = "white", fill = "blue") +
+      geom_histogram(data = df_included[input$table_rows_all,], binwidth = 1, color = "white", fill = "blue") +
       theme_classic()
   }, res = 96)
   
   output$filterPlot <- renderPlot({
-    create_filter_plots(df_included)
+    create_filter_plots(df_included[input$table_rows_all,])
   }, res = 96)
 
   output$overviewHistograms <- renderPlot({
-    create_overview_panel(df_included)
+    create_overview_panel(df_included[input$table_rows_all,])
   }, res = 96)
 }

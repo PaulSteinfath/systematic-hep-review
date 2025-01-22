@@ -6,7 +6,6 @@ library(scales)
 library(patchwork)
 library(grid)
 
-# Custom function to create combined plots with adjustable x-axis label accuracy
 create_combined_plot <- function(
   df,
   start_var,
@@ -21,7 +20,15 @@ create_combined_plot <- function(
 
   # Remove missing data and validate ranges
   df_filtered <- df %>%
-    filter(!is.na(.data[[start_var]]) & !is.na(.data[[end_var]])) 
+    filter(!is.na(.data[[start_var]]) & !is.na(.data[[end_var]])) %>%
+    filter(.data[[start_var]] > 0 & .data[[end_var]] > 0)  # ensure positive values for log scale
+  
+  # Return empty plot if no valid data
+  if (nrow(df_filtered) == 0) {
+    return(ggplot() + 
+           theme_void() + 
+           annotate("text", x = 0.5, y = 0.5, label = "No valid data selected"))
+  }
   
   df <- df_filtered %>%
     distinct(PMID, .data[[start_var]], .data[[end_var]], .keep_all = TRUE) %>%
@@ -86,14 +93,18 @@ create_combined_plot <- function(
 
   # Adapt x-axis label resolution
   custom_label_function <- function(breaks) {
+    if (is.null(breaks) || length(breaks) == 0) return(NULL)
     sapply(breaks, function(x) {
+      if (is.na(x) || is.null(x)) return("")
       if (x < 1) sprintf("%.2f", x) else sprintf("%.0f", x)
     })
   }
 
-  # Add scales
-  p1 <- p1 + scale_x_log10(breaks = custom_breaks, labels = custom_label_function)
-  p2 <- p2 + scale_x_log10(breaks = custom_breaks, labels = custom_label_function)
+  # Add scales only if we have valid data
+  if (nrow(df) > 0) {
+    p1 <- p1 + scale_x_log10(breaks = custom_breaks, labels = custom_label_function)
+    p2 <- p2 + scale_x_log10(breaks = custom_breaks, labels = custom_label_function)
+  }
 
   # Combine plots
   combined_plot <- p1 / p2 + plot_layout(heights = c(12, 0.6))

@@ -17,13 +17,13 @@ create_filter_plots <- function(df) {
     y_label = "Individual Studies",
     font_family = "sans"
   )
-  return(filter_plot)  # Add this line
+  return(filter_plot)
 }
 
 # Create overview histogram panel plot
 create_overview_panel <- function(df) {
 
-  # Define major reference categories in lowercase
+  # Define major reference categories
   major_categories <- tolower(c("Cz", "Nose", "Linked earlobes", "Linked mastoids", 
                               "FCz", "Common average", "Fpz", "CMS", "CMS and DRL", 
                               "unknown", "Laplacian reference"))

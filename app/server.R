@@ -4,6 +4,8 @@ library(ggplot2)
 library(palmerpenguins)
 library(shiny)
 
+source("../functions/figures.R")
+
 function(input, output) {
   output$table <- 
     renderDT(
@@ -20,5 +22,13 @@ function(input, output) {
       geom_histogram(binwidth = 1, color = "white", fill = "lightgray") +
       geom_histogram(data = df_selected, binwidth = 1, color = "white", fill = "blue") +
       theme_classic()
+  }, res = 96)
+  
+  output$filterPlot <- renderPlot({
+    create_filter_plots(df_included)
+  }, res = 96)
+
+  output$overviewHistograms <- renderPlot({
+    create_overview_panel(df_included)
   }, res = 96)
 }

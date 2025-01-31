@@ -1,4 +1,3 @@
-#' Create overview histogram panel
 hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
                        drop.na = T, force.numeric = F, allowed = NULL,
                        x.label = NULL, use.log10 = F, use.log2 = F, modality_filter = NULL, binwidth = NULL, tilt_labels = F) {
@@ -31,17 +30,20 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
     
     p <- ggplot(df_distinct, aes(x = !!sym(col))) +
       geom_bar(fill = '#696969', color = 'white', linewidth = 0.5) +
-      theme_classic()
+      theme_classic(base_family = "sans")
   } else {
     p <- ggplot(df_distinct, aes(x = !!sym(col))) +
       geom_histogram(fill = '#696969', color = 'white', linewidth = 0.5, binwidth = binwidth) +
-      theme_classic()
+      theme_classic(base_family = "sans")
   }
   
   p <- p +
     labs(title = paste('n =', nrow(distinct(df_distinct, !!sym(group_col))))) +
-    theme(title = element_text(size = 8),
-          axis.text.x = element_text(angle = if (tilt_labels) 45 else 0, hjust = if (tilt_labels) 1 else 0.5)
+    scale_y_continuous(expand = expansion(mult = c(0, .1))) +
+    theme(
+      title = element_text(size = 8),
+      axis.text.x = element_text(angle = if (tilt_labels) 45 else 0, hjust = if (tilt_labels) 1 else 0.5),
+      axis.title.x = element_text(margin = margin(t = 1))  # Adjust this value to move label closer
     )
   
   

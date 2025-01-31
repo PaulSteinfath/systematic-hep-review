@@ -86,6 +86,33 @@ preprocess_screening <- function(df_screening) {
 }
 
 
+# Clean cardiac IC rejection data
+clean_cardiac_ics <- function(x) {
+  # Return NA for NULL, NA, or empty strings
+  if (is.null(x) || is.na(x) || x == "") return(NA_real_)
+  
+  # Handle mean ± SD format (e.g., "4.78+-1.13")
+  if (grepl("\\+-", x)) {
+    mean_val <- as.numeric(sub("\\+-.*$", "", x))
+    return(mean_val)
+  }
+  
+  # Handle ranges (e.g., "0-3", "1–3", "2–4")
+  if (grepl("-|–", x)) {
+    range_vals <- strsplit(x, "-|–")[[1]]
+    # Return mean of range
+    return(mean(as.numeric(range_vals)))
+  }
+  
+  # Handle single numbers
+  if (grepl("^\\d+(\\.\\d+)?$", x)) {
+    return(as.numeric(x))
+  }
+  
+  return(NA_real_)
+}
+
+
 preprocess <- function(df_full) {
   # Rename the columns
   df_full <- rename(df_full, all_of(column_mapping))
@@ -118,6 +145,9 @@ preprocess <- function(df_full) {
   df_included$high_pass <- as.numeric(df_included$high_pass)
   df_included$low_pass <- as.numeric(df_included$low_pass)
   df_included$channels <- as.numeric(df_included$channels)
+
+  #5 transform included IC data
+  df_included$rejected_cardiac_ics <- sapply(df_included$rejected_cardiac_ics, clean_cardiac_ics)
 
   list(df_screening, df_included)
 }

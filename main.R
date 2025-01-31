@@ -25,6 +25,6 @@ source(file.path(func_path, 'validate.R'))
 df_full <- load_data(pubmed_path, manual_path)
 validate_data(df_full)
 c(df_screening, df_included) %<-% preprocess(df_full)
-#p_prisma <- generate_prisma(df_screening, prisma_template_path, 
+#p_prisma <- generate_prisma(df_screening, prisma_template_path,
 #                            derivatives_path, results_path)
 make_figures(df_included, results_path)

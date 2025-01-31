@@ -1,9 +1,13 @@
 library(cowplot)
 library(tidyr)
+library(dplyr)
 
 # Import plotting functions
-source(file.path(func_path, "plots", "combined_cutoffs_plot.r"))
+source(file.path(func_path, "plots", "create_combined_plot.r"))
 source(file.path(func_path, "plots", "hist_panel.r"))
+source(file.path(func_path, "plots", "create_ica_usage_plot.R"))
+source(file.path(func_path, "plots", "create_ica_rej.R"))
+
 
 # Create filter cutoff plots
 create_filter_plots <- function(df) {
@@ -14,125 +18,126 @@ create_filter_plots <- function(df) {
     x_scale = "log",
     custom_breaks = c(0.01, 0.1, 0.5, 1, 20, 40, 80),
     x_label = "Filter Cutoff (Hz)",
-    y_label = "Individual Studies",
-    font_family = "sans"
+    y_label = "Individual Studies"
   )
   return(filter_plot)
 }
 
-# Create overview histogram panel plot
-create_overview_panel <- function(df) {
 
-  # Define major reference categories
-  major_categories <- tolower(c("Cz", "Nose", "Linked earlobes", "Linked mastoids", 
-                              "FCz", "Common average", "Fpz", "CMS", "CMS and DRL", 
-                              "unknown", "Laplacian reference"))
+# Create EEG Acquisition & Preprocessing
+eeg_aq_prep <- function(df) {
+  
+  # Define major reference categories once
+  major_categories <- tolower(c(
+    "Cz", "Nose", "Linked earlobes", "Linked mastoids",
+    "FCz", "Common average", "Fpz", "CMS", "CMS and DRL",
+    "unknown", "Laplacian reference", "REST"
+  ))
 
-  df <- df %>%
-    mutate(
-      reference_online = ifelse(
-        tolower(reference_online) %in% major_categories,
-        reference_online,
-        "Other"
-      ),
-      reference_online = ifelse(reference_online == "Other", 
-                              "Other", 
-                              tolower(reference_online))
-    )
+  # Process reference categories
+  df_ref <- df %>%
+    mutate(across(
+      .cols = c(reference_online, reference_offline),
+      .fns = ~ case_when(
+        tolower(.) %in% major_categories ~ tolower(.),
+        TRUE ~ "Other"
+      )
+    ))
 
-  df <- df %>%
-    mutate(
-      reference_offline = ifelse(
-        tolower(reference_offline) %in% major_categories,
-        reference_offline, 
-        "Other"            
-      ),
-      reference_offline = ifelse(reference_offline == "Other", 
-                               "Other", 
-                               tolower(reference_offline))
-    )
-
-  # plotting function
-  p <- plot_grid(
-    hist_panel(df, 'Year', binwidth = 1),
-    hist_panel(df, 'sample_size', x.label = 'Sample size', use.log10 = TRUE),
-    hist_panel(df, 'rsHEP', x.label = 'Resting-state HEP', discrete = TRUE),
-    hist_panel(df, 'Modality', discrete = TRUE, 
-              allowed = c('EEG' = 'EEG', 'MEG' = 'MEG')),
-    hist_panel(df, 'ecg_lead', discrete = TRUE, x.label = 'ECG Lead', 
-              tilt_labels = TRUE,
-              allowed = c(
-                'Lead I' = 'Lead I',
-                'Lead II' = 'Lead II', 
-                'Lead III' = 'Lead III',
-                'Multiple Leads' = 'Multiple Leads',
-                'Multiple Leads (including Lead I)' = 'Multiple Leads',
-                'Multiple Leads (including Lead I, II, III)' = 'Multiple Leads',
-                'Multiple Leads (including Lead II)' = 'Multiple Leads',
-                'single-channel' = 'Single Channel',
-                'none' = 'None',
-                'unknown' = 'Unknown'
-              )),
-    hist_panel(df, 'ecg_num_electrodes', x.label = 'Number of ECG channels',
-              discrete = TRUE, drop.na = FALSE),
-    hist_panel(df, 'channels', x.label = 'Number of EEG channels', 
-              force.numeric = TRUE, use.log2 = TRUE, 
-              modality_filter = 'EEG'),
-    hist_panel(df, 'reference_online', x.label = 'Reference (online)', 
-              discrete = TRUE, tilt_labels = TRUE, 
-              modality_filter = 'EEG',
-              allowed = c('Common average' = 'CAR', 'Linked mastoids' = 'LM',
-                        'Cz' = 'Cz', 'FCz' = 'FCz', 'Fpz' = 'Fpz',
-                        'CMS' = 'CMS', 'CMS and DRL' = 'CMS', 
-                        'Nose' = 'Nose', 'Linked earlobes' = 'LE', 
-                        'Other' = 'other', 'unknown' = 'unknown')),
-    hist_panel(df, 'reference_offline', x.label = 'Reference (offline)', 
-              discrete = TRUE, tilt_labels = TRUE, 
-              modality_filter = 'EEG',
-              allowed = c('Common average' = 'CAR', 'Linked mastoids' = 'LM',
-                        'Linked earlobes' = 'LE', 'REST' = 'REST', 
-                        'Cz' = 'Cz', 'Laplacian reference' = 'LAP', 
-                        'unknown' = 'unknown', 'other' = 'other')),
-    hist_panel(df, 'ICA', discrete = TRUE),
-    hist_panel(df, 'cfa_rej_approach', x.label = 'CFA Rejection Approach', 
-              discrete = TRUE,
-              allowed = c("Manual" = "Manual", "Automatic" = "Auto",
-                        "Semi-automatic" = "Semi", "Unknown" = "Unknown")),
-    hist_panel(df, 'hep_relative_to', discrete = TRUE, 
-              x.label = 'Relative to',
-              allowed = c('R-peak' = 'R-peak', 'T-peak' = 'T-peak')),
-    ncol = 3, nrow = 4, align = 'hv', axis = 'l'
+  # Common reference category mapping
+  ref_categories <- c(
+    "Common average" = "CAR",
+    "Linked mastoids" = "LM",
+    "Linked earlobes" = "LE",
+    "Cz" = "Cz",
+    "FCz" = "FCz",
+    "Fpz" = "Fpz",
+    "CMS" = "CMS",
+    "CMS and DRL" = "CMS",
+    "Nose" = "Nose",
+    "Laplacian reference" = "LAP",
+    "REST" = "REST",
+    "Other" = "other",
+    "unknown" = "unknown"
   )
-  return(p)
+
+  # Create individual histogtams for online / offline references
+  ref_online <- hist_panel(df_ref, "reference_online",
+    x.label = "Reference (online)",
+    discrete = TRUE, tilt_labels = TRUE,
+    modality_filter = "EEG",
+    allowed = ref_categories[c(
+      "Common average", "Linked mastoids", "Cz", "FCz",
+      "Fpz", "CMS and DRL", "Nose",
+      "Linked earlobes", "Other", "unknown"
+    )]
+  )
+
+  ref_offline <- hist_panel(df_ref, "reference_offline",
+    x.label = "Reference (offline)",
+    discrete = TRUE, tilt_labels = TRUE,
+    modality_filter = "EEG",
+    allowed = ref_categories[c(
+      "Common average", "Linked mastoids", "Linked earlobes",
+      "REST", "Cz", "Laplacian reference", "unknown", "Other"
+    )]
+  )
+
+  # Create plots for filtering cutoffs, ICA rejection, and ICA usage
+  filter_plot <- create_filter_plots(df)
+  ica_rej_plot <- create_ica_rej(df)
+  ica_usage_plot <- create_ica_usage_plot(df) 
+
+  # Combine reference plots
+  ref_plots <- plot_grid(
+    ref_online, ref_offline,
+    ncol = 1,
+    align = "v"
+  )
+
+  # Group ica_rej_plot and ica_usage_plot in one row
+  bottom_row <- plot_grid(
+    ica_rej_plot,
+    ica_usage_plot,
+    ncol = 2,
+    labels = c("D", "E"),
+    align = "h",
+    rel_widths = c(1, 1)
+  )
+
+  # Combine top (ref_plots, filter_plot) and bottom (ica_rej_plot, ica_usage_plot) rows
+  top_row <- plot_grid(
+    ref_plots, filter_plot,
+    ncol = 2,
+    labels = c("A", "C"),
+    align = "h",
+    rel_widths = c(1, 1)
+  )
+
+  plot_grid(
+    top_row,
+    bottom_row,
+    ncol = 1,
+    rel_heights = c(1, 1)
+  )
 }
 
-# Generate all figures
-# Ideally, each panel / figure should be generated by a function that 
+# Here we generate all figures
+# Ideally, each panel / figure should be generated by a function that
 # accepts the dataframe as the first argument so that the functions could be
 # re-used in the Shiny app
 make_figures <- function(df, save_path) {
+
+  eeg_aq_prep_plot <- eeg_aq_prep(df)
   
-  filter_plot <- create_filter_plots(df)
-  overview_plot <- create_overview_panel(df)
-  
-  # Save plots with consistent parameters
   ggsave(
-    filename = file.path(save_path, "combined_hp_lp_cutoffs_density.svg"),
-    plot = filter_plot,
-    width = 4,
-    height = 5.2,
+    filename = file.path(save_path, "eeg_aq_prep_plot.svg"),
+    plot = eeg_aq_prep_plot,
+    width = 6.85,
+    height = 8,
     units = "in",
     dpi = 300,
     device = "svg"
   )
-  
-  ggsave(
-    filename = file.path(save_path, "overview_plots.svg"),
-    plot = overview_plot,
-    width = 12,
-    height = 12,
-    units = "in",
-    dpi = 300,
-    device = "svg"
-  )
+  show(eeg_aq_prep_plot)
 }

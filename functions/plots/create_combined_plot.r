@@ -14,7 +14,6 @@ create_combined_plot <- function(
   custom_breaks,
   x_label,
   y_label = "Individual Studies",
-  font_family = "sans",
   font_face = "plain"
 ) {
 
@@ -37,19 +36,41 @@ create_combined_plot <- function(
     
   # Create main plot
   p1 <- ggplot(df, aes(x = .data[[start_var]], xend = .data[[end_var]], y = StudyID, yend = StudyID)) +
-    geom_segment(color = "black", linewidth = 0.4) +
+    geom_segment(color = "black", linewidth = 0.4)
+
+  # Calculate top 3 most frequent start_var values
+  top_3_values <- df %>%
+    count(.data[[start_var]]) %>%
+    arrange(desc(n)) %>%
+    head(3) %>%
+    pull(.data[[start_var]])
+
+  # Add vertical lines for top 3 most frequent values
+  p1 <- p1 +
+    geom_vline(xintercept = top_3_values, 
+               color = "red", 
+               alpha = 0.3,
+               linetype = "dashed") +
     geom_point(aes(x = .data[[start_var]]), color = "grey", size = 1, shape = 32) +
     geom_point(aes(x = .data[[end_var]]), color = "grey", size = 1, shape = 32) +
     labs(x = x_label, y = y_label) +
-    theme_classic() +
+    theme_classic(base_family = "sans") +
     theme(
       axis.text.y = element_blank(),
-      axis.title.y = element_text(size = 9, color = "black", family = font_family, face = font_face),
+      axis.title.y = element_text(size = 10, family = "sans", face = font_face),
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
       axis.title.x = element_blank(),
       plot.margin = unit(c(0.5, 0.5, -0.2, 0.5), "cm")
-    )
+    ) +
+    annotate("text", 
+             x = min(df[[start_var]]), 
+             y = max(df$StudyID), 
+             label = paste0("n=", nrow(df)), 
+             hjust = 0, 
+             vjust = 1,
+             size = 3,
+             family = "sans")
 
   # Density calculation
   n_bins <- 160 #n_bins defines resolution of density plot
@@ -76,19 +97,22 @@ create_combined_plot <- function(
       limits = c(0, max(density_df$Density, na.rm = TRUE)),
       breaks = scales::pretty_breaks(n = 4)
     ) +
-    labs(x = x_label, y = "", fill = "Density") +
-    theme_classic() +
+    labs(x = x_label, y = "", fill = "#Studies") +
+    theme_classic(base_family = "sans") +
     theme(
-      axis.text.x = element_text(size = 8, color = "black", family = font_family, face = font_face),
-      axis.title.x = element_text(size = 9, color = "black", family = font_family, face = font_face),
+      axis.text.x = element_text(size = 8, color = "black", family = "sans", face = font_face),
+      axis.title.x = element_text(size = 10, color = "black", family = "sans", face = font_face),
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank(),
       axis.title.y = element_blank(),
       plot.margin = unit(c(0, 0.5, 0.5, 0.5), "cm"),
-      legend.position = "bottom",
-      legend.key.width = unit(0.3, "cm"),
-      legend.title = element_text(size = 9, color = "black", family = font_family, face = font_face),
-      legend.text = element_text(size = 8, color = "black", family = font_family, face = font_face)
+      # legend.position = "bottom",
+      # legend.text = element_text(size = 9),
+      # legend.title = element_text(size = 10, hjust = 0.5),
+      # legend.title.position = 'bottom',
+      # legend.key.height = unit(0.3, 'cm'),
+      # legend.key.width = unit(0.5, 'cm'),
+      legend.position = "none"  # Remove legend for now.
     )
 
   # Adapt x-axis label resolution
@@ -100,14 +124,15 @@ create_combined_plot <- function(
     })
   }
 
-  # Add scales only if we have valid data
+  # Add scales only if we have valid data (for shiny app data selections)
   if (nrow(df) > 0) {
     p1 <- p1 + scale_x_log10(breaks = custom_breaks, labels = custom_label_function)
     p2 <- p2 + scale_x_log10(breaks = custom_breaks, labels = custom_label_function)
   }
 
-  # Combine plots
-  combined_plot <- p1 / p2 + plot_layout(heights = c(12, 0.6))
-  
+  # Create the base combined plot
+  combined_plot <- (p1 / p2 + plot_layout(heights = c(12, 0.6)))
+
+
   return(combined_plot)
 }

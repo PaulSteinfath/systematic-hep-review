@@ -39,4 +39,13 @@ function(input, output) {
     },
     res = 96
   )
+
+
+  output$cfaRejPlot <- renderPlot(
+    {
+      cfa_removal(df_included[input$table_rows_all, ])
+    },
+    res = 96
+  )
+
 }

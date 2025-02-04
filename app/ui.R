@@ -11,7 +11,7 @@ ui <- page_navbar(
     DTOutput("table")
   ),
   nav_panel(
-    "Aquisition & Preprocessing", 
+    "Acquisition & Preprocessing", 
     plotOutput("aquisitionPrepPlot", height = "800px")
   ),
   nav_panel(
@@ -21,6 +21,10 @@ ui <- page_navbar(
   nav_panel(
     "Filter Cutoffs",
     plotOutput("filterPlot")
+  ),
+  nav_panel(
+    "CFA Removal",
+    plotOutput("cfaRejPlot", height = "800px")
   ),
   title = "Methods in HEP research"
 )

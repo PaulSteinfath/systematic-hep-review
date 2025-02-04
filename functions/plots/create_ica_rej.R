@@ -22,12 +22,12 @@ create_ica_rej <- function(df) {
 
   # Create a mapping of common variations to standardized names
   component_mapping <- c(
-    "eye movements" = "Eye Movements",
-    "blinks" = "Blinks",
+    "eye movements" = "Ocular",
+    "blinks" = "Ocular",
     "muscle" = "Muscle",
     "cfa" = "CFA",
-    "channel noise" = "Channel Noise",
-    "line noise" = "Line Noise",
+    "channel noise" = "Channel\nnoise",
+    "line noise" = "Line\nnoise",
     "other" = "Other"
   )
 
@@ -41,21 +41,20 @@ create_ica_rej <- function(df) {
     summarise(Frequency = n()) %>%
     arrange(desc(Frequency)) %>%
     filter(!is.na(rejected_components), rejected_components != "") %>%
-    ggplot(aes(x = reorder(rejected_components, Frequency), y = Frequency)) +
+    ggplot(aes(x = reorder(rejected_components, Frequency, decreasing = T), y = Frequency)) +
     geom_bar(stat = "identity", fill = "#696969") +
     scale_y_continuous(expand = expansion(mult = c(0, .1))) +
     labs(
       # title = "Frequency of Rejected ICA Components",
-      # subtitle = paste("n=", nrow(df_ica), " pipelines"),
+      title = paste("n =", nrow(df_ica), " pipelines"),
       y = "Number of Pipelines",
-      x = ""
+      x = "Types of rejected ICA components"
       #x = paste("Rejected ICA Component types ", "n=", nrow(df_ica), " pipelines"), 
     ) +
     theme_classic(base_family = "sans") +
     theme(
-      axis.text.x = element_text(angle = 45, hjust = 1, size = 9),
-      plot.title = element_text(hjust = 0.5, size = 10),
-      plot.subtitle = element_text(hjust = 0.5, size = 9),
-      axis.title = element_text(size = 10)
+      title = element_text(size = 9),
+      axis.text = element_text(size = 8),
+      axis.title = element_text(size = 9, margin = margin(t = 4))
     )
 }

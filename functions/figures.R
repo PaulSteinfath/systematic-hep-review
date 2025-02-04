@@ -57,14 +57,14 @@ eeg_aq_prep <- function(df) {
     "Nose" = "Nose",
     "Laplacian reference" = "LAP",
     "REST" = "REST",
-    "Other" = "other",
-    "unknown" = "unknown"
+    "Other" = "Other",
+    "unknown" = "N/M"
   )
 
   # Create individual histogtams for online / offline references
   ref_online <- hist_panel(df_ref, "reference_online",
     x.label = "Reference (online)",
-    discrete = TRUE, tilt_labels = TRUE,
+    discrete = TRUE, tilt_labels = F,
     modality_filter = "EEG",
     allowed = ref_categories[c(
       "Common average", "Linked mastoids", "Cz", "FCz",
@@ -75,7 +75,7 @@ eeg_aq_prep <- function(df) {
 
   ref_offline <- hist_panel(df_ref, "reference_offline",
     x.label = "Reference (offline)",
-    discrete = TRUE, tilt_labels = TRUE,
+    discrete = TRUE, tilt_labels = F,
     modality_filter = "EEG",
     allowed = ref_categories[c(
       "Common average", "Linked mastoids", "Linked earlobes",
@@ -88,37 +88,27 @@ eeg_aq_prep <- function(df) {
   ica_rej_plot <- create_ica_rej(df)
   ica_usage_plot <- create_ica_usage_plot(df) 
 
-  # Combine reference plots
-  ref_plots <- plot_grid(
-    ref_online, ref_offline,
-    ncol = 1,
-    align = "v"
+  # Combine plots
+  fig_ABC <- plot_grid(
+    ref_online, ref_offline, ica_rej_plot, 
+    ncol = 1, 
+    align = "hv",
+    axis = "tblr",
+    labels = c("A", "B", "C"), 
+    vjust = 1
   )
-
-  # Group ica_rej_plot and ica_usage_plot in one row
-  bottom_row <- plot_grid(
-    ica_rej_plot,
-    ica_usage_plot,
-    ncol = 2,
-    labels = c("D", "E"),
-    align = "h",
-    rel_widths = c(1, 1)
-  )
-
-  # Combine top (ref_plots, filter_plot) and bottom (ica_rej_plot, ica_usage_plot) rows
-  top_row <- plot_grid(
-    ref_plots, filter_plot,
-    ncol = 2,
-    labels = c("A", "C"),
-    align = "h",
-    rel_widths = c(1, 1)
-  )
-
+  
   plot_grid(
-    top_row,
-    bottom_row,
-    ncol = 1,
-    rel_heights = c(1, 1)
+    fig_ABCD,
+    NULL,
+    filter_plot,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    labels = c("", "", "D"),
+    rel_widths = c(1.2, 0.05, 1),
+    hjust = 0.5,
+    vjust = 1
   )
 }
 
@@ -133,11 +123,12 @@ make_figures <- function(df, save_path) {
   ggsave(
     filename = file.path(save_path, "eeg_aq_prep_plot.svg"),
     plot = eeg_aq_prep_plot,
-    width = 6.85,
-    height = 8,
+    width = 8,
+    height = 6,
     units = "in",
     dpi = 300,
-    device = "svg"
+    device = "svg",
+    bg = "white"
   )
   show(eeg_aq_prep_plot)
 }

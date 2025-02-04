@@ -48,29 +48,22 @@ create_combined_plot <- function(
   # Add vertical lines for top 3 most frequent values
   p1 <- p1 +
     geom_vline(xintercept = top_3_values, 
-               color = "red", 
+               color = "#aaaaaa", 
                alpha = 0.3,
-               linetype = "dashed") +
+               linetype = "11") +
     geom_point(aes(x = .data[[start_var]]), color = "grey", size = 1, shape = 32) +
     geom_point(aes(x = .data[[end_var]]), color = "grey", size = 1, shape = 32) +
-    labs(x = x_label, y = y_label) +
+    labs(x = x_label, y = y_label, title = paste("n =", nrow(df))) +
     theme_classic(base_family = "sans") +
     theme(
       axis.text.y = element_blank(),
-      axis.title.y = element_text(size = 10, family = "sans", face = font_face),
+      axis.title.y = element_text(size = 9, family = "sans", face = font_face),
+      axis.ticks.y = element_blank(),
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
       axis.title.x = element_blank(),
-      plot.margin = unit(c(0.5, 0.5, -0.2, 0.5), "cm")
-    ) +
-    annotate("text", 
-             x = min(df[[start_var]]), 
-             y = max(df$StudyID), 
-             label = paste0("n=", nrow(df)), 
-             hjust = 0, 
-             vjust = 1,
-             size = 3,
-             family = "sans")
+      title = element_text(size = 9)
+    )
 
   # Density calculation
   n_bins <- 160 #n_bins defines resolution of density plot
@@ -101,7 +94,7 @@ create_combined_plot <- function(
     theme_classic(base_family = "sans") +
     theme(
       axis.text.x = element_text(size = 8, color = "black", family = "sans", face = font_face),
-      axis.title.x = element_text(size = 10, color = "black", family = "sans", face = font_face),
+      axis.title.x = element_text(size = 9, color = "black", family = "sans", face = font_face),
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank(),
       axis.title.y = element_blank(),
@@ -131,8 +124,13 @@ create_combined_plot <- function(
   }
 
   # Create the base combined plot
-  combined_plot <- (p1 / p2 + plot_layout(heights = c(12, 0.6)))
-
+  combined_plot <- plot_grid(
+    p1, p2, 
+    ncol = 1,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(7.5, 1)
+  )
 
   return(combined_plot)
 }

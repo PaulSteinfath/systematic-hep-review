@@ -25,13 +25,7 @@ function(input, output) {
     },
     res = 96
   )
-  
-  output$filterPlot <- renderPlot({
-      create_filter_plots(df_selected())
-    },
-    res = 96
-  )
-  
+    
   output$acquisitionPrepPlot <- renderPlot({
       eeg_acq_prep(df_selected())
     },

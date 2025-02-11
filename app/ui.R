@@ -18,13 +18,5 @@ ui <- page_navbar(
     "Overview",
     plotOutput("yearPlot")
   ),
-  nav_panel(
-    "Filter Cutoffs",
-    plotOutput("filterPlot")
-  ),
-  nav_panel(
-    "CFA Removal",
-    plotOutput("cfaRejPlot", height = "800px")
-  ),
   title = "Methods in HEP research"
 )

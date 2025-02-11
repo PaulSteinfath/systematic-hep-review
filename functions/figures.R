@@ -5,7 +5,6 @@ library(dplyr)
 # Import plotting functions
 source(file.path(func_path, "plots", "create_combined_plot.R"))
 source(file.path(func_path, "plots", "hist_panel.R"))
-source(file.path(func_path, "plots", "create_ica_usage_plot.R"))
 source(file.path(func_path, "plots", "create_ica_rej.R"))
 source(file.path(func_path, "plots", "create_simple_ica_plot.R"))
 

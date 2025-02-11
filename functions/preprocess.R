@@ -54,8 +54,6 @@ column_mapping <- c(
   "other_notes" = "Other.notes..unclassified.",
   "motivation" = "Motivation",
   "sample_size" = "Sample.size"
- 
-
   # NOTE: add other columns here
 )
 

@@ -12,7 +12,7 @@ ui <- page_navbar(
   ),
   nav_panel(
     "Acquisition & Preprocessing", 
-    plotOutput("aquisitionPrepPlot", height = "800px")
+    plotOutput("acquisitionPrepPlot", height = "800px")
   ),
   nav_panel(
     "Overview",

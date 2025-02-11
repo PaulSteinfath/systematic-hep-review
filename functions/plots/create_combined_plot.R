@@ -32,10 +32,10 @@ create_combined_plot <- function(
   df <- df_filtered %>%
     distinct(PMID, .data[[start_var]], .data[[end_var]], .keep_all = TRUE) %>%
     arrange(.data[[start_var]], .data[[end_var]]) %>%
-    mutate(StudyID = row_number())
+    mutate(studyid = row_number())
     
   # Create main plot
-  p1 <- ggplot(df, aes(x = .data[[start_var]], xend = .data[[end_var]], y = StudyID, yend = StudyID)) +
+  p1 <- ggplot(df, aes(x = .data[[start_var]], xend = .data[[end_var]], y = studyid, yend = studyid)) +
     geom_segment(color = "black", linewidth = 0.4)
 
   # Calculate top 3 most frequent start_var values

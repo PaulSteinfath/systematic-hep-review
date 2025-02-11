@@ -53,8 +53,8 @@ column_mapping <- c(
   "controls" = "Controls",
   "other_notes" = "Other.notes..unclassified.",
   "motivation" = "Motivation",
-  "sample_size" = "Sample.size",
-  "stats_permutation" = "Cluster.based.Permutation"
+  "sample_size" = "Sample.size"
+ 
 
   # NOTE: add other columns here
 )
@@ -100,7 +100,6 @@ clean_cardiac_ics <- function(x) {
   # Handle ranges (e.g., "0-3", "1–3", "2–4")
   if (grepl("-|–", x)) {
     range_vals <- strsplit(x, "-|–")[[1]]
-    # Return mean of range
     return(mean(as.numeric(range_vals)))
   }
   
@@ -109,6 +108,8 @@ clean_cardiac_ics <- function(x) {
     return(as.numeric(x))
   }
   
+  # If the value did not match any format, warn and return NA_real_
+  warning(paste("Could not parse cardiac IC value:", x))
   return(NA_real_)
 }
 

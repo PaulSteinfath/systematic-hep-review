@@ -1,6 +1,7 @@
 hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
                        drop.na = T, force.numeric = F, allowed = NULL,
-                       x.label = NULL, use.log10 = F, use.log2 = F, modality_filter = NULL, binwidth = NULL, tilt_labels = F) {
+                       x.label = NULL, use.log10 = F, use.log2 = F, 
+                       modality_filter = NULL, binwidth = NULL, tilt_labels = F) {
   
   # Filter for EEG modality if specified
   if (!is.null(modality_filter)) {
@@ -41,9 +42,14 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
     labs(title = paste('n =', nrow(distinct(df_distinct, !!sym(group_col))))) +
     scale_y_continuous(expand = expansion(mult = c(0, .1))) +
     theme(
-      title = element_text(size = 8),
-      axis.text.x = element_text(angle = if (tilt_labels) 45 else 0, hjust = if (tilt_labels) 1 else 0.5),
-      axis.title.x = element_text(margin = margin(t = 1))  # Adjust this value to move label closer
+      title = element_text(size = 9),
+      axis.text.x = element_text(size = 8, 
+                                 angle = if (tilt_labels) 45 else 0, 
+                                 hjust = if (tilt_labels) 1 else 0.5),
+      axis.text.y = element_text(size = 8),
+      axis.title.x = element_text(size = 9, 
+                                  margin = margin(t = 4)),  # Adjust this value to move label closer
+      axis.title.y = element_text(size = 9)
     )
   
   

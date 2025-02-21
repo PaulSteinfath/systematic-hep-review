@@ -5,20 +5,31 @@ library(palmerpenguins)
 library(shiny)
 
 function(input, output) {
-  output$table <- 
-    renderDT(
-      df_included,
-      filter = "top",
-      options = list(
-        pageLength = 25
-      )
-    )
+
+  output$table <- renderDT(
+    df_included,
+    filter = "top",
+    options = list(pageLength = 25)
+  )
+  
+  # Wrap df_selected in a reactive
+  df_selected <- reactive({
+    df_included[input$table_rows_all, ]
+  })
   
   output$yearPlot <- renderPlot({
-    df_selected <- df_included[input$table_rows_all,]
-    ggplot(df_included, aes(x = Year)) +
-      geom_histogram(binwidth = 1, color = "white", fill = "lightgray") +
-      geom_histogram(data = df_selected, binwidth = 1, color = "white", fill = "blue") +
-      theme_classic()
-  }, res = 96)
+      ggplot(df_selected(), aes(x = Year)) +
+        geom_histogram(binwidth = 1, color = "white", fill = "lightgray") +
+        geom_histogram(data = df_selected(), binwidth = 1, color = "white", fill = "blue") +
+        theme_classic()
+    },
+    res = 96
+  )
+    
+  output$acquisitionPrepPlot <- renderPlot({
+      eeg_acq_prep(df_selected())
+    },
+    res = 96
+  )
+  
 }

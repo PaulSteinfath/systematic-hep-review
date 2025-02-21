@@ -1,3 +1,10 @@
+library(cowplot)
+library(dplyr)
+library(ggimage)
+library(ggplot2)
+library(magick)
+library(stringr)
+library(tidyr)
 library(zeallot)
 
 # Paths

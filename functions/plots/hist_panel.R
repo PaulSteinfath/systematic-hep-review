@@ -1,7 +1,7 @@
 hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
                        drop.na = T, force.numeric = F, allowed = NULL,
                        x.label = NULL, use.log10 = F, use.log2 = F, 
-                       modality_filter = NULL, binwidth = NULL, tilt_labels = F,
+                       modality_filter = NULL, binwidth = NULL, bins = NULL, tilt_labels = F,
                        use_proportion = TRUE, y_limits = NULL, custom_labels = NULL) {  # Added custom_labels
   
   # Filter for EEG modality if specified
@@ -12,9 +12,10 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   # Get unique (group_col, col) combinations to avoid overestimating the weight
   # of papers with multiple rows
   df_distinct <- distinct(df, !!sym(group_col), !!sym(col))
+  multiple_rows_per_pmid <- any(table(df_distinct$PMID) > 1)
   
   # Check if there are multiple rows per paper for the specified column
-  if(nrow(df) != nrow(df_distinct)) {
+  if (multiple_rows_per_pmid) {
     warning(paste("Warning: Multiple rows detected per", group_col, "for column", col))
   }
   
@@ -55,21 +56,17 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
                               y = if(use_proportion) prop else n)) +
       geom_bar(stat = "identity", fill = '#696969', color = 'white', linewidth = 0.5) +
       theme_classic(base_family = "sans")
-      
-    if(use_proportion) {
-      p <- p + scale_y_continuous(labels = scales::percent,
-                                expand = expansion(mult = c(0, .1)),
-                                limits = y_limits)  # Apply y-axis limits if provided
-    }
   } else {
-    p <- ggplot(df_distinct, aes(x = !!sym(col))) +
-      geom_histogram(fill = '#696969', color = 'white', linewidth = 0.5, binwidth = binwidth) +
+    p <- ggplot(df_distinct, aes(x = !!sym(col),
+                                 y = after_stat(ncount))) +
+      geom_histogram(fill = '#696969', color = 'white', linewidth = 0.5, 
+                     binwidth = binwidth, bins = bins) +
       theme_classic(base_family = "sans")
   }
   
   # Get label type once for both title and y-axis
   n_total <- nrow(distinct(df, !!sym(group_col)))
-  label_type <- if(nrow(df) == n_total) "Studies" else "Pipelines"
+  label_type <- if (multiple_rows_per_pmid) "Studies" else "Pipelines"
   
   p <- p +
     labs(title = paste("n =", n_total, tolower(label_type))) +
@@ -88,11 +85,17 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
     p <- p + xlab(x.label)
   }
   
+  if (use_proportion) {
+    p <- p + scale_y_continuous(labels = scales::percent,
+                                expand = expansion(mult = c(0, .1)),
+                                limits = y_limits)  # Apply y-axis limits if provided
+  }
+  
   # Update y-axis label to use the same label_type
-  if (discrete && use_proportion) {
-    p <- p + ylab(paste("Proportion of", label_type))
+  if (use_proportion) {
+    p <- p + ylab(paste("Proportion"))
   } else {
-    p <- p + ylab(paste("Number of", label_type))
+    p <- p + ylab(paste("Number"))
   }
   
   if (use.log10) {

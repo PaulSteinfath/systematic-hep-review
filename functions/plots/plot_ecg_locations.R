@@ -1,11 +1,3 @@
-library(cowplot)
-library(dplyr)
-library(ggimage)
-library(ggplot2)
-library(magick)
-library(stringr)
-library(tidyr)
-
 # Body image
 body_image_path <- file.path(getwd(), 'assets', 'body_lowres.png')
 body_image_info <- image_info(magick::image_read(body_image_path))
@@ -18,8 +10,6 @@ pos <- data.frame(
   name = c('right clavicle', 'left clavicle', 'right wrist', 'left wrist',
            'right shoulder', 'sternum', 'left leg', 'left abdomen', 'chest')
 )
-
-# Not needed: 'LS' - 'Left shoulder' - 0.81 - 0.8
 
 # Define start and end positions for each lead
 LEADS <- data.frame(

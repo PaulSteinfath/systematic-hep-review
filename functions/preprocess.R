@@ -1,5 +1,3 @@
-library(dplyr) # %>%, rename
-
 # Columns that describe the screening
 screening_columns <- c(
   "source", "PMID", "DOI", "Analyst", "Include",
@@ -84,6 +82,17 @@ preprocess_screening <- function(df_screening) {
 }
 
 
+preprocess_ecg <- function(df) {
+  df %>%
+    mutate(ecg_lead = recode(ecg_lead,
+                             "none" = "None",
+                             "Single-channel" = "Single\nchannel",
+                             "Multiple leads" = "Multiple\nleads",
+                             "Multiple leads (including lead I)" = "Multiple\nleads",
+                             "Multiple leads (including lead II)" = "Multiple\nleads",
+                             "Multiple leads (including leads I, II, III)" = "Multiple\nleads"))
+}
+
 # Clean cardiac IC rejection data
 clean_cardiac_ics <- function(x) {
   # Return NA for NULL, NA, or empty strings
@@ -129,12 +138,8 @@ preprocess <- function(df_full) {
     pull(PMID)
 
   df_included <- df_full %>%
-    filter(PMID %in% included_pmids)
-
-  # NOTE: Apply additional preprocessing steps to df_included here using
-  # something along the lines of:
-  #
-  # df_included <- preprocess_ecg(df_included)
+    filter(PMID %in% included_pmids) %>%
+    preprocess_ecg()
 
   # 4. adjust data types
   df_included$rsHEP <- as.factor(df_included$rsHEP)

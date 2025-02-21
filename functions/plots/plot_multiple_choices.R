@@ -14,7 +14,9 @@ plot_multiple_choices <- function(df, variables = multiple_choice_columns_defaul
                                   plot_fill = plot_fill_default,
                                   plot_theme = plot_theme_default,
                                   gap = 0.5, group_bar_pos = "dodge",
-                                  show_wordy_title = FALSE) {
+                                  show_wordy_title = FALSE,
+                                  x_lab = "Methodological Choice",
+                                  x_ticks = TRUE) {
   
   choice_analysis <- NULL
   
@@ -70,14 +72,6 @@ plot_multiple_choices <- function(df, variables = multiple_choice_columns_defaul
     choice_analysis$Group <- factor(choice_analysis$Group)
   }
   
-  # Apply column mapping if provided.
-  if (!is.null(column_mapping_readable)) {
-    choice_analysis$Method <- sapply(choice_analysis$Method, function(x) {
-      ind <- which(column_mapping_readable == x)
-      if (length(ind) > 0) names(column_mapping_readable)[ind[1]] else x
-    })
-  }
-  
   choice_analysis$Method <- apply_column_mapping(choice_analysis$Method, column_mapping_readable)
   
   if (show_wordy_title){
@@ -98,12 +92,13 @@ plot_multiple_choices <- function(df, variables = multiple_choice_columns_defaul
                       group_var = if (is.null(group_var)) NULL else "Group",
                       align_by_magnitude = align_by_magnitude,
                       gap = gap,
-                      x_lab = "Methodological Choice",
+                      x_lab = x_lab,
                       y_lab = ifelse(percentages, "Percentage of Papers with Multiple Decisions", "Number of Papers with Multiple Decisions"),
                       plot_title = my_title,
                       plot_fill = plot_fill,
                       plot_theme = plot_theme,
                       column_mapping_readable = column_mapping_readable,
-                      group_bar_pos = group_bar_pos)
+                      group_bar_pos = group_bar_pos,
+                      x_ticks = x_ticks)
   return(p)
 }

@@ -122,15 +122,15 @@ create_author_column <- function(data) {
     mutate(
       First_Author_Surname = word(Authors, 1, sep = " "),
       Paper = case_when(
-        str_detect(Authors, ",") ~ paste0(First_Author_Surname, " et al. (", Year, ")"),
-        TRUE ~ paste0(First_Author_Surname, " (", Year, ")")
+        str_detect(Authors, ",") ~ paste0(First_Author_Surname, " et al. (", Year),
+        TRUE ~ paste0(First_Author_Surname, " (", Year)
       )
     ) %>%
     group_by(Paper) %>%
     mutate(
       Paper = if (n_distinct(PMID) > 1) {
-        paste0(Paper, " ", letters[match(PMID, unique(PMID))])
-      } else Paper
+        paste0(Paper, letters[match(PMID, unique(PMID))], ")")
+      } else paste0(Paper, ")")
     ) %>%
     ungroup() %>%
     pull(Paper) # Extract the column as a vector
@@ -156,7 +156,7 @@ adjust_data_type <- function(df, adjust_numeric = c(), adjust_factor = c()) {
   return(df)
 }
 
-preprocess <- function(df_full, output_screening = F, drop_cols = T, adjust_data_types = T) {
+preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data_types = T) {
   
   if (output_screening){
     # Extract and return two dataframes

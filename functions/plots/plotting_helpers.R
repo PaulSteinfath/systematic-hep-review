@@ -59,7 +59,8 @@ column_mapping_readable_default <- c(
   "Sample Size" = "sample_size",
   "Cluster-Based Permutation" = "clustering",
   "Length (min)" = "length_min", 
-  "Modality (EEG/MEG)" = "Modality"
+  "Modality (EEG/MEG)" = "Modality",
+  "EEG Locations" = "eeg_locations"
 )
 
 save_plot <- function(p, vis_path, file_name, plot_format = "svg", plot_width = 6, plot_height = 6) {
@@ -92,7 +93,8 @@ column_barplot <- function(results_df,
                            plot_fill = plot_fill_default,
                            plot_theme = plot_theme_default,
                            column_mapping_readable = column_mapping_default,
-                           group_bar_pos = "dodge") {
+                           group_bar_pos = "dodge",
+                           x_ticks = TRUE) {
   # 1. Build a lookup table from the original variables input.
   # If variables is a list, check whether every element is of length 1.
   if (is.list(variables)) {
@@ -194,10 +196,19 @@ column_barplot <- function(results_df,
     }
   }
   
-  p <- p + scale_x_continuous(breaks = methods_df$xpos, 
-                              labels = methods_df[[x_col]],
-                              expand = expansion(mult = c(0.01, 0.01))) +
-    plot_theme +
+  # Conditionally control the x-axis tick labels.
+  if (x_ticks) {
+    p <- p + scale_x_continuous(breaks = methods_df$xpos, 
+                                labels = methods_df[[x_col]],
+                                expand = expansion(mult = c(0.01, 0.01)))
+  } else {
+    p <- p + scale_x_continuous(breaks = methods_df$xpos, 
+                                labels = NULL,
+                                expand = expansion(mult = c(0.01, 0.01)))
+  }
+  
+  
+  p <- p + plot_theme +
     labs(x = ifelse(is.null(x_lab), x_col, x_lab),
          y = ifelse(is.null(y_lab), y_col, y_lab),
          title = ifelse(is.null(plot_title), "", plot_title))

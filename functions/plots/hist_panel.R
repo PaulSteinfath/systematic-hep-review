@@ -75,13 +75,11 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
                                  y = if(use_proportion) prop else n, 
                                  fill = !!sym(grouping_var))) +
         geom_bar(stat = "identity", position = "dodge", color = 'white', linewidth = 0.5) +
-        theme_classic(base_family = "sans") +
         scale_fill_manual(values = plot_fill, name = "")
     } else {
       p <- ggplot(counts_df, aes(x = reorder(!!sym(col), n, decreasing = TRUE), 
                                  y = if(use_proportion) prop else n)) +
-        geom_bar(stat = "identity", fill = plot_fill[1], color = 'white', linewidth = 0.5) +
-        theme_classic(base_family = "sans")
+        geom_bar(stat = "identity", fill = plot_fill[1], color = 'white', linewidth = 0.5) 
     }
     
     if(use_proportion) {
@@ -95,12 +93,10 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
     if (!is.null(grouping_var)) {
       p <- ggplot(df_distinct, aes(x = !!sym(col), fill = !!sym(grouping_var))) +
         geom_histogram(color = 'white', linewidth = 0.5, binwidth = binwidth, position = "dodge") +
-        theme_classic(base_family = "sans") +
         scale_fill_manual(values = plot_fill_default, name = "")
     } else {
       p <- ggplot(df_distinct, aes(x = !!sym(col))) +
-        geom_histogram(fill = plot_fill_default[1], color = 'white', linewidth = 0.5, binwidth = binwidth) +
-        theme_classic(base_family = "sans")
+        geom_histogram(fill = plot_fill_default[1], color = 'white', linewidth = 0.5, binwidth = binwidth) 
     }
   }
   

@@ -14,9 +14,13 @@ source(file.path(func_path, "plots", "plot_entropy.R"))
 
 create_combined_plot_for_columns <- function(df){
   
-  p1 <- plot_entropy(df)
-  p2 <- plot_multiple_choices(df)
-  p3 <- plot_missing(df)
+  analysis_steps <- colnames(df)[6:45] 
+  
+  p1 <- plot_entropy(df,method_columns = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F,  x_lab = "", x_ticks = FALSE)
+  
+  p2 <- plot_multiple_choices(df,variables = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F, x_lab = "", x_ticks = FALSE)
+  
+  p3 <- plot_missing(df, columns = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F, x_ticks = TRUE)
   
   fig_ABC <- plot_grid(
     p1, p2, p3, 
@@ -24,7 +28,8 @@ create_combined_plot_for_columns <- function(df){
     align = "v",
     axis = "l",
     labels = c("A", "B", "C"), 
-    vjust = 1
+    vjust = 1,
+    rel_heights = c(1, 1, 1.2)
   )
   
   return(fig_ABC)

@@ -157,6 +157,7 @@ plot_entropy <- function(df,
                          vertical = FALSE, 
                          num_bins = 10, 
                          unique_threshold = 10, 
+                         align_by_magnitude = TRUE,
                          all_char = FALSE, 
                          norm = TRUE, 
                          plot_fill = plot_fill_default,
@@ -164,7 +165,9 @@ plot_entropy <- function(df,
                          drop_paper_duplicates = TRUE,
                          gap = 0.5, 
                          group_bar_pos = "dodge",
-                         show_wordy_title = FALSE) {
+                         show_wordy_title = FALSE,
+                         x_lab = "Methodological Choice",
+                         x_ticks = TRUE) {
   
   # Flatten method_columns if needed.
   if (is.list(method_columns)) {
@@ -225,14 +228,15 @@ plot_entropy <- function(df,
                       variables = method_columns,
                       vertical = vertical,
                       group_var = if (is.null(group_var)) NULL else "Group",
-                      align_by_magnitude = TRUE,
+                      align_by_magnitude = align_by_magnitude,
                       gap = gap,
-                      x_lab = "Methodological Choice",
+                      x_lab = x_lab,
                       y_lab = "Entropy",
                       plot_title = my_title,
                       plot_fill = plot_fill,
                       plot_theme = plot_theme,
                       column_mapping_readable = column_mapping_readable,
-                      group_bar_pos = group_bar_pos)
+                      group_bar_pos = group_bar_pos,
+                      x_ticks = x_ticks)
   return(p)
 }

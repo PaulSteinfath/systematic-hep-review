@@ -106,7 +106,9 @@ plot_missing <- function(df,
                          align_by_magnitude = TRUE,
                          gap = 0.5,
                          group_bar_pos = "dodge",
-                         show_wordy_title = FALSE) {
+                         show_wordy_title = FALSE,
+                         x_lab = "Methodological Choice",
+                         x_ticks = TRUE) {
   
   # Flatten columns if needed.
   if (is.list(columns)) {
@@ -157,7 +159,6 @@ plot_missing <- function(df,
   results_df$Column <- apply_column_mapping(results_df$Column, column_mapping_readable)
   
   # Define axis labels and title.
-  x_lab <- "Methodological Choice"
   y_lab <- if (percentages) "Percentage of Papers with Missing Information" else "Number of Papers with Missing Information"
   if (show_wordy_title) {
     my_title <- if (is.null(group_var)) 
@@ -184,6 +185,7 @@ plot_missing <- function(df,
                       plot_fill = plot_fill,
                       plot_theme = plot_theme,
                       column_mapping_readable = column_mapping_readable,
-                      group_bar_pos = group_bar_pos)
+                      group_bar_pos = group_bar_pos,
+                      x_ticks = x_ticks)
   return(p)
 }

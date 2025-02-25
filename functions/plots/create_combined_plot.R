@@ -24,9 +24,7 @@ create_combined_plot <- function(
   
   # Return empty plot if no valid data
   if (nrow(df_filtered) == 0) {
-    return(ggplot() + 
-           theme_void() + 
-           annotate("text", x = 0.5, y = 0.5, label = "No valid data selected"))
+    return(no_valid_data_stub(message = "No valid data selected"))
   }
   
   df <- df_filtered %>%

@@ -11,12 +11,12 @@ ui <- page_navbar(
     DTOutput("table")
   ),
   nav_panel(
-    "Acquisition & Preprocessing", 
+    "EEG Acquisition & Preprocessing", 
     plotOutput("acquisitionPrepPlot", height = "800px")
   ),
   nav_panel(
-    "Overview",
-    plotOutput("yearPlot")
+    "ECG Acquistion",
+    plotOutput("ecgSummaryPlot", height = "500px")
   ),
   title = "Methods in HEP research"
 )

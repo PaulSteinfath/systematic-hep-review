@@ -23,6 +23,11 @@ plot_ecg_locations <- function(
     distinct(pick(cols_to_pick)) %>%
     filter(ecg_locations != "unknown")
   
+  # Shiny: exit immediately if all rows are removed
+  if (nrow(ecg) == 0) {
+    return(no_valid_data_stub(message = "No usages of leads I/II/III in the selection"))
+  }
+  
   # Make sure that two locations per lead are specified
   ecg$num_locations <- sapply(ecg$ecg_locations, \(x) length(unlist(strsplit(x, ", "))))
   if (any(ecg$num_locations > 2)) {

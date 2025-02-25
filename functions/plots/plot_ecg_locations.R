@@ -15,21 +15,24 @@ pos <- data.frame(
 
 plot_ecg_locations <- function(
   df, 
-  leads_to_plot,
-  border = F,
-  split = F
+  leads_to_plot
 ) {
+  # Pick rows with leads of interest and known locations
   cols_to_pick <- c('PMID', 'ecg_lead', 'ecg_locations')
   ecg <- df[df$ecg_lead %in% names(leads_to_plot), cols_to_pick] %>%
-    distinct(PMID, ecg_lead, ecg_locations) %>%
+    distinct(pick(cols_to_pick)) %>%
     filter(ecg_locations != "unknown")
+  
+  # Make sure that two locations per lead are specified
   ecg$num_locations <- sapply(ecg$ecg_locations, \(x) length(unlist(strsplit(x, ", "))))
   if (any(ecg$num_locations > 2)) {
-    pmids <- ecg$PMID[ecg$num_locations > 2]
+    bad_pmids <- ecg$PMID[ecg$num_locations > 2]
     message(paste("plot_ecg_locations: Too many ECG locations specified for the following PMIDs:", 
-                  paste(pmids, collapse = ", ")))
+                  paste(bad_pmids, collapse = ", ")))
   }
   
+  # Preprocess the electrode positions
+  # NOTE: only the first two locations are processed from now on
   ecg$start <- sapply(ecg$ecg_locations, \(x) str_to_lower(str_split_i(x, ", ", 1)))
   ecg$end <- sapply(ecg$ecg_locations, \(x) str_to_lower(str_split_i(x, ", ", 2)))
   ecg <- ecg %>%
@@ -106,21 +109,6 @@ plot_ecg_locations <- function(
     theme_void() +
     theme(aspect.ratio = aspect,
           strip.background = element_blank())
-  
-  if (border) {
-    p <- p +
-      geom_hline(yintercept = c(0, 1)) +
-      geom_vline(xintercept = c(0, 1))
-  }
-  
-  if (split) {
-    p <- p + 
-      facet_wrap(. ~ type, nrow = 1) +
-      guides(color = guide_none(),
-             linewidth = guide_legend(title = "Number of studies",
-                                      title.position = "top")) +
-      theme(strip.text.x = element_text(face = "bold", size = 13, hjust = 0.47))
-  }
   
   p
 }

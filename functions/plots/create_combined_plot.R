@@ -10,7 +10,7 @@ create_combined_plot <- function(
   df,
   start_var,
   end_var,
-  x_scale = "log",
+  x_scale,
   custom_breaks,
   x_label,
   y_label = "Individual Studies",
@@ -19,9 +19,13 @@ create_combined_plot <- function(
 
   # Remove missing data and validate ranges
   df_filtered <- df %>%
-    filter(!is.na(.data[[start_var]]) & !is.na(.data[[end_var]])) %>%
-    filter(.data[[start_var]] > 0 & .data[[end_var]] > 0)  # ensure positive values for log scale
+    filter(!is.na(.data[[start_var]]) & !is.na(.data[[end_var]])) 
   
+  # Only apply positive value filter if using log scale
+  if (x_scale == "log") {
+    df_filtered <- df_filtered %>% filter(.data[[start_var]] > 0 & .data[[end_var]] > 0)
+  }
+        
   # Return empty plot if no valid data
   if (nrow(df_filtered) == 0) {
     return(ggplot() + 

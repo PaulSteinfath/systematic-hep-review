@@ -95,7 +95,7 @@ plot_ecg_locations <- function(
                  mapping = aes(x = x, y = y, xend = x, yend = 0),
                  linewidth = 1, color = "#696969",
                  arrow = arrow(length = unit(0.25, "cm"))) + 
-    geom_point(data = pos_actual, size = 8, color="#999999") +
+    geom_point(data = pos_actual, size = 8, color="#696969") +
     geom_text(data = pos_actual, aes(label = label), color="white", size = 3) +
     scale_x_continuous(limits = c(0, 1)) +
     scale_y_continuous(limits = c(0, 1)) +

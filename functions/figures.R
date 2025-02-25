@@ -131,19 +131,28 @@ eeg_acq_prep <- function(df) {
 }
 
 ecg_summary <- function(df) {
+  # TODO: move to config / helpers
+  leads_palette <- c('Lead I' = '#e41a1c', 
+                     'Lead II' = '#4daf4a', 
+                     'Lead III' = '#377eb8')
+  
   p_ecg_num_electrodes <- hist_panel(df, "ecg_num_electrodes",
                                      force.numeric = T, binwidth = 1,
                                      x.label = "Number of ECG electrodes") +
-    scale_x_continuous(breaks = seq(0, 8, 2))
-  p_ecg_leads <- hist_panel(df, "ecg_lead", 
-                            discrete = T, x.label = "ECG lead")
-  p_ecg_locations <- plot_ecg_locations(df)
+    scale_x_continuous(breaks = seq(0, 8, 1))
+  p_ecg_leads <- hist_panel(df, "ecg_lead", fill_as_aesthetic = T,
+                            discrete = T, x.label = "ECG lead") +
+    scale_fill_manual(values = leads_palette,
+                      guide = "none") 
+  p_ecg_locations <- plot_ecg_locations(df, leads_palette)
   
   fig_AB = plot_grid(
     p_ecg_num_electrodes,
     p_ecg_leads,
     ncol = 1,
-    labels = c("A", "B")
+    labels = c("A", "B"),
+    align = "v",
+    axis = "lr"
   )
   
   fig <- plot_grid(
@@ -151,7 +160,9 @@ ecg_summary <- function(df) {
     p_ecg_locations,
     nrow = 1,
     rel_widths = c(1, 1.5),
-    labels = c("", "C")
+    labels = c("", "C"),
+    align = "h",
+    axis = "tb"
   )
   
   fig

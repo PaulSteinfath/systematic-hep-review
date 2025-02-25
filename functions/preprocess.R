@@ -90,7 +90,8 @@ preprocess_ecg <- function(df) {
                              "Multiple leads" = "Multiple\nleads",
                              "Multiple leads (including lead I)" = "Multiple\nleads",
                              "Multiple leads (including lead II)" = "Multiple\nleads",
-                             "Multiple leads (including leads I, II, III)" = "Multiple\nleads"))
+                             "Multiple leads (including leads I, II, III)" = "Multiple\nleads",
+                             "unknown" = "N/M"))
 }
 
 # Clean cardiac IC rejection data

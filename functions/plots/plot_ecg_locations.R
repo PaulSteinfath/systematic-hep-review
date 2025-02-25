@@ -1,105 +1,110 @@
 # Body image
 body_image_path <- file.path(getwd(), 'assets', 'body_lowres.png')
 body_image_info <- image_info(magick::image_read(body_image_path))
+aspect <- body_image_info$height / body_image_info$width
 
 # Assign coordinates to different ECG locations
 pos <- data.frame(
-  x = c(0.335, 0.62, 0.075, 0.9, 0.15, 0.47, 0.65, 0.65, 0.625),
-  y = c(0.875, 0.8675, 0.125, 0.175, 0.8, 0.8, 0.05, 0.35, 0.55), 
-  label = c('RC', 'LC', 'RW', 'LW', 'RS', 'S', 'LL', 'LAb', 'C'),
+  x = c(0.335, 0.62, 0.075, 0.9, 0.15, 0.65, 0.65, 0.625),
+  y = c(0.875, 0.8675, 0.125, 0.175, 0.8, 0.075, 0.25, 0.55), 
+  label = c('RC', 'LC', 'RW', 'LW', 'RS', 'LL', 'LAb', 'C'),
   name = c('right clavicle', 'left clavicle', 'right wrist', 'left wrist',
-           'right shoulder', 'sternum', 'left leg', 'left abdomen', 'chest')
+           'right shoulder', 'left leg', 'left abdomen', 'chest')
 )
 
-# Define start and end positions for each lead
-LEADS <- data.frame(
-  start = c('C', 'C', 'C', 'C', 'LAb', 'LAb', 'LC', 'LL', 'LL', 'LW'),
-  end = c('LC', 'RC', 'RW', 'S', 'RC', 'RS', 'RC', 'LW', 'RW', 'RW'),
-  type = c('III', 'II', 'II', 'II', 'II', 'II', 'I', 'III', 'II', 'I')
-)
 
 plot_ecg_locations <- function(
   df, 
-  leads_to_consider = c('Lead I', 'Lead II', 'Lead III'),
+  leads_to_plot,
   border = F,
   split = F
 ) {
   cols_to_pick <- c('PMID', 'ecg_lead', 'ecg_locations')
-  ecg <- df[df$ecg_lead %in% leads_to_consider, cols_to_pick] %>%
-    group_by(PMID) %>%
-    summarise(ecg_lead = unique(ecg_lead),
-              ecg_locations = unique(ecg_locations)) %>%
+  ecg <- df[df$ecg_lead %in% names(leads_to_plot), cols_to_pick] %>%
+    distinct(PMID, ecg_lead, ecg_locations) %>%
     filter(ecg_locations != "unknown")
+  ecg$num_locations <- sapply(ecg$ecg_locations, \(x) length(unlist(strsplit(x, ", "))))
+  if (any(ecg$num_locations > 2)) {
+    pmids <- ecg$PMID[ecg$num_locations > 2]
+    message(paste("plot_ecg_locations: Too many ECG locations specified for the following PMIDs:", 
+                  paste(pmids, collapse = ", ")))
+  }
   
   ecg$start <- sapply(ecg$ecg_locations, \(x) str_to_lower(str_split_i(x, ", ", 1)))
   ecg$end <- sapply(ecg$ecg_locations, \(x) str_to_lower(str_split_i(x, ", ", 2)))
   ecg <- ecg %>%
-    mutate(start = case_when(start == "v5" ~ "chest",
-                             start == "left chest" ~ "chest",
+    mutate(start = case_when(start == "left chest" ~ "chest",
                              start == "left ankle" ~ "left leg",
                              .default = start),
-           end = case_when(end == "v5" ~ "chest",
-                           end == "left chest" ~ "chest",
+           end = case_when(end == "left chest" ~ "chest",
                            end == "left ankle" ~ "left leg",
                            .default = end))
+  
+  # NOTE: use sorting to match the same locations listed in different order
+  ecg$setup <- apply(ecg, 1, \(x) paste(sort(c(x['start'], x['end'])), 
+                                        collapse = "; "))
 
-  ecg$start_pos <- sapply(ecg$start, \(x) as.vector(pos$label[str_to_lower(pos$name) == x]))
-  ecg$end_pos <- sapply(ecg$end, \(x) as.vector(pos$label[str_to_lower(pos$name) == x]))
+  # Count the occurrences of all leads
+  leads <- ecg %>%
+    group_by(ecg_lead, setup) %>%
+    summarize(count = n())
+  leads$start <- sapply(leads$setup, \(x) str_split_i(x, "; ", 1))
+  leads$end <- sapply(leads$setup, \(x) str_split_i(x, "; ", 2))
   
-  ecg$start_len <- sapply(ecg$start_pos, \(x) length(x))
-  ecg$end_len <- sapply(ecg$end_pos, \(x) length(x))
+  # Pivot longer to have two rows (start and end position) per lead for plotting
+  leads <- leads %>% pivot_longer(
+    cols = c('start', 'end'),
+    names_to = c('pos_type'),
+    values_to = c('name')
+  )
+  n_before_merge <- nrow(leads)
   
-  ecg <- ecg[ecg$start_len > 0 & ecg$end_len > 0,]
+  # Add electrode positions
+  leads <- merge(leads, pos, by.x = "name", by.y = "name", sort = F)
+  n_after_merge <- nrow(leads)
+  if (n_before_merge != n_after_merge) {
+    diff <- n_before_merge - n_after_merge
+    message(paste("Missing", diff, "rows after merging ECG electrode positions"))
+  }
   
-  leads <- t(rbind(
-    unname(unlist(ecg$start_pos)),
-    unname(unlist(ecg$end_pos))
-  ))
-  leads <- data.frame(t(apply(leads, 1, sort)))
-  colnames(leads) <- c('start', 'end')
-  leads <- leads %>%
-    count(start, end)
-  leads$setup <- apply(leads, 1, \(x) str_c(x['start'], x['end'], sep = "-"))
+  # Count the occurrences of all electrode positions to plot only those that are
+  # actually present in the data
+  occurrences <- as.data.frame(table(leads$label))
+  names(occurrences) <- c("label", "freq")
+  # NOTE: unused locations will be dropped here and not appear in pos_actual
+  pos_actual <- merge(pos, occurrences)
   
-  
-  leads <- merge(leads, LEADS) %>%
-    pivot_longer(
-      cols = c('start', 'end'),
-      names_to = c('pos_type'),
-      values_to = c('pos')
-    )
-  leads$x <- sapply(leads$pos, \(p) pos$x[pos$label == p])
-  leads$y <- sapply(leads$pos, \(p) pos$y[pos$label == p])
-  
+  # Show the total number of papers that use each lead
   lead_counts <- leads %>%
-    group_by(type) %>%
-    summarise(n = sum(n) / 2)
-  
-  
-  
-  leads$type <- as.factor(leads$type)
+    group_by(ecg_lead) %>%
+    summarize(count = sum(count) / 2)   # rows are duplicated
+  leads$type <- as.factor(leads$ecg_lead)
   levels(leads$type) <- sapply(
-    c('I', 'II', 'III'), 
-    \(x) paste0('Lead ', x, ' (n = ', lead_counts$n[lead_counts$type == x], ')')
+    levels(leads$type), 
+    \(x) paste0(x, ' (n = ', lead_counts$count[lead_counts$ecg_lead == x], ')')
   )
   
-  asp <- body_image_info$height / body_image_info$width
-  
+  # Plot the leads and positions on top of the body image
   p <- ggplot(leads, aes(x = x, y = y)) +
     geom_image(data = data.frame(x = 0.5, y = 0.5),
                aes(image = body_image_path),
                size = 0.865) +    # more or less a magic number found 
-                                  # through trial and error :(((
-    geom_line(aes(group = setup, color = type, linewidth = n)) +
-    geom_point(data = pos, size = 8, color="#999999") +
-    geom_text(data = pos, aes(label = label), color="white", size = 3) +
+                                  # through trial and error :(
+    geom_line(aes(group = setup, color = ecg_lead, linewidth = count)) +
+    geom_segment(data = pos_actual[pos_actual$label == "LL",], 
+                 mapping = aes(x = x, y = y, xend = x, yend = 0),
+                 linewidth = 1, color = "#696969",
+                 arrow = arrow(length = unit(0.25, "cm"))) + 
+    geom_point(data = pos_actual, size = 8, color="#999999") +
+    geom_text(data = pos_actual, aes(label = label), color="white", size = 3) +
     scale_x_continuous(limits = c(0, 1)) +
     scale_y_continuous(limits = c(0, 1)) +
+    scale_color_manual(values = leads_to_plot, labels = levels(leads$type)) +
     scale_linewidth_continuous(range = c(1, 4)) +
-    guides(color = guide_legend(title = "ECG Lead"),
+    guides(color = guide_legend(title = "ECG lead"),
            linewidth = guide_legend(title = "Number of studies")) +
     theme_void() +
-    theme(aspect.ratio = asp,
+    theme(aspect.ratio = aspect,
           strip.background = element_blank())
   
   if (border) {
@@ -119,8 +124,3 @@ plot_ecg_locations <- function(
   
   p
 }
-
-# For the calling side:
-# ggsave('ecg_locations_combined.png', p, width = 6, height = 5, bg = "white")
-# ggsave('ecg_locations_split.png', p, width = 15, height = 5, bg = "white")
-

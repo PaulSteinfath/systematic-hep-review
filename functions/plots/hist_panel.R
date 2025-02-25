@@ -1,6 +1,7 @@
 hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
                        drop.na = T, force.numeric = F, allowed = NULL,
-                       x.label = NULL, use.log10 = F, use.log2 = F, 
+                       x.label = NULL, use.log10 = F, use.log2 = F,
+                       fill_as_aesthetic = F,
                        modality_filter = NULL, binwidth = NULL, bins = NULL, tilt_labels = F,
                        use_proportion = TRUE, y_limits = NULL, custom_labels = NULL) {  # Added custom_labels
   
@@ -53,9 +54,19 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
     }
     
     p <- ggplot(counts_df, aes(x = reorder(!!sym(col), n, decreasing = TRUE), 
-                              y = if(use_proportion) prop else n)) +
-      geom_bar(stat = "identity", fill = '#696969', color = 'white', linewidth = 0.5) +
-      theme_classic(base_family = "sans")
+                               y = if(use_proportion) prop else n))
+    
+    if (fill_as_aesthetic) {
+      p <- p +
+        geom_bar(aes(fill = !!sym(col)), stat = "identity", 
+                 color = 'white', linewidth = 0.5)
+    } else {
+      p <- p + 
+        geom_bar(stat = "identity", fill = '#696969', 
+                 color = 'white', linewidth = 0.5)
+    }
+    
+    p <- p + theme_classic(base_family = "sans")
   } else {
     p <- ggplot(df_distinct, aes(x = !!sym(col),
                                  y = after_stat(ncount))) +
@@ -66,7 +77,7 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   
   # Get label type once for both title and y-axis
   n_total <- nrow(distinct(df, !!sym(group_col)))
-  label_type <- if (multiple_rows_per_pmid) "Studies" else "Pipelines"
+  label_type <- if (multiple_rows_per_pmid) "Pipelines" else "Studies"
   
   p <- p +
     labs(title = paste("n =", n_total, tolower(label_type))) +

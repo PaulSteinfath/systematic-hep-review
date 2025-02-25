@@ -197,15 +197,15 @@ create_time_windows_with_ecg_plot <- function(df) {
   r_peak_ms <- 0
   t_peak_ms <- 300
 
-  # Create plots with forced spacing using white characters between words
+  # Create plots with simple plain text titles
   hep_windows_plot <- create_time_windows_plot(df, 
     "hep_start", "hep_end", "hep_relative_to",
     "Time relative to R-peak (ms)",
     t_peak_offset = 300,
     x_limits = shared_limits,
     add_vlines = TRUE) +
-    ggtitle("<span style='font-weight:bold; font-size:14pt;'>A)</span>&nbsp;&nbsp;&nbsp;&emsp;<span style='font-size:12pt;'>HEP<span style='color:white;'>..</span>Time<span style='color:white;'>..</span>of<span style='color:white;'>.</span>Interest</span>") +
-    theme(plot.title = element_markdown(hjust = 0, margin = margin(b = 10)))
+    ggtitle("A) HEP Time of Interest") +
+    theme(plot.title = element_text(hjust = 0, size = 12, margin = margin(b = 10)))
 
   baseline_windows_plot <- create_time_windows_plot(df,
     "baseline_start_ms", "baseline_end_ms", "hep_relative_to",
@@ -213,8 +213,8 @@ create_time_windows_with_ecg_plot <- function(df) {
     t_peak_offset = 300,
     x_limits = shared_limits,
     add_vlines = FALSE) +
-    ggtitle("<span style='font-weight:bold; font-size:14pt;'>B)</span>&nbsp;&nbsp;&nbsp;&emsp;<span style='font-size:12pt;'>Baseline<span style='color:white;'>..</span>Window</span>") +
-    theme(plot.title = element_markdown(hjust = 0, margin = margin(b = 10)))
+    ggtitle("B) Baseline Window") +
+    theme(plot.title = element_text(hjust = 0, size = 12, margin = margin(b = 10)))
 
   significant_windows_plot <- create_time_windows_plot(df,
     "significant_start_ms", "significant_end_ms", "significant_relative_to",
@@ -222,8 +222,8 @@ create_time_windows_with_ecg_plot <- function(df) {
     t_peak_offset = 300,
     x_limits = shared_limits,
     add_vlines = FALSE) +
-    ggtitle("<span style='font-weight:bold; font-size:14pt;'>C)</span>&nbsp;&nbsp;&nbsp;&emsp;<span style='font-size:12pt;'>Significant<span style='color:white;'>..</span>Effects<span style='color:white;'>..</span>Found</span>") +
-    theme(plot.title = element_markdown(hjust = 0, margin = margin(b = 10)))
+    ggtitle("C) Significant Effects Found") +
+    theme(plot.title = element_text(hjust = 0, size = 12, margin = margin(b = 10)))
 
   # Create ECG data
   if (!is.null(shared_limits)) {
@@ -233,6 +233,7 @@ create_time_windows_with_ecg_plot <- function(df) {
   }
   ecg <- create_ecg_wave(t)
   ecg_df <- data.frame(Time = t, ECG = ecg)
+  
   # Regular ECG plot without lines for final display
   ecg_plot <- ggplot(ecg_df, aes(x = Time, y = ECG)) +
     geom_line(color = "grey80", size = 1) +
@@ -290,7 +291,7 @@ create_time_windows_with_ecg_plot <- function(df) {
   legend_plot <- ggplot() +
     geom_segment(aes(x = 0, y = 2, xend = 1, yend = 2, color = "R Peak", linetype = "dashed"), size = 1) +
     geom_segment(aes(x = 0, y = 1, xend = 1, yend = 1, color = "T Peak", linetype = "dashed"), size = 1) +
-    scale_color_manual(values = c("R Peak" = "#0072B2", "T Peak" = "#E69F00")) +
+    scale_color_manual(values = c("R-Peak" = "#0072B2", "T-Peak" = "#E69F00")) +
     scale_linetype_manual(values = c("dashed" = "dashed")) +
     theme_void() +
     theme(
@@ -363,14 +364,4 @@ make_figures <- function(df, save_path) {
     bg = "white"
   )
 
-  # Also save as PNG for comparison if needed
-  ggsave(
-    filename = file.path(save_path, "time_windows_plot.png"),
-    plot = time_windows_plot,
-    width = 9,
-    height = 7,
-    units = "in",
-    dpi = 300,
-    bg = "white"
-  )
 }

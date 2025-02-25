@@ -136,10 +136,16 @@ ecg_summary <- function(df) {
                      'Lead II' = '#4daf4a', 
                      'Lead III' = '#377eb8')
   
-  p_ecg_num_electrodes <- hist_panel(df, "ecg_num_electrodes",
+  # Map "unknown" to 9 so that it isn't lost during conversion to numeric and
+  # is positioned nicely
+  df <- df %>%
+    mutate(ecg_num_electrodes = replace(ecg_num_electrodes,
+                                        ecg_num_electrodes == "unknown", 9))
+  p_ecg_num_electrodes <- hist_panel(df, "ecg_num_electrodes", 
                                      force.numeric = T, binwidth = 1,
                                      x.label = "Number of ECG electrodes") +
-    scale_x_continuous(breaks = seq(0, 8, 1))
+    scale_x_continuous(breaks = seq(0, 9),
+                       labels = c(seq(0, 8), "N/M"))
   p_ecg_leads <- hist_panel(df, "ecg_lead", fill_as_aesthetic = T,
                             discrete = T, x.label = "ECG lead") +
     scale_fill_manual(values = leads_palette,

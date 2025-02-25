@@ -13,7 +13,7 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   # Get unique (group_col, col) combinations to avoid overestimating the weight
   # of papers with multiple rows
   df_distinct <- distinct(df, !!sym(group_col), !!sym(col))
-  multiple_rows_per_pmid <- any(table(df_distinct$PMID) > 1)
+  multiple_rows_per_pmid <- any(table(df_distinct[[group_col]]) > 1)
   
   # Check if there are multiple rows per paper for the specified column
   if (multiple_rows_per_pmid) {
@@ -68,9 +68,9 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
     
     p <- p + theme_classic(base_family = "sans")
   } else {
-    p <- ggplot(df_distinct, aes(x = !!sym(col),
-                                 y = after_stat(ncount))) +
-      geom_histogram(fill = '#696969', color = 'white', linewidth = 0.5, 
+    p <- ggplot(df_distinct, aes(x = !!sym(col))) +
+      geom_histogram(aes(y = if (use_proportion) after_stat(density) else after_stat(count)),
+                     fill = '#696969', color = 'white', linewidth = 0.5, 
                      binwidth = binwidth, bins = bins) +
       theme_classic(base_family = "sans")
   }
@@ -104,9 +104,9 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   
   # Update y-axis label to use the same label_type
   if (use_proportion) {
-    p <- p + ylab(paste("Proportion"))
+    p <- p + ylab(paste("Proportion of", label_type))
   } else {
-    p <- p + ylab(paste("Number"))
+    p <- p + ylab(paste("Number of", label_type))
   }
   
   if (use.log10) {

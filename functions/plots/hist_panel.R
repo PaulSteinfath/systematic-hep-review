@@ -13,10 +13,10 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   # Get unique (group_col, col) combinations to avoid overestimating the weight
   # of papers with multiple rows
   df_distinct <- distinct(df, !!sym(group_col), !!sym(col))
-  multiple_rows_per_pmid <- any(table(df_distinct[[group_col]]) > 1)
+  multiple_rows_per_group <- any(table(df_distinct[[group_col]]) > 1)
   
   # Check if there are multiple rows per paper for the specified column
-  if (multiple_rows_per_pmid) {
+  if (multiple_rows_per_group) {
     warning(paste("Warning: Multiple rows detected per", group_col, "for column", col))
   }
   
@@ -77,7 +77,7 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   
   # Get label type once for both title and y-axis
   n_total <- nrow(distinct(df, !!sym(group_col)))
-  label_type <- if (multiple_rows_per_pmid) "Pipelines" else "Studies"
+  label_type <- if (multiple_rows_per_group) "Pipelines" else "Studies"
   
   p <- p +
     labs(title = paste("n =", n_total, tolower(label_type))) +

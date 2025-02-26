@@ -2,68 +2,96 @@ library(eegUtils)
 library(ggplot2)
 library(tidyr)
 
-find_channel <- function(ch, ch_list) {
-  # Resolve T3-T7, T4-T8, T5-P7, T6-P8
-  # ch <- recode(ch, 
-  #              "T3" = "T7", "T4" = "T8",
-  #              "T5" = "P7", "T6" = "P8")
-  grepl(ch, ch_list, fixed = T)
+
+get_channel_freq <- function(df, col, ch) {
+  in_layout <- sapply(df$meeg_locations, 
+                      \(x) grepl(ch, x, fixed = T))
+  in_selection <- sapply(df[[col]], 
+                         \(x) grepl(ch, x, fixed = T))
+  
+  n_used <- sum(in_layout)
+  if (n_used == 0) {
+    return(0)
+  }
+  
+  n_selected <- sum(in_selection)
+  n_selected / n_used
 }
 
-layout <- "biosemi128"
-montage <- NULL
-if (layout == "biosemi128") {
-  montage <- "biosemi128"
-}
-df_channels <- df_included %>%
-  mutate(eeg_layout = recode(eeg_layout,
-                             "10-10" = "standard61",
-                             "10-20" = "standard19")) %>%
-  filter(modality == "EEG",
-         eeg_layout == layout,
-         stats_hypothesis != "none")
-for (ch in ch_names[[layout]]) {
-  df_channels[[paste0(ch, "_used")]] <- sapply(df_channels$eeg_locations, find_channel, ch = ch)
-  df_channels[[paste0(ch, "_selected")]] <- sapply(df_channels$hep_channels_selected, find_channel, ch = ch)
-  # df_channels[[paste0(ch, "_significant")]] <- sapply(df_channels$significant_channels, find_channel, ch = ch)
-}
-df_channels$counter <- 1
-summary <- df_channels %>%
-  select(-hep_channels_selected) %>%
-  group_by(hep_window_type) %>%
-  summarise(across(ends_with(c("_used", "_selected", "_significant", "counter")), \(x) sum(x, na.rm = T)))
-for (ch in ch_names[[layout]]) {
-  # summary[[paste0(ch, "_freq")]] <- summary[[paste0(ch, "_selected")]] / summary$counter
-  summary[[paste0(ch, "_freq")]] <- summary[[paste0(ch, "_selected")]] / summary[[paste0(ch, "_used")]]
-}
-summary_freq <- summary %>%
-  select(c(hep_window_type, ends_with("_freq"))) %>%
-  pivot_longer(
-    cols = !hep_window_type,
-    names_to = c("electrode", "dummy"),
-    names_sep = "_",
-    values_to = "count"
-  ) %>%
-  electrode_locations(montage = montage)
 
-lim = 1.1 * max(summary_freq$count)
-p_window_type <- ggplot(summary_freq,
-                        aes(x = x,
-                            y = y,
-                            fill = count,
-                            z = count,
-                            label = electrode)) +
-  geom_topo(grid_res = 200,
-            chan_size = rel(0.25), 
-            head_size = rel(0.5),
-            color = 'black',
-            linetype = 'solid',
-            linewidth = rel(0.1)) + 
-  scale_fill_distiller(palette = "Reds",
-                       direction = 1,
-                       limits=c(0, lim)) + 
-  facet_wrap(. ~ hep_window_type, nrow = 1) +
-  theme_void() + 
-  coord_equal()
+count_occurrences <- function(df, col, group_col = 'PMID', add.locs = T) {
+  layout <- unique(df$meeg_layout)
+  if (length(layout) > 1) {
+    layout_desc <- paste(layout, collapse = ", ")
+    warning(paste("count_occurrences: expected layout to be same",
+                  "across the data frame, got:", layout_desc))
+  }
+  
+  df_distinct <- df %>% distinct(meeg_layout, meeg_locations,
+                                 !!sym(group_col), !!sym(col))
+  freqs <- sapply(ch_names[[layout]], get_channel_freq,
+                  df = df_distinct, col = col)
+  
+  df_freq <- data.frame(meeg_layout = layout,
+                        electrode = ch_names[[layout]],
+                        freq = freqs)
+  
+  if (add.locs) {
+    montage <- if (layout == "biosemi128") "biosemi128" else NULL
+    df_freq <- df_freq %>%
+      electrode_locations(montage = montage)
+  }
+  
+  df_freq
+}
 
-p_window_type
+
+plot_eeg_locations_separate <- function(df, lim = 1.0) {
+  p <- ggplot(df,
+              aes(x = x,
+                  y = y,
+                  fill = freq,
+                  z = freq,
+                  label = electrode)) +
+    geom_topo(grid_res = 200,
+              chan_size = rel(0.25), 
+              head_size = rel(0.5),
+              color = 'black',
+              linetype = 'solid',
+              linewidth = rel(0.1)) + 
+    scale_fill_distiller(palette = "Reds",
+                         direction = 1,
+                         limits = c(0, lim)) + 
+    facet_wrap(. ~ meeg_layout, nrow = 1) +
+    theme_void() + 
+    coord_equal()
+  
+  p
+}
+
+
+plot_eeg_locations_combined <- function(df) {
+  
+}
+
+
+plot_eeg_locations <- function(df, 
+                               col,
+                               group_col = 'PMID',
+                               layouts = c("standard19", "standard61", "biosemi128"), 
+                               combined = T) {
+  # Get the number of occurrences for each channel in each layout
+  df_sel <- df[df$meeg_layout %in% layouts,]
+  counts <- by(df_sel, df_sel$meeg_layout, count_occurrences,
+               col = col, group_col = group_col)
+  df_counts <- bind_rows(lapply(counts, as.data.frame))
+  
+  # Plot the results for each layout separately or combined
+  if (combined) {
+    p <- plot_eeg_locations_combined(df_counts)
+  } else {
+    p <- plot_eeg_locations_separate(df_counts)
+  }
+  
+  p
+}

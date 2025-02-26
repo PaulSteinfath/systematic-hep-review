@@ -14,6 +14,7 @@ dir.create(results_path, showWarnings = F)
 
 # Imports
 source(file.path(func_path, 'figures.R'))
+source(file.path(func_path, 'layouts.R'))
 source(file.path(func_path, 'preprocess.R'))
 source(file.path(func_path, 'prisma.R'))
 source(file.path(func_path, 'validate.R'))

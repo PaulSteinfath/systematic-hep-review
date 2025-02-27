@@ -17,6 +17,7 @@ source(file.path(func_path, "plots", "rr_intervals_plot.R"))
 source(file.path(func_path, "plots", "other_strategy_plot.R"))
 source(file.path(func_path, "plots", "epoch_continuous_ica.R"))
 source(file.path(func_path, "plots", "minimal_artifact_windows_plot.R"))
+source(file.path(func_path, "plots", "create_control_variables_plot.R"))
 # source(file.path(func_path, "plots", "plotting_helpers.R"))
 
 # Create filter cutoff plots
@@ -363,5 +364,21 @@ make_figures <- function(df, save_path) {
     device = "svg",
     bg = "white"
   )
-
+  
+  # Generate and save the control variables plot
+  control_vars_plot <- create_control_variables_plot(df)
+  
+  ggsave(
+    filename = file.path(save_path, "control_variables_plot.svg"),
+    plot = control_vars_plot,
+    width = 7,
+    height = 12,
+    units = "in",
+    dpi = 300,
+    device = "svg",
+    bg = "white"
+  )
+  show(control_vars_plot)
 }
+
+

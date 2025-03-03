@@ -6,7 +6,7 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   
   # Filter for EEG modality if specified
   if (!is.null(modality_filter)) {
-    df <- df %>% filter(Modality == modality_filter)
+    df <- df %>% filter(modality == modality_filter)
   }
   
   # Get unique (group_col, col) combinations to avoid overestimating the weight

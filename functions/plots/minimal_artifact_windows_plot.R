@@ -1,52 +1,42 @@
-minimal_artifact_windows_plot <- function(df) {
-  t_peak_offset <- 300
+  minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
   
   df_minimal <- df %>%
     filter(str_detect(tolower(other_cfa_removal_strategy), "limit analysis to time of minimal artifact")) %>%
     select(PMID, hep_start, hep_end, hep_relative_to) %>%
-    distinct(PMID, hep_start, hep_end, hep_relative_to) %>%
+    distinct() %>%
     mutate(
-      hep_start = case_when(
-        tolower(hep_relative_to) == "t-peak" ~ hep_start + t_peak_offset,
-        TRUE ~ hep_start
-      ),
-      hep_end = case_when(
-        tolower(hep_relative_to) == "t-peak" ~ hep_end + t_peak_offset,
-        TRUE ~ hep_end
-      ),
-      reference = case_when(
-        tolower(hep_relative_to) == "t-peak" ~ "T-peak",
-        TRUE ~ "R-peak"
-      )
+      # shift T-peak
+      hep_start = as.numeric(hep_start) + if_else(tolower(hep_relative_to) == "t-peak", t_peak_offset, 0),
+      hep_end = as.numeric(hep_end) + if_else(tolower(hep_relative_to) == "t-peak", t_peak_offset, 0),
+      reference = if_else(tolower(hep_relative_to) == "t-peak", "T-peak", "R-peak"),
+      reference = factor(reference, levels = c("T-peak", "R-peak"))
     ) %>%
-    mutate(reference = factor(reference, levels = c("T-peak", "R-peak"))) %>%
-    arrange(reference, hep_start)
-  
-  df_minimal <- df_minimal %>%
+    arrange(reference, hep_start) %>%
+
     group_by(reference) %>%
     mutate(rank_in_group = row_number()) %>%
     ungroup()
-  
+
+  # offset between lines
   group_offsets <- df_minimal %>%
     group_by(reference) %>%
     summarise(group_count = n(), .groups = "drop") %>%
     arrange(reference) %>%
     mutate(offset = lag(cumsum(group_count), default = 0) + (row_number()-1)*0.5)
-  
+
   df_minimal <- df_minimal %>%
     left_join(group_offsets, by = "reference") %>%
-    mutate(new_rank = rank_in_group + offset) %>%
-    mutate(rank_scaled = 0.1 + (new_rank / max(new_rank)) * 1.5)
+    mutate(rank_scaled = 0.1 + ((rank_in_group + offset) / max(rank_in_group + offset)) * 1.5)
   
+  # Get plot limits and create ECG data
   x_min <- min(df_minimal$hep_start, -150)
   x_max <- max(df_minimal$hep_end)
   
-  break_points <- seq(floor(x_min/100)*100, ceiling(x_max/100)*100, by = 250)
-  
-  ecg_data <- data.frame(time = seq(x_min, x_max, length.out = 500))
-  ecg_data$voltage <- create_ecg_wave(ecg_data$time)
-  ecg_data$voltage <- ecg_data$voltage - mean(ecg_data$voltage)
-  
+  ecg_data <- data.frame(
+    time = seq(x_min, x_max, length.out = 500),
+    voltage = scale(create_ecg_wave(seq(x_min, x_max, length.out = 500)), scale = FALSE)
+  )
+
   ggplot() +
     geom_line(data = ecg_data, aes(x = time, y = voltage),
               color = "#696969", size = 1, alpha = 0.3) +

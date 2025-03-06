@@ -28,6 +28,7 @@ summarize_cfa_criteria <- function(df) {
                  discrete = TRUE,
                  x.label = "CFA rejection criteria")
   
+  # small inset plot
   algo_data <- df %>%
     separate_rows(cfa_rej_criteria, sep = ",") %>%
     mutate(cfa_rej_criteria = tolower(str_trim(cfa_rej_criteria, side = "both"))) %>%
@@ -51,7 +52,7 @@ summarize_cfa_criteria <- function(df) {
   
   combined_plot <- ggdraw() +
       draw_plot(main_plot) +
-      draw_plot(algo_plot, x = 0.65, y = 0.65, width = 0.3, height = 0.3)
+      draw_plot(algo_plot, x = 0.65, y = 0.45, width = 0.3, height = 0.5)
   
   return(combined_plot)
 }

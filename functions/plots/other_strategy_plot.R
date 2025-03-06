@@ -1,6 +1,5 @@
 other_strategy_plot <- function(df) {
   df_other <- df %>%
-    select(PMID, other_cfa_removal_strategy) %>%
     distinct(PMID, other_cfa_removal_strategy, .keep_all = TRUE) %>%
     filter(
       other_cfa_removal_strategy != "",

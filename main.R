@@ -1,4 +1,10 @@
 library(zeallot)
+library(cowplot)
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(gridGraphics)
+library(ggtext)
 
 # Paths
 data_path <- file.path(getwd(), 'data')

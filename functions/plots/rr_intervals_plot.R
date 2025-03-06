@@ -1,6 +1,6 @@
 rr_intervals_plot <- function(df) {
+  
   rr_df <- df %>%
-    select(PMID, other_cfa_removal_strategy) %>%
     distinct(PMID, other_cfa_removal_strategy, .keep_all = TRUE) %>%
     mutate(rr_match = str_match(tolower(other_cfa_removal_strategy), "rr at least\\s*(\\d+)\\s*ms")) %>%
     filter(!is.na(rr_match[,2])) %>%
@@ -10,7 +10,7 @@ rr_intervals_plot <- function(df) {
     mutate(rank_scaled = 0.1 + (rank / max(rank)) * 1.5)
   
   x_min <- -150
-  x_max <- max(rr_df$rr_value, na.rm = TRUE) 
+  x_max <- max(rr_df$rr_value) 
   n_rows <- nrow(rr_df)
   
   ecg_data <- data.frame(time = seq(x_min, x_max, length.out = 500))

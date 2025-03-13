@@ -1,16 +1,31 @@
-  minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
-  
+minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
+
   df_minimal <- df %>%
     filter(str_detect(tolower(other_cfa_removal_strategy), "limit analysis to time of minimal artifact")) %>%
     select(PMID, hep_start, hep_end, hep_relative_to) %>%
-    distinct() %>%
+    distinct()
+  
+  if (nrow(df_minimal) == 0) {
+    return(create_empty_plot("No minimal artifact window data"))
+  }
+    
+  df_minimal <- df_minimal %>%
+    mutate(
+      # Convert to numeric and check for valid values
+      hep_start = as.numeric(hep_start),
+      hep_end = as.numeric(hep_end)
+    ) %>%
+    filter(!is.na(hep_start), !is.na(hep_end),
+           is.finite(hep_start), is.finite(hep_end)) %>%
     mutate(
       # shift T-peak
-      hep_start = as.numeric(hep_start) + if_else(tolower(hep_relative_to) == "t-peak", t_peak_offset, 0),
-      hep_end = as.numeric(hep_end) + if_else(tolower(hep_relative_to) == "t-peak", t_peak_offset, 0),
+      hep_start = hep_start + if_else(tolower(hep_relative_to) == "t-peak", t_peak_offset, 0),
+      hep_end = hep_end + if_else(tolower(hep_relative_to) == "t-peak", t_peak_offset, 0),
       reference = if_else(tolower(hep_relative_to) == "t-peak", "T-peak", "R-peak"),
       reference = factor(reference, levels = c("T-peak", "R-peak"))
-    ) %>%
+    )
+  
+  df_minimal <- df_minimal %>%
     arrange(reference, hep_start) %>%
 
     group_by(reference) %>%
@@ -48,7 +63,7 @@
       linewidth = 0.7
     ) +
     geom_vline(xintercept = 0, linetype = "dotted", color = "gray40") +
-    geom_vline(xintercept = 300, linetype = "dashed", color = "#E69F00") +
+    geom_vline(xintercept = t_peak_offset, linetype = "dashed", color = "#E69F00") +
     labs(
       x = "Time (ms)",
       y = "",

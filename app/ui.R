@@ -15,6 +15,14 @@ ui <- page_navbar(
     plotOutput("acquisitionPrepPlot", height = "800px")
   ),
   nav_panel(
+    "CFA Removal",
+    plotOutput("cfaRemovalPlot", height = "800px")
+  ),
+  nav_panel(
+    "Control Variables",
+    plotOutput("controlVariablesPlot", height = "800px")
+  ),
+  nav_panel(
     "Overview",
     plotOutput("yearPlot")
   ),

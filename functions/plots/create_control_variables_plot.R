@@ -58,7 +58,7 @@ create_control_variables_plot <- function(df) {
     "Pupil diameter" = list(category = "Physiological and Environmental Controls", synonyms = c()),
     
     # Task and Experimental Controls
-    "Attention" = list(category = "Task and Experimental Controls", synonyms = c()),
+    "Attention" = list(category = "Task and Experimental Controls", synonyms = c("attention to the task")),
     "Alpha Power" = list(category = "Task and Experimental Controls", synonyms = c()),
     "Total Intracranial Volume" = list(category = "Task and Experimental Controls", synonyms = c()),
     "Arousal" = list(category = "Task and Experimental Controls", synonyms = c()),
@@ -127,7 +127,10 @@ create_control_variables_plot <- function(df) {
   ggplot(control_counts, aes(x = Count, y = Control_Variable, fill = Category)) +
     geom_bar(stat = "identity") +
     scale_fill_manual(values = category_colors) +
-    scale_x_continuous(labels = function(x) paste0(round(x, 1), "%")) +  # Add % to axis labels
+    scale_x_continuous(
+      labels = function(x) paste0(round(x, 1), "%"),
+      expand = c(0, 0)  
+    ) +
     labs(x = "Percentage of Pipelines", y = "Control Variables", fill = "Category") +
     theme_classic() +
     theme(

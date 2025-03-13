@@ -1,6 +1,6 @@
 other_strategy_plot <- function(df) {
   df_other <- df %>%
-    distinct(PMID, other_cfa_removal_strategy, .keep_all = TRUE) %>%
+    distinct(PMID, other_cfa_removal_strategy) %>%
     filter(
       other_cfa_removal_strategy != "",
       other_cfa_removal_strategy != "limit analysis to time of minimal artifact",

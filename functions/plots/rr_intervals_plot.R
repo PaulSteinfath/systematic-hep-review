@@ -1,21 +1,34 @@
 rr_intervals_plot <- function(df) {
   
   rr_df <- df %>%
-    distinct(PMID, other_cfa_removal_strategy, .keep_all = TRUE) %>%
+    distinct(PMID, other_cfa_removal_strategy) %>%
     mutate(rr_match = str_match(tolower(other_cfa_removal_strategy), "rr at least\\s*(\\d+)\\s*ms")) %>%
     filter(!is.na(rr_match[,2])) %>%
     mutate(rr_value = as.numeric(rr_match[,2])) %>%
+    filter(!is.na(rr_value), is.finite(rr_value))
+    
+  # Early return if no data
+  if (nrow(rr_df) == 0) {
+    return(create_empty_plot("No RR interval data"))
+  }
+
+  # Process data only if we have valid entries
+  rr_df <- rr_df %>%
     arrange(rr_value) %>%
-    mutate(rank = row_number()) %>%
-    mutate(rank_scaled = 0.1 + (rank / max(rank)) * 1.5)
+    mutate(
+      rank = seq_len(n()),
+      rank_scaled = 0.1 + (rank / n()) * 1.5
+    )
   
+  # Define plot limits 
   x_min <- -150
-  x_max <- max(rr_df$rr_value) 
-  n_rows <- nrow(rr_df)
+  x_max <- 750
   
-  ecg_data <- data.frame(time = seq(x_min, x_max, length.out = 500))
-  ecg_data$voltage <- create_ecg_wave(ecg_data$time)
-  ecg_data$voltage <- ecg_data$voltage - mean(ecg_data$voltage)
+  # Create ECG data 
+  ecg_data <- data.frame(
+    time = seq(x_min, x_max, length.out = 500),
+    voltage = scale(create_ecg_wave(seq(x_min, x_max, length.out = 500)), scale = FALSE)
+  )
   
   ggplot() +
     geom_line(data = ecg_data, aes(x = time, y = voltage),
@@ -28,7 +41,7 @@ rr_intervals_plot <- function(df) {
     geom_vline(xintercept = 0, linetype = "dotted", color = "gray40") +
     labs(x = "Time (ms)",
          y = "",
-         title = paste("n =", n_rows),
+         title = paste("n =", nrow(rr_df)),
          caption = "Minimum RR Intervals") +
     scale_x_continuous(breaks = unique(sort(c(seq(0, x_max, by = 250), x_max)))) +
     theme_classic(base_family = "sans") +

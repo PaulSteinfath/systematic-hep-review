@@ -12,6 +12,7 @@ source(file.path(func_path, "plots", "epoch_continuous_ica.R"))
 source(file.path(func_path, "plots", "minimal_artifact_windows_plot.R"))
 source(file.path(func_path, "plots", "create_control_variables_plot.R"))
 source(file.path(func_path, "plots", "rejected_cardiac_ics.R"))
+source(file.path(func_path, "plots", "create_empty_plot.R"))
 
 # Create filter cutoff plots
 create_filter_plots <- function(df) {
@@ -140,17 +141,36 @@ eeg_acq_prep <- function(df) {
 # CFA Removal
 cfa_removal <- function(df) {
 
-  # Use the imported plotting functions
-  plot1 <- rejected_cardiac_ics(df)
-  plot2 <- summarize_cfa_criteria(df)
-  plot3 <- rr_intervals_plot(df)
-  plot4 <- other_strategy_plot(df)
-  plot5 <- epoch_continuous_ica(df)
-  plot6 <- minimal_artifact_windows_plot(df, t_peak_offset = 300)
+  ica_usage_plot <- epoch_continuous_ica(df)
+  cfa_criteria_plot <- summarize_cfa_criteria(df)
+  cardiac_ics_plot <- rejected_cardiac_ics(df)
+  other_strategies_plot <- other_strategy_plot(df)
+  rr_plot <- rr_intervals_plot(df)
+  minimal_artifact_plot <- minimal_artifact_windows_plot(df, t_peak_offset = 300)
+      
+  # Combine subplots into rows
+  top_row <- plot_grid(
+    ica_usage_plot,
+    cfa_criteria_plot,
+    ncol = 2, labels = c("A", "B"),
+    align = "v", axis = "b",
+    rel_widths = c(0.25, 0.75)
+  )
 
-  top_row <- plot_grid(plot5, plot2, ncol = 2, labels = c("A", "B"), align = "v", axis = "b", rel_widths = c(0.25, 0.75))
-  middle_row <- plot_grid(plot1, plot4, ncol = 2, labels = c("C", "D"), align = "hv", rel_widths = c(0.4, 0.6))
-  bottom_row <- plot_grid(plot3, plot6, ncol = 2, labels = c("E", "F"), align = "hv")
+  middle_row <- plot_grid(
+    cardiac_ics_plot,
+    other_strategies_plot,
+    ncol = 2, labels = c("C", "D"),
+    align = "hv", rel_widths = c(0.4, 0.6)
+  )
+
+  bottom_row <- plot_grid(
+    rr_plot,
+    minimal_artifact_plot,
+    ncol = 2, labels = c("E", "F"),
+    align = "hv"
+  )
+
   plot_grid(top_row, middle_row, bottom_row, ncol = 1)
 }
 

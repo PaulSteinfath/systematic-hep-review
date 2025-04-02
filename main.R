@@ -24,6 +24,7 @@ source(file.path(func_path, 'figures.R'))
 source(file.path(func_path, 'preprocess.R'))
 source(file.path(func_path, 'prisma.R'))
 source(file.path(func_path, 'validate.R'))
+source(file.path(func_path, 'utils.R'))
 
 # Main analysis
 # TODO: download the data from OSF / wherever we put it?
@@ -33,3 +34,7 @@ c(df_screening, df_included) %<-% preprocess(df_full)
 p_prisma <- generate_prisma(df_screening, prisma_template_path,
                             derivatives_path, results_path)
 make_figures(df_included, results_path)
+
+# Save MD5 sums for tracking changes in the generated figures
+df_sums <- get_check_sums(results_path)
+write.csv(df_sums, file = file.path("md5sums.csv"), row.names = F)

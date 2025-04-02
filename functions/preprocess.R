@@ -69,9 +69,6 @@ load_data <- function(pubmed.path, manual.path) {
   df_pubmed <- read.csv(pubmed.path, skip = 1)
   df_manual <- read.csv(manual.path, skip = 1)
   
-  df_manual <- df_manual %>%
-    filter(!is.na(PMID) & PMID != "")
-  
   # Combine the dataframe but keep the information about the source
   df_pubmed$source <- "pubmed"
   df_manual$source <- "manual"

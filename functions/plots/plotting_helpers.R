@@ -14,6 +14,10 @@ plot_fill_default_single <- "#696969"
 
 plot_fill_default <- c("#696969","#A9A9A9","#8a8888")
 
+leads_palette <- c('Lead I' = '#fc8d62', 
+                   'Lead II' = '#66c2a5', 
+                   'Lead III' = '#8da0cb')
+
 theme_set(plot_theme_default)
 
 column_mapping_readable_default <- c(

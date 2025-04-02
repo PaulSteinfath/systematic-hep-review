@@ -59,7 +59,7 @@ column_mapping <- c(
 )
 
 columns_to_drop <- c("Other.notes..unclassified.", "Motivation", "DOI", "Link", "Analyst", "Include", "Comment", "Citation", "ECG.Description", "Multiple.Comparisons")
-convert_to_numeric <- c("Year", "sample_size", "channels", "length_min", "ecg_num_electrodes", "high_pass", "low_pass", "groups", "conditions", "hep_start", "hep_end", 
+convert_to_numeric <- c("Year", "sample_size", "channels", "length_min", "high_pass", "low_pass", "groups", "conditions", "hep_start", "hep_end", 
                         "baseline_start_ms", "baseline_end_ms", "permutations", "significant_start_ms", "significant_end_ms")
 convert_to_factors <- c("rsHEP", "Modality", "ICA", "ica_on_epochs", "hep_relative_to", "averaging_channels", "averaging_time", "clustering", "significant_test", 
                         "significant_relative_to")
@@ -68,9 +68,6 @@ load_data <- function(pubmed.path, manual.path) {
   # Load the data
   df_pubmed <- read.csv(pubmed.path, skip = 1)
   df_manual <- read.csv(manual.path, skip = 1)
-  
-  df_manual <- df_manual %>%
-    filter(!is.na(PMID) & PMID != "")
   
   # Combine the dataframe but keep the information about the source
   df_pubmed$source <- "pubmed"
@@ -89,6 +86,19 @@ preprocess_screening <- function(df_screening) {
                             "Intracranial Recordings" = "Intracranial recordings",
                             "Conference Abstract" = "Conference abstract"
     ))
+}
+
+
+preprocess_ecg <- function(df) {
+  df %>%
+    mutate(ecg_lead = recode(ecg_lead,
+                             "none" = "None",
+                             "Single-channel" = "Single\nchannel",
+                             "Multiple leads" = "Multiple\nleads",
+                             "Multiple leads (including lead I)" = "Multiple\nleads",
+                             "Multiple leads (including lead II)" = "Multiple\nleads",
+                             "Multiple leads (including leads I, II, III)" = "Multiple\nleads",
+                             "unknown" = "N/M"))
 }
 
 # Clean cardiac IC rejection data
@@ -187,6 +197,8 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   if (adjust_data_types){
     df_included <- adjust_data_type(df_included, convert_to_numeric, convert_to_factors)
   }
+  
+  df_included <- preprocess_ecg(df_included)
   
   # transform included IC data
   df_included$rejected_cardiac_ics <- sapply(df_included$rejected_cardiac_ics, clean_cardiac_ics)

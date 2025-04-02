@@ -28,7 +28,19 @@ plot_ecg_locations <- function(
     return(no_valid_data_stub(message = "No usages of leads I/II/III in the selection"))
   }
   
-  # Make sure that two locations per lead are specified
+  # Split rows by ";" in case several ECG locations were used for different
+  # subjects in the study
+  locs <- lapply(ecg$ecg_locations, \(x) unlist(strsplit(x, "; ")))
+  
+  # Duplicate the rows for which there are multiple locations
+  reps <- sapply(locs, \(x) length(x))
+  idx <- rep(1:nrow(ecg), reps)
+  ecg <- ecg[idx,]
+  
+  # Plug in the split locations
+  ecg$ecg_locations <- unlist(locs)
+  
+  # Make sure that two locations per row are specified
   ecg$num_locations <- sapply(ecg$ecg_locations, \(x) length(unlist(strsplit(x, ", "))))
   if (any(ecg$num_locations > 2)) {
     bad_pmids <- ecg$PMID[ecg$num_locations > 2]

@@ -37,8 +37,10 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   # Plot the histogram
   if (discrete) {
     
-    #print unique values
-    message(paste(col, paste(unique(df_distinct[[col]]), collapse = ", "), sep = ": "))
+    # Print unique values
+    unique_values <- paste(unique(df_distinct[[col]]), collapse = ", ")
+    unique_values <- gsub("\n", " ", unique_values)
+    message(paste(col, unique_values, sep = ": "))
 
     # Get counts and calculate proportions
     counts_df <- df_distinct %>%

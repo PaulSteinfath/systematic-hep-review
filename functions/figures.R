@@ -5,7 +5,34 @@ source(file.path(func_path, "plots", "hist_panel.R"))
 source(file.path(func_path, "plots", "create_ica_rej.R"))
 source(file.path(func_path, "plots", "create_simple_ica_plot.R"))
 source(file.path(func_path, "plots", "plot_ecg_locations.R"))
+source(file.path(func_path, "plots", "plotting_helpers.R"))
+source(file.path(func_path, "plots", "plot_missing.R"))
+source(file.path(func_path, "plots", "plot_multiple_choices.R"))
+source(file.path(func_path, "plots", "plot_entropy.R"))
 
+create_combined_plot_for_columns <- function(df){
+  
+  analysis_steps <- colnames(df)[6:45] 
+  
+  p1 <- plot_entropy(df,method_columns = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F,  x_lab = "", x_ticks = FALSE)
+  
+  p2 <- plot_multiple_choices(df,variables = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F, x_lab = "", x_ticks = FALSE)
+  
+  p3 <- plot_missing(df, columns = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F, x_ticks = TRUE)
+  
+  fig_ABC <- plot_grid(
+    p1, p2, p3, 
+    ncol = 1, 
+    align = "v",
+    axis = "l",
+    labels = c("A", "B", "C"), 
+    vjust = 1,
+    rel_heights = c(1, 1, 1.2)
+  )
+  
+  return(fig_ABC)
+  
+}
 
 # Create filter cutoff plots
 create_filter_plots <- function(df) {
@@ -195,6 +222,20 @@ make_figures <- function(df, save_path) {
     bg = "white"
   )
   show(eeg_acq_prep_plot)
+  
+  combined_plot_for_columns <- create_combined_plot_for_columns(df)
+  
+  ggsave(
+    filename = file.path(save_path, "combined_plot_for_columns.svg"),
+    plot = combined_plot_for_columns,
+    width = 10,
+    height = 11,
+    units = "in",
+    dpi = 300,
+    device = "svg",
+    bg = "white"
+  )
+  show(combined_plot_for_columns)
   
   ecg_summary_plot <- ecg_summary(df)
   ggsave(

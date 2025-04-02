@@ -37,7 +37,7 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   # Plot the histogram
   if (discrete) {
     
-    # Print unique values
+    # Print unique values while replacing new lines with spaces
     unique_values <- paste(unique(df_distinct[[col]]), collapse = ", ")
     unique_values <- gsub("\n", " ", unique_values)
     message(paste(col, unique_values, sep = ": "))
@@ -78,7 +78,7 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   }
   
   # Get label type once for both title and y-axis
-  n_total <- nrow(distinct(df, !!sym(group_col)))
+  n_total <- nrow(df_distinct)
   label_type <- if (multiple_rows_per_group) "Pipelines" else "Studies"
   
   p <- p +

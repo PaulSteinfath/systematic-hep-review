@@ -99,9 +99,9 @@ plot_ecg_locations <- function(
     geom_line(aes(group = setup, color = ecg_lead, linewidth = count)) +
     geom_segment(data = pos_actual[pos_actual$label == "LL",], 
                  mapping = aes(x = x, y = y, xend = x, yend = 0),
-                 linewidth = 1, color = "#696969",
+                 linewidth = 1, color = plot_fill_default_single,
                  arrow = arrow(length = unit(0.25, "cm"))) + 
-    geom_point(data = pos_actual, size = 8, color="#696969") +
+    geom_point(data = pos_actual, size = 8, color = plot_fill_default_single) +
     geom_text(data = pos_actual, aes(label = label), color="white", size = 3) +
     scale_x_continuous(limits = c(0, 1)) +
     scale_y_continuous(limits = c(0, 1)) +

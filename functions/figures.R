@@ -1,11 +1,11 @@
 # Import plotting functions
+source(file.path(func_path, "plots", "plotting_helpers.R"))
 source(file.path(func_path, "plots", "utils.R"))
 source(file.path(func_path, "plots", "create_combined_plot.R"))
 source(file.path(func_path, "plots", "hist_panel.R"))
 source(file.path(func_path, "plots", "create_ica_rej.R"))
 source(file.path(func_path, "plots", "create_simple_ica_plot.R"))
 source(file.path(func_path, "plots", "plot_ecg_locations.R"))
-source(file.path(func_path, "plots", "plotting_helpers.R"))
 source(file.path(func_path, "plots", "plot_missing.R"))
 source(file.path(func_path, "plots", "plot_multiple_choices.R"))
 source(file.path(func_path, "plots", "plot_entropy.R"))
@@ -159,11 +159,6 @@ eeg_acq_prep <- function(df) {
 }
 
 ecg_summary <- function(df) {
-  # TODO: move to config / helpers
-  leads_palette <- c('Lead I' = '#e41a1c', 
-                     'Lead II' = '#4daf4a', 
-                     'Lead III' = '#377eb8')
-  
   # Map "unknown" to 9 so that it isn't lost during conversion to numeric and
   # is positioned nicely
   df <- df %>%

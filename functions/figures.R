@@ -172,7 +172,7 @@ ecg_summary <- function(df) {
   p_ecg_leads <- hist_panel(df, "ecg_lead", fill_as_aesthetic = T,
                             discrete = T, x.label = "ECG lead") +
     scale_fill_manual(values = leads_palette,
-                      na.value = '#696969',
+                      na.value = plot_fill_default_single,
                       guide = "none") 
   p_ecg_locations <- plot_ecg_locations(df, leads_palette)
   

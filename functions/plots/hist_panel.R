@@ -68,8 +68,8 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   }
   
   # Get label type once for both title and y-axis
-  n_total <- nrow(distinct(df, !!sym(group_col)))
-  label_type <- if(nrow(df) == n_total) "Studies" else "Pipelines"
+  n_total <- nrow(df_distinct)
+  label_type <- if(nrow(distinct(df, !!sym(group_col))) == n_total) "Studies" else "Pipelines"
   
   p <- p +
     labs(title = paste("n =", n_total, tolower(label_type))) +

@@ -7,9 +7,9 @@ aspect <- body_image_info$height / body_image_info$width
 pos <- data.frame(
   x = c(0.335, 0.62, 0.075, 0.9, 0.15, 0.65, 0.65, 0.625),
   y = c(0.875, 0.8675, 0.125, 0.175, 0.8, 0.075, 0.25, 0.55), 
-  label = c('RC', 'LC', 'RW', 'LW', 'RS', 'LL', 'LAb', 'C'),
+  label = c('RC', 'LC', 'RW', 'LW', 'RS', 'LL', 'LAb', 'LCh'),
   name = c('right clavicle', 'left clavicle', 'right wrist', 'left wrist',
-           'right shoulder', 'left leg', 'left abdomen', 'chest')
+           'right shoulder', 'left leg', 'left abdomen', 'left chest')
 )
 
 
@@ -41,11 +41,9 @@ plot_ecg_locations <- function(
   ecg$start <- sapply(ecg$ecg_locations, \(x) str_to_lower(str_split_i(x, ", ", 1)))
   ecg$end <- sapply(ecg$ecg_locations, \(x) str_to_lower(str_split_i(x, ", ", 2)))
   ecg <- ecg %>%
-    mutate(start = case_when(start == "left chest" ~ "chest",
-                             start == "left ankle" ~ "left leg",
+    mutate(start = case_when(start == "left ankle" ~ "left leg",
                              .default = start),
-           end = case_when(end == "left chest" ~ "chest",
-                           end == "left ankle" ~ "left leg",
+           end = case_when(end == "left ankle" ~ "left leg",
                            .default = end))
   
   # NOTE: use sorting to match the same locations listed in different order

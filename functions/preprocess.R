@@ -186,8 +186,7 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
     pull(PMID)
   
   df_included <- df_full %>%
-    filter(PMID %in% included_pmids) %>%
-    preprocess_ecg()
+    filter(PMID %in% included_pmids)
   
   if (drop_cols){
     df_included <- df_included %>%
@@ -201,6 +200,8 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   if (adjust_data_types){
     df_included <- adjust_data_type(df_included, convert_to_numeric, convert_to_factors)
   }
+  
+  df_included <- preprocess_ecg(df_included)
   
   # transform included IC data
   df_included$rejected_cardiac_ics <- sapply(df_included$rejected_cardiac_ics, clean_cardiac_ics)

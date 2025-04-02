@@ -2,35 +2,29 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
                        drop.na = T, force.numeric = F, allowed = NULL,
                        x.label = NULL, use.log10 = F, use.log2 = F, 
                        modality_filter = NULL, binwidth = NULL, tilt_labels = F,
-                       use_proportion = TRUE, y_limits = NULL, custom_labels = NULL,
-                       grouping_var = NULL, plot_fill = plot_fill_default) {
+                       use_proportion = TRUE, y_limits = NULL, custom_labels = NULL) {  # Added custom_labels
   
   # Filter for EEG modality if specified
   if (!is.null(modality_filter)) {
     df <- df %>% filter(Modality == modality_filter)
   }
   
-  # Use distinct rows based on group_col and col; if a grouping variable is provided include it.
-  if(!is.null(grouping_var)){
-    df_distinct <- distinct(df, !!sym(group_col), !!sym(col), !!sym(grouping_var))
-  } else {
-    df_distinct <- distinct(df, !!sym(group_col), !!sym(col))
-  }
+  # Get unique (group_col, col) combinations to avoid overestimating the weight
+  # of papers with multiple rows
+  df_distinct <- distinct(df, !!sym(group_col), !!sym(col))
   
-  # Warn if there are multiple rows per paper for the specified column
+  # Check if there are multiple rows per paper for the specified column
   if(nrow(df) != nrow(df_distinct)) {
     warning(paste("Warning: Multiple rows detected per", group_col, "for column", col))
   }
   
   if (force.numeric) {
-    # Convert to numeric (this may introduce NAs which are dropped below)
+    # Place before drop_na so that all failed conversions (NAs) are removed
     df_distinct[[col]] <- as.numeric(df_distinct[[col]]) 
   }
-  
   if (drop.na) {
     df_distinct <- drop_na(df_distinct, !!sym(col))
   }
-  
   if (!is.null(allowed)) {
     df_distinct[[col]] <- tolower(df_distinct[[col]])
     names(allowed) <- lapply(names(allowed), tolower)
@@ -38,71 +32,44 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
     df_distinct[[col]] <- allowed[df_distinct[[col]]]
   }
   
-  # Plotting
+  # Plot the histogram
   if (discrete) {
     
-    # Print unique values for col (and grouping_var if provided)
+    #print unique values
     message(paste(col, paste(unique(df_distinct[[col]]), collapse = ", "), sep = ": "))
-    if (!is.null(grouping_var)) {
-      message(paste(grouping_var, paste(unique(df_distinct[[grouping_var]]), collapse = ", "), sep = ": "))
-    }
+
+    # Get counts and calculate proportions
+    counts_df <- df_distinct %>%
+      count(!!sym(col)) %>%
+      arrange(desc(n)) %>%  # Sort by frequency
+      mutate(prop = n / sum(n))  # Calculate proportions
     
-    # Compute counts – if grouping_var is provided, count by both variables
-    if (!is.null(grouping_var)) {
-      counts_df <- df_distinct %>%
-        count(!!sym(col), !!sym(grouping_var)) %>%
-        arrange(desc(n)) %>%
-        group_by(!!sym(col)) %>%
-        mutate(prop = n / sum(n)) %>%
-        ungroup()
-    } else {
-      counts_df <- df_distinct %>%
-        count(!!sym(col)) %>%
-        arrange(desc(n)) %>%
-        mutate(prop = n / sum(n))
-    }
-    
-    # Apply custom labels to the target variable if provided
+    # Apply custom labels if provided
     if (!is.null(custom_labels)) {
       counts_df[[col]] <- factor(counts_df[[col]], 
-                                 levels = seq_along(custom_labels) - 1,
-                                 labels = custom_labels)
+                                levels = seq_along(custom_labels) - 1,
+                                labels = custom_labels)
     }
     
-    # Create the bar plot
-    if (!is.null(grouping_var)) {
-      p <- ggplot(counts_df, aes(x = factor(!!sym(col)), 
-                                 y = if(use_proportion) prop else n, 
-                                 fill = !!sym(grouping_var))) +
-        geom_bar(stat = "identity", position = "dodge", color = 'white', linewidth = 0.5) +
-        scale_fill_manual(values = plot_fill, name = "")
-    } else {
-      p <- ggplot(counts_df, aes(x = reorder(!!sym(col), n, decreasing = TRUE), 
-                                 y = if(use_proportion) prop else n)) +
-        geom_bar(stat = "identity", fill = plot_fill[1], color = 'white', linewidth = 0.5) 
-    }
-    
+    p <- ggplot(counts_df, aes(x = reorder(!!sym(col), n, decreasing = TRUE), 
+                              y = if(use_proportion) prop else n)) +
+      geom_bar(stat = "identity", fill = '#696969', color = 'white', linewidth = 0.5) +
+      theme_classic(base_family = "sans")
+      
     if(use_proportion) {
       p <- p + scale_y_continuous(labels = scales::percent,
-                                  expand = expansion(mult = c(0, .1)),
-                                  limits = y_limits)
+                                expand = expansion(mult = c(0, .1)),
+                                limits = y_limits)  # Apply y-axis limits if provided
     }
-    
   } else {
-    # Continuous variable: Plot a histogram
-    if (!is.null(grouping_var)) {
-      p <- ggplot(df_distinct, aes(x = !!sym(col), fill = !!sym(grouping_var))) +
-        geom_histogram(color = 'white', linewidth = 0.5, binwidth = binwidth, position = "dodge") +
-        scale_fill_manual(values = plot_fill_default, name = "")
-    } else {
-      p <- ggplot(df_distinct, aes(x = !!sym(col))) +
-        geom_histogram(fill = plot_fill_default[1], color = 'white', linewidth = 0.5, binwidth = binwidth) 
-    }
+    p <- ggplot(df_distinct, aes(x = !!sym(col))) +
+      geom_histogram(fill = '#696969', color = 'white', linewidth = 0.5, binwidth = binwidth) +
+      theme_classic(base_family = "sans")
   }
   
-  # Determine total number of distinct studies (or pipelines)
-  n_total <- nrow(df_distinct)
-  label_type <- if(nrow(distinct(df, !!sym(group_col))) == n_total) "Studies" else "Pipelines"
+  # Get label type once for both title and y-axis
+  n_total <- nrow(distinct(df, !!sym(group_col)))
+  label_type <- if(nrow(df) == n_total) "Studies" else "Pipelines"
   
   p <- p +
     labs(title = paste("n =", n_total, tolower(label_type))) +
@@ -112,7 +79,8 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
                                  angle = if (tilt_labels) 45 else 0, 
                                  hjust = if (tilt_labels) 1 else 0.5),
       axis.text.y = element_text(size = 8),
-      axis.title.x = element_text(size = 9, margin = margin(t = 4)),
+      axis.title.x = element_text(size = 9, 
+                                  margin = margin(t = 4)),  # Adjust this value to move label closer
       axis.title.y = element_text(size = 9)
     )
   
@@ -120,7 +88,8 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
     p <- p + xlab(x.label)
   }
   
-  if (discrete && use_proportion) { 
+  # Update y-axis label to use the same label_type
+  if (discrete && use_proportion) {
     p <- p + ylab(paste("Proportion of", label_type))
   } else {
     p <- p + ylab(paste("Number of", label_type))
@@ -131,8 +100,8 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   }
   
   if (use.log2) {
-    p <- p + scale_x_continuous(trans = "log2")
+    p <- p + scale_x_continuous(transform = 'log2')
   }
   
-  return(p)
+   return(p)
 }

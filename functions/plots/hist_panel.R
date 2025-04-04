@@ -1,7 +1,8 @@
 hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
                        drop.na = T, force.numeric = F, allowed = NULL,
-                       x.label = NULL, use.log10 = F, use.log2 = F, 
-                       modality_filter = NULL, binwidth = NULL, tilt_labels = F,
+                       x.label = NULL, use.log10 = F, use.log2 = F,
+                       fill_as_aesthetic = F,
+                       modality_filter = NULL, binwidth = NULL, bins = NULL, tilt_labels = F,
                        use_proportion = TRUE, y_limits = NULL, custom_labels = NULL) {  # Added custom_labels
   
   # Filter for EEG modality if specified
@@ -12,9 +13,10 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   # Get unique (group_col, col) combinations to avoid overestimating the weight
   # of papers with multiple rows
   df_distinct <- distinct(df, !!sym(group_col), !!sym(col))
+  multiple_rows_per_group <- any(table(df_distinct[[group_col]]) > 1)
   
   # Check if there are multiple rows per paper for the specified column
-  if(nrow(df) != nrow(df_distinct)) {
+  if (multiple_rows_per_group) {
     warning(paste("Warning: Multiple rows detected per", group_col, "for column", col))
   }
   
@@ -35,8 +37,10 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   # Plot the histogram
   if (discrete) {
     
-    #print unique values
-    message(paste(col, paste(unique(df_distinct[[col]]), collapse = ", "), sep = ": "))
+    # Print unique values while replacing new lines with spaces
+    unique_values <- paste(unique(df_distinct[[col]]), collapse = ", ")
+    unique_values <- gsub("\n", " ", unique_values)
+    message(paste(col, unique_values, sep = ": "))
 
     # Get counts and calculate proportions
     counts_df <- df_distinct %>%
@@ -52,24 +56,30 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
     }
     
     p <- ggplot(counts_df, aes(x = reorder(!!sym(col), n, decreasing = TRUE), 
-                              y = if(use_proportion) prop else n)) +
-      geom_bar(stat = "identity", fill = '#696969', color = 'white', linewidth = 0.5) +
-      theme_classic(base_family = "sans")
-      
-    if(use_proportion) {
-      p <- p + scale_y_continuous(labels = scales::percent,
-                                expand = expansion(mult = c(0, .1)),
-                                limits = y_limits)  # Apply y-axis limits if provided
+                               y = if(use_proportion) prop else n))
+    
+    if (fill_as_aesthetic) {
+      p <- p +
+        geom_bar(aes(fill = !!sym(col)), stat = "identity", 
+                 color = 'white', linewidth = 0.5)
+    } else {
+      p <- p + 
+        geom_bar(stat = "identity", fill = '#696969', 
+                 color = 'white', linewidth = 0.5)
     }
+    
+    p <- p + theme_classic(base_family = "sans")
   } else {
     p <- ggplot(df_distinct, aes(x = !!sym(col))) +
-      geom_histogram(fill = '#696969', color = 'white', linewidth = 0.5, binwidth = binwidth) +
+      geom_histogram(aes(y = if (use_proportion) after_stat(density) else after_stat(count)),
+                     fill = '#696969', color = 'white', linewidth = 0.5, 
+                     binwidth = binwidth, bins = bins) +
       theme_classic(base_family = "sans")
   }
   
   # Get label type once for both title and y-axis
-  n_total <- nrow(distinct(df_distinct, !!sym(group_col)))
-  label_type <- if(nrow(df_distinct) == n_total) "Studies" else "Pipelines"
+  n_total <- nrow(df_distinct)
+  label_type <- if (multiple_rows_per_group) "Pipelines" else "Studies"
   
   p <- p +
     labs(title = paste("n =", n_total, tolower(label_type))) +
@@ -88,8 +98,14 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
     p <- p + xlab(x.label)
   }
   
+  if (use_proportion) {
+    p <- p + scale_y_continuous(labels = scales::percent,
+                                expand = expansion(mult = c(0, .1)),
+                                limits = y_limits)  # Apply y-axis limits if provided
+  }
+  
   # Update y-axis label to use the same label_type
-  if (discrete && use_proportion) {
+  if (use_proportion) {
     p <- p + ylab(paste("Proportion of", label_type))
   } else {
     p <- p + ylab(paste("Number of", label_type))

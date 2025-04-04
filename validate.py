@@ -849,6 +849,10 @@ def validate_own(df, schema, codebook,
     report['line'] += EXCEL_OFFSET
     errors_total = len(report)
 
+    # Print number of errors per column
+    col_stats = report.column.value_counts()
+    print(col_stats)
+
     # Prepare to print: 
     #  - remove errors for ignored columns
     #  - sort by line in Excel

@@ -81,24 +81,16 @@ load_data <- function(pubmed.path, manual.path) {
 
 preprocess_channels <- function(df) {
   # Fill in standard EEG locations if the whole layout was used
-  df <- df %>%
-    mutate(meeg_layout = recode(meeg_layout,
-                               "10-10" = "standard61",
-                               "10-20" = "standard19"))
-  # TODO: remove standard once the table is fully fixed
-  df$eeg_locations[df$eeg_locations == "standard"] <- sapply(df$meeg_layout[df$eeg_locations == "standard"], 
-                                                               \(x) paste(ch_names[[x]], collapse = ", "))
-  df$eeg_locations[df$eeg_locations == "layout"] <- sapply(df$meeg_layout[df$eeg_locations == "layout"], 
-                                                             \(x) paste(ch_names[[x]], collapse = ", "))
+  use_layout <- df$eeg_locations == "layout"
+  df$eeg_locations[use_layout] <- sapply(df$meeg_layout[use_layout], 
+                                         \(x) paste(ch_names[[x]], collapse = ", "))
   
   # If all channels were selected, copy from EEG Locations
-  all_channels_selected <- df$hep_channels_selected == "All"
-  df$hep_channels_selected[all_channels_selected] <- df$eeg_locations[all_channels_selected]
+  all_selected <- df$hep_channels_selected == "All"
+  df$hep_channels_selected[all_selected] <- df$eeg_locations[all_selected]
   
   # Allow All except, copy from EEG locations and remove unnecessary
   
-  # NOTE: C4 might mean different things in different layouts
-  # Resolve layouts: GSN-HydroCel-129, biosemi128
   
   df
 }

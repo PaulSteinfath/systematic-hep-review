@@ -30,7 +30,6 @@ other_strategy_plot <- function(df) {
              col = "merged_strategy",
              group_col = "PMID",
              discrete = TRUE,
-             use_proportion = FALSE, 
-             x.label = "Other strategies for the removal of CFA") +
-    scale_y_continuous(expand = c(0, 0))
+             use_proportion = TRUE, 
+             x.label = "Other strategies for the removal of CFA")
 }

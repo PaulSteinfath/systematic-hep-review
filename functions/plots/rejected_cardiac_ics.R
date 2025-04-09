@@ -10,7 +10,5 @@ rejected_cardiac_ics <- function(df) {
     x.label = "Average Number of rejected CFA-related ICs",
     discrete = FALSE,
     binwidth = 1
-  ) + scale_y_continuous(
-    expand = c(0, 0)
-  )
+  ) 
 }

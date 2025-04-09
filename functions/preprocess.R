@@ -20,7 +20,7 @@ column_mapping = c(
   "hep_start" = "HEP...Start..ms.",
   "hep_end" = "HEP...End..ms.",
   "modality" = "Modality",
-  "meeg_locations" = "EEG.Locations",
+  "eeg_locations" = "EEG.Locations",
   "meeg_num_electrodes" = "X.Channels",
   "meeg_layout" = "Layout",
   "reference_online" = "Reference..online.",
@@ -86,14 +86,14 @@ preprocess_channels <- function(df) {
                                "10-10" = "standard61",
                                "10-20" = "standard19"))
   # TODO: remove standard once the table is fully fixed
-  df$meeg_locations[df$meeg_locations == "standard"] <- sapply(df$meeg_layout[df$meeg_locations == "standard"], 
+  df$eeg_locations[df$eeg_locations == "standard"] <- sapply(df$meeg_layout[df$eeg_locations == "standard"], 
                                                                \(x) paste(ch_names[[x]], collapse = ", "))
-  df$meeg_locations[df$meeg_locations == "layout"] <- sapply(df$meeg_layout[df$meeg_locations == "layout"], 
+  df$eeg_locations[df$eeg_locations == "layout"] <- sapply(df$meeg_layout[df$eeg_locations == "layout"], 
                                                              \(x) paste(ch_names[[x]], collapse = ", "))
   
   # If all channels were selected, copy from EEG Locations
   all_channels_selected <- df$hep_channels_selected == "All"
-  df$hep_channels_selected[all_channels_selected] <- df$meeg_locations[all_channels_selected]
+  df$hep_channels_selected[all_channels_selected] <- df$eeg_locations[all_channels_selected]
   
   # Allow All except, copy from EEG locations and remove unnecessary
   

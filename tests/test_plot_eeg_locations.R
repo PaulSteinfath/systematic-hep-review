@@ -7,7 +7,7 @@ create_test_data <- function() {
   data.frame(
     PMID = c(1, 2, 3),
     meeg_layout = "test",
-    meeg_locations = c("Ch1, Ch2", "Ch1", "Ch1, Ch2, Ch3"),
+    eeg_locations = c("Ch1, Ch2", "Ch1", "Ch1, Ch2, Ch3"),
     hep_channels_selected = c("Ch1", "Ch1", "Ch1")
   )
 }
@@ -29,7 +29,8 @@ test_that("get_channel_freq, channel is NOT present in the layouts", {
 
 test_that("count_occurrences, all PMIDs are unique", {
   df <- create_test_data()
-  df_freqs <- count_occurrences(df, "hep_channels_selected", add.locs = F)
+  df_freqs <- count_occurrences(df, "hep_channels_selected", 
+                                add.locs = F, divide.over = "n_used")
   
   # only channel 1 is present in the selection
   expect_equal(df_freqs$freq, c(1.0, 0.0, 0.0, 0.0))

@@ -9,7 +9,7 @@ rr_intervals_plot <- function(df) {
     
   # Early return if no data
   if (nrow(rr_df) == 0) {
-    return(create_empty_plot("No RR interval data"))
+    return(no_valid_data_stub("No RR interval data"))
   }
 
   # Process data only if we have valid entries
@@ -25,10 +25,7 @@ rr_intervals_plot <- function(df) {
   x_max <- 750
   
   # Create ECG data 
-  ecg_data <- data.frame(
-    time = seq(x_min, x_max, length.out = 500),
-    voltage = scale(create_ecg_wave(seq(x_min, x_max, length.out = 500)), scale = FALSE)
-  )
+  ecg_data <- create_ecg_data(x_min, x_max)
   
   ggplot() +
     geom_line(data = ecg_data, aes(x = time, y = voltage),

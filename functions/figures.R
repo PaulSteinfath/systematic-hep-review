@@ -1,6 +1,7 @@
 # Import plotting functions
 source(file.path(func_path, "plots", "plotting_helpers.R"))
 source(file.path(func_path, "plots", "utils.R"))
+source(file.path(func_path, "plots", "preprocess_controls.R"))
 source(file.path(func_path, "plots", "create_combined_plot.R"))
 source(file.path(func_path, "plots", "hist_panel.R"))
 source(file.path(func_path, "plots", "create_ica_usage_plot.R"))
@@ -12,6 +13,7 @@ source(file.path(func_path, "plots", "other_strategy_plot.R"))
 source(file.path(func_path, "plots", "epoch_continuous_ica.R"))
 source(file.path(func_path, "plots", "minimal_artifact_windows_plot.R"))
 source(file.path(func_path, "plots", "create_control_variables_plot.R"))
+source(file.path(func_path, "plots", "create_control_categories_plot.R"))
 source(file.path(func_path, "plots", "rejected_cardiac_ics.R"))
 source(file.path(func_path, "plots", "create_empty_plot.R"))
 source(file.path(func_path, "plots", "plot_ecg_locations.R"))
@@ -43,7 +45,6 @@ create_combined_plot_for_columns <- function(df){
   
 }
 
-
 # Create filter cutoff plots
 create_filter_plots <- function(df) {
   filter_plot <- create_combined_plot(
@@ -58,18 +59,6 @@ create_filter_plots <- function(df) {
   return(filter_plot)
 }
 
-
-# Create synthetic ECG wave data
-create_ecg_wave <- function(t) {
-  # R peak at t=0, T wave at t=300ms
-  r_wave <- 1.8 * exp(-(t / 10)^2) # R peak
-  q_wave <- -0.1 * exp(-(t + 20)^2 / 100) # Q wave
-  s_wave <- -0.15 * exp(-(t - 20)^2 / 100) # S wave
-  p_wave <- 0.15 * exp(-(t + 100)^2 / 400) # P wave
-  t_wave <- 0.2 * exp(-(t - 300)^2 / 3000) # T wave
-
-  return(p_wave + q_wave + r_wave + s_wave + t_wave)
-}
 
 # Create EEG Acquisition & Preprocessing
 eeg_acq_prep <- function(df) {
@@ -134,7 +123,7 @@ eeg_acq_prep <- function(df) {
   ica_rej_plot <- create_ica_rej(df)
   ica_simple_plot <- create_simple_ica_plot(df)
 
-  plot_BC <- plot_grid( # Create a row with ref_offline and simple ICA plot
+  plot_BC <- plot_grid( 
     ref_offline,
     ica_simple_plot,
     ncol = 2,
@@ -167,6 +156,7 @@ eeg_acq_prep <- function(df) {
     vjust = 1
   )
 }
+
 
 # CFA Removal
 cfa_removal <- function(df) {
@@ -201,7 +191,9 @@ cfa_removal <- function(df) {
     align = "hv"
   )
 
-  plot_grid(top_row, middle_row, bottom_row, ncol = 1)}
+  plot_grid(top_row, middle_row, bottom_row, ncol = 1)
+}
+
 
 ecg_summary <- function(df) {
   # Map "unknown" to 9 so that it isn't lost during conversion to numeric and
@@ -241,8 +233,8 @@ ecg_summary <- function(df) {
   )
   
   fig
-
 }
+
 
 # Here we generate all figures
 make_figures <- function(df, save_path, ext = "svg") {
@@ -265,13 +257,13 @@ make_figures <- function(df, save_path, ext = "svg") {
   cfa_removal_plot <- cfa_removal(df)
 
   ggsave(
-    filename = file.path(save_path, "cfa_removal_plot.svg"),
+    filename = file.path(save_path, paste0("cfa_removal_plot.", ext)),
     plot = cfa_removal_plot,
     width = 10,
     height = 11,
     units = "in",
     dpi = 300,
-    device = "svg",
+    device = ext,
     bg = "white"
   )
 
@@ -288,20 +280,35 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
 
-  # Generate and save the control variables plot
   control_vars_plot <- create_control_variables_plot(df)
   
   ggsave(
-    filename = file.path(save_path, "control_variables_plot.svg"),
+    filename = file.path(save_path, paste0("control_variables_plot.", ext)),
     plot = control_vars_plot,
     width = 7,
     height = 12,
     units = "in",
     dpi = 300,
-    device = "svg",
+    device = ext,
     bg = "white"
   )
   show(control_vars_plot)
+
+
+  control_categories_plot <- create_control_categories_plot(df)
+  
+  ggsave(
+    filename = file.path(save_path, paste0("control_categories_plot.", ext)),
+    plot = control_categories_plot,
+    width = 7,
+    height = 5,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
+  show(control_categories_plot)
+  
   
   ecg_summary_plot <- ecg_summary(df)
 
@@ -316,4 +323,4 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(ecg_summary_plot)}
-  
+

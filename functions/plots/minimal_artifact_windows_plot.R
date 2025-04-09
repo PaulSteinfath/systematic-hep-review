@@ -6,7 +6,7 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
     distinct()
   
   if (nrow(df_minimal) == 0) {
-    return(create_empty_plot("No minimal artifact window data"))
+    return(no_valid_data_stub("No minimal artifact window data"))
   }
     
   df_minimal <- df_minimal %>%
@@ -18,10 +18,12 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
     filter(!is.na(hep_start), !is.na(hep_end),
            is.finite(hep_start), is.finite(hep_end)) %>%
     mutate(
+      # Create T-peak indicator
+      is_tpeak = tolower(hep_relative_to) == "t-peak",
       # shift T-peak
-      hep_start = hep_start + if_else(tolower(hep_relative_to) == "t-peak", t_peak_offset, 0),
-      hep_end = hep_end + if_else(tolower(hep_relative_to) == "t-peak", t_peak_offset, 0),
-      reference = if_else(tolower(hep_relative_to) == "t-peak", "T-peak", "R-peak"),
+      hep_start = hep_start + if_else(is_tpeak, t_peak_offset, 0),
+      hep_end = hep_end + if_else(is_tpeak, t_peak_offset, 0),
+      reference = if_else(is_tpeak, "T-peak", "R-peak"),
       reference = factor(reference, levels = c("T-peak", "R-peak"))
     )
   
@@ -47,10 +49,7 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
   x_min <- min(df_minimal$hep_start, -150)
   x_max <- max(df_minimal$hep_end)
   
-  ecg_data <- data.frame(
-    time = seq(x_min, x_max, length.out = 500),
-    voltage = scale(create_ecg_wave(seq(x_min, x_max, length.out = 500)), scale = FALSE)
-  )
+  ecg_data <- create_ecg_data(x_min, x_max)
 
   ggplot() +
     geom_line(data = ecg_data, aes(x = time, y = voltage),

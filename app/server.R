@@ -14,7 +14,12 @@ function(input, output) {
   
   # Wrap df_selected in a reactive
   df_selected <- reactive({
-    df_included[input$table_rows_all, ]
+    # NOTE: use all rows by default
+    if (is.null(input$table_rows_all)) {
+      df_included
+    } else {
+      df_included[input$table_rows_all, ] 
+    }
   })
   
   output$yearPlot <- renderPlot({
@@ -32,4 +37,8 @@ function(input, output) {
     res = 96
   )
   
+  output$ecgSummaryPlot <- renderPlot({
+      ecg_summary(df_selected())
+    }, res = 96
+  )
 }

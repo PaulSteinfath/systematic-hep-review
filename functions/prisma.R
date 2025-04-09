@@ -22,7 +22,8 @@ reasons_to_exclude <- function(df_excluded) {
 }
 
 
-generate_prisma <- function(df_screening, template_path, derivatives_path, plot_path) {
+generate_prisma <- function(df_screening, template_path, derivatives_path, 
+                            plot_path, ext = 'svg') {
   # Process all reasons to exclude
   comments <- with(df_screening, as.data.frame(table(source, Comment, Include)))
   excluded <- comments[comments$Include == 0,]
@@ -80,7 +81,8 @@ generate_prisma <- function(df_screening, template_path, derivatives_path, plot_
   p_prisma <- plot_prisma_diagram(df_prisma)
   PRISMA_save(
     p_prisma, 
-    file.path(plot_path, "PRISMA.svg"),
+    filename = file.path(plot_path, paste0("PRISMA.", ext)),
+    filetype = ext,
     overwrite = T
   )
 }

@@ -2,8 +2,8 @@ data/derivatives
 data/HEP Literature - Normalization.docx
 data/HEP - Pubmed Results.csv
 data/HEP - Manual.csv
-results
 
+.Rdata
 .Rhistory
 .lintr
 .vscode/

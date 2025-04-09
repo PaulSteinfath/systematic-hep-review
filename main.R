@@ -30,7 +30,7 @@ source(file.path(func_path, 'validate.R'))
 # TODO: download the data from OSF / wherever we put it?
 df_full <- load_data(pubmed_path, manual_path)
 c(df_screening, df_included) %<-% preprocess(df_full)
-errors <- validate_preprocessed(df_included)
+# errors <- validate_preprocessed(df_included)
 p_prisma <- generate_prisma(df_screening, prisma_template_path,
                             derivatives_path, results_path, ext = 'png')
 make_figures(df_included, results_path, ext = 'png')

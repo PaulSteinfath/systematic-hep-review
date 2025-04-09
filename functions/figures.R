@@ -202,22 +202,30 @@ ecg_summary <- function(df) {
 eeg_locations_summary <- function(df) {
   # Temporary function for testing the display of EEG locations
   p_separate_primary <- plot_eeg_locations(df[df$hep_window_type == "Primary",], 
-                                           "hep_channels_selected", combined = F)
+                                           "hep_channels_selected", combined = F) +
+    guides(fill = guide_none())
   p_separate_secondary <- plot_eeg_locations(df[df$hep_window_type == "Secondary",],
-                                             "hep_channels_selected", combined = F)
-  p_separate_significant <- plot_eeg_locations(df, "significant_channels", combined = F)
+                                             "hep_channels_selected", combined = F) +
+    guides(fill = guide_none())
+  p_separate_significant <- plot_eeg_locations(df, "significant_channels", 
+                                               lim = NULL, combined = F) +
+    guides(fill = guide_none())
   
   p_combined_primary <- plot_eeg_locations(df[df$hep_window_type == "Primary",], 
-                                           "hep_channels_selected", combined = T)
+                                           "hep_channels_selected", combined = T) +
+    labs(title = "Primary")
   p_combined_secondary <- plot_eeg_locations(df[df$hep_window_type == "Secondary",],
-                                             "hep_channels_selected", combined = T)
-  p_combined_significant <- plot_eeg_locations(df, "significant_channels", combined = T)
+                                             "hep_channels_selected", combined = T) +
+    labs(title = "Secondary")
+  p_combined_significant <- plot_eeg_locations(df, "significant_channels", 
+                                               lim = NULL, combined = T) +
+    labs(title = "Significant")
   
   fig <- plot_grid(
     p_separate_primary, p_combined_primary,
     p_separate_secondary, p_combined_secondary,
     p_separate_significant, p_combined_significant,
-    nrow=3, ncol=2, rel_widths=c(4, 1)
+    nrow = 3, ncol = 2, rel_widths = c(4, 1.5)
   )
   
   fig

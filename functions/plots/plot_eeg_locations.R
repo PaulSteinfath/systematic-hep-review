@@ -59,6 +59,11 @@ count_occurrences <- function(df, col, group_col = 'PMID',
 plot_eeg_locations_separate <- function(df, 
                                         lim = 1.0, 
                                         colormap = "magma") {
+  # Calculate the limit automatically if not provided
+  if (is.null(lim)) {
+    lim <- max(df$freq)
+  }
+  
   ggplot(df, aes(x = x,
                  y = y,
                  fill = freq,
@@ -70,6 +75,7 @@ plot_eeg_locations_separate <- function(df,
               linetype = 'solid',
               linewidth = rel(0.1)) + 
     scale_fill_viridis(option = colormap,
+                       labels = scales::percent,
                        direction = 1,
                        limits = c(0, lim)) + 
     facet_wrap(. ~ meeg_layout, nrow = 1) +
@@ -114,28 +120,36 @@ plot_eeg_locations_combined <- function(df,
   # Calculate and combine the topomaps
   maps <- by(df, df$meeg_layout, get_weighted_scalpmap)
   maps_merged <- purrr::reduce(maps, merge, by = c('x', 'y'), sort = F) %>%
-    mutate(fill.sum = rowSums(across(starts_with("fill"))))
+    mutate(fill.sum = rowSums(across(starts_with("fill"))),
+           fill.sum = clip_values(fill.sum))
   
   # Prepare the channels that should be displayed on top of the combined topomap
   montage = if (display.layout == "biosemi128") "biosemi128" else NULL
   df_display <- data.frame(electrode = ch_names[[display.layout]]) %>%
     electrode_locations(montage = montage)
   
+  # Calculate the limit automatically if not provided
+  if (is.null(lim)) {
+    lim <- max(maps_merged$fill.sum)
+  }
+  
   ggplot(data = df_display,
          aes(x = x, y = y)) + 
     geom_raster(data = maps_merged,
                 aes(fill = fill.sum)) +
     scale_fill_viridis(option = colormap,
+                       labels = scales::percent,
                        direction = 1,
                        limits = c(0, lim)) +
     geom_head(linewidth = rel(0.5),
               color = "black") +
     geom_channels(size = rel(0.25),
                   color = 'black') +
-    # Interpolating the already interpolated map takes a lot of time, need to
-    # look for another solution: pick values that correspond to displayed electrodes?
-    # stat_scalpcontours(data = maps_merged, 
-    #                    aes(z = fill.sum, fill = fill.sum)) +
+    geom_contour(data = maps_merged, 
+                 aes(z = fill.sum), 
+                 color = "black", 
+                 linewidth = rel(0.1),
+                 bins = 6) +
     theme_void() +
     coord_equal()
 }
@@ -146,7 +160,9 @@ plot_eeg_locations <- function(df,
                                group_col = 'PMID',
                                divide.over = "n_rows",
                                layouts = names(ch_names), 
+                               lim = 1.0,
                                colormap = "magma",
+                               colorbar_title = "Proportion",
                                combined = T,
                                display.layout = "standard61") {
   # Get the number of occurrences for each channel in each layout
@@ -158,11 +174,12 @@ plot_eeg_locations <- function(df,
   # Plot the results for each layout separately or combined
   if (combined) {
     p <- plot_eeg_locations_combined(df_counts, display.layout,
-                                     colormap = colormap)
+                                     lim = lim, colormap = colormap)
   } else {
     p <- plot_eeg_locations_separate(df_counts,
-                                     colormap = colormap)
+                                     lim = lim, colormap = colormap)
   }
   
-  p
+  p + 
+    guides(fill = guide_colorbar(title = colorbar_title))
 }

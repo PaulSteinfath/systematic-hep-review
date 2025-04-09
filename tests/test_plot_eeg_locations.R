@@ -1,3 +1,4 @@
+source(file.path(getwd(), '..', 'functions', 'layouts.R'))
 source(file.path(getwd(), '..', 'functions', 'plots', 'plot_eeg_locations.R'))
 
 create_test_data <- function() {

@@ -8,7 +8,7 @@ screening_columns <- c(
 )
 
 # Mapping for renaming: "new column name" = "old column name"
-column_mapping = c(
+column_mapping <- c(
   "ecg_num_electrodes" = "X.ECG.electrodes",
   "ecg_description" = "ECG.Description",
   "ecg_lead" = "ECG.Lead",
@@ -60,7 +60,7 @@ column_mapping = c(
 )
 
 columns_to_drop <- c("Other.notes..unclassified.", "Motivation", "DOI", "Link", "Analyst", "Include", "Comment", "Citation", "ECG.Description", "Multiple.Comparisons")
-convert_to_numeric <- c("Year", "sample_size", "channels", "length_min", "high_pass", "low_pass", "groups", "conditions", "hep_start", "hep_end", 
+convert_to_numeric <- c("Year", "sample_size", "meeg_num_electrodes", "length_min", "high_pass", "low_pass", "groups", "conditions", "hep_start", "hep_end", 
                         "baseline_start_ms", "baseline_end_ms", "permutations", "significant_start_ms", "significant_end_ms")
 convert_to_factors <- c("rsHEP", "Modality", "ICA", "ica_on_epochs", "hep_relative_to", "averaging_channels", "averaging_time", "clustering", "significant_test", 
                         "significant_relative_to")
@@ -89,8 +89,7 @@ preprocess_channels <- function(df) {
   all_selected <- df$hep_channels_selected == "All"
   df$hep_channels_selected[all_selected] <- df$eeg_locations[all_selected]
   
-  # Allow All except, copy from EEG locations and remove unnecessary
-  
+  # TODO: resolve All except ...
   
   df
 }

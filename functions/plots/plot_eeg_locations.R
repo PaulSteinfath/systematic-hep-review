@@ -6,6 +6,8 @@ library(viridis)
 
 
 get_channel_freq <- function(df, col, ch, divide.over = "n_rows") {
+  # NOTE: this function should be adjusted if we decide to normalize
+  # the study / pipeline counts differently
   in_layout <- sapply(df$eeg_locations, 
                       \(x) grepl(ch, x, fixed = T))
   in_selection <- sapply(df[[col]], 
@@ -92,7 +94,7 @@ get_weighted_scalpmap <- function(df, grid_res = 200, interp_limit = "skirt") {
   # Get the interpolated data for the topomap
   map <- get_scalpmap(df, grid_res = grid_res, interp_limit = interp_limit)
   
-  # Weight the data by the fraction of papers that use the corresponding layout
+  # Weigh the data by the fraction of papers that use the corresponding layout
   layout_weight <- unique(df$weight)
   if (length(layout_weight) > 1) {
     message("get_weighted_scalpmap: expected one weight value per layout")

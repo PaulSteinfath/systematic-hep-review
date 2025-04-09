@@ -1,6 +1,4 @@
 validate_row <- function(row) {
-  print(row)
-  
   # Only EEG locations for supported layouts should be validated
   if (row$modality != "EEG") {
     return(list())
@@ -42,13 +40,11 @@ validate_row <- function(row) {
   }
 }
 
-validate_preprocessed <- function(df, on.error = "warn") {
+validate_preprocessed <- function(df) {
   # validate the data after preprocessing, iterating over rows
-  
-  errors <- unlist(apply(X = df, MARGIN = 1, FUN = validate_row, 
-                         simplify = F), recursive = F)
+  errors <- apply(X = df, MARGIN = 1, FUN = validate_row, simplify = F)
+  errors <- unlist(errors, recursive = F)
   errors <- as.data.frame(do.call(rbind, errors))
-  rownames(errors) <- seq(1, nrow(errors))
   
   if (nrow(errors) == 0) {
     message("validate_preprocessed: no errors")

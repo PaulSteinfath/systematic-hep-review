@@ -41,4 +41,23 @@ function(input, output) {
       ecg_summary(df_selected())
     }, res = 96
   )
+  
+  output$hepTimeWindowsAveraging <- renderPlot({
+    hep_time_plots <- create_time_windows_with_ecg_plot(df_selected(), "both")
+    hep_time_plots$averaging
+  })
+
+  output$hepTimeWindowsClustering <- renderPlot({
+    hep_time_plots <- create_time_windows_with_ecg_plot(df_selected(), "both")
+    hep_time_plots$clustering
+  })
+
+  output$hepTimeWindowsPlot <- renderPlot({
+    hep_time_plots <- create_time_windows_with_ecg_plot(df_selected(), "both")
+    if (input$hepWindowType == "averaging") {
+      hep_time_plots$averaging
+    } else {
+      hep_time_plots$clustering
+    }
+  })
 }

@@ -6,6 +6,8 @@ library(magick)
 library(stringr)
 library(tidyr)
 library(zeallot)
+library(grid)
+library(gridExtra)
 
 # Paths
 data_path <- file.path(getwd(), 'data')

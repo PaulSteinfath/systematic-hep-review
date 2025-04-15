@@ -1,11 +1,3 @@
-#' This function creates a combined plot of high / low pass filter cutoffs and their density distribution.
-
-library(ggplot2)
-library(dplyr)
-library(scales)
-library(patchwork)
-library(grid)
-
 create_combined_plot <- function(
   df,
   start_var,
@@ -88,7 +80,7 @@ create_combined_plot <- function(
     geom_raster() +
     scale_fill_gradient(
       low = "white", 
-      high = "#696969",
+      high = plot_fill_default_single,
       limits = c(0, max(density_df$Density, na.rm = TRUE)),
       breaks = scales::pretty_breaks(n = 4)
     ) +
@@ -100,13 +92,7 @@ create_combined_plot <- function(
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank(),
       axis.title.y = element_blank(),
-      plot.margin = unit(c(0, 0.5, 0.5, 0.5), "cm"),
-      # legend.position = "bottom",
-      # legend.text = element_text(size = 9),
-      # legend.title = element_text(size = 10, hjust = 0.5),
-      # legend.title.position = 'bottom',
-      # legend.key.height = unit(0.3, 'cm'),
-      # legend.key.width = unit(0.5, 'cm'),
+      plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm"),
       legend.position = "none"  # Remove legend for now.
     )
 

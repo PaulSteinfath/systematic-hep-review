@@ -64,7 +64,7 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
                  color = 'white', linewidth = 0.5)
     } else {
       p <- p + 
-        geom_bar(stat = "identity", fill = '#696969', 
+        geom_bar(stat = "identity", fill = plot_fill_default_single, 
                  color = 'white', linewidth = 0.5)
     }
     
@@ -72,7 +72,7 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   } else {
     p <- ggplot(df_distinct, aes(x = !!sym(col))) +
       geom_histogram(aes(y = if (use_proportion) after_stat(density) else after_stat(count)),
-                     fill = '#696969', color = 'white', linewidth = 0.5, 
+                     fill = plot_fill_default_single, color = 'white', linewidth = 0.5, 
                      binwidth = binwidth, bins = bins) +
       theme_classic(base_family = "sans")
   }
@@ -84,7 +84,7 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   p <- p +
     labs(title = paste("n =", n_total, tolower(label_type))) +
     theme(
-      title = element_text(size = 9),
+      title = element_text(size = 9), 
       axis.text.x = element_text(size = 8, 
                                  angle = if (tilt_labels) 45 else 0, 
                                  hjust = if (tilt_labels) 1 else 0.5),

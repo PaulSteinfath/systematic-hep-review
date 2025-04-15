@@ -15,7 +15,6 @@ source(file.path(func_path, "plots", "minimal_artifact_windows_plot.R"))
 source(file.path(func_path, "plots", "create_control_variables_plot.R"))
 source(file.path(func_path, "plots", "create_control_categories_plot.R"))
 source(file.path(func_path, "plots", "rejected_cardiac_ics.R"))
-source(file.path(func_path, "plots", "create_empty_plot.R"))
 source(file.path(func_path, "plots", "plot_ecg_locations.R"))
 source(file.path(func_path, "plots", "plot_missing.R"))
 source(file.path(func_path, "plots", "plot_multiple_choices.R"))
@@ -266,7 +265,9 @@ make_figures <- function(df, save_path, ext = "svg") {
     device = ext,
     bg = "white"
   )
+  show(cfa_removal_plot)
 
+  
   combined_plot_for_columns <- create_combined_plot_for_columns(df)
   
   ggsave(

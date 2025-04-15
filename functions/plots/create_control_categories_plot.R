@@ -9,7 +9,7 @@ create_control_categories_plot <- function(df) {
   total_pipelines <- nrow(df_unique)
   
   # Initialize category presence matrix once
-  categories <-  uniqu(sapply(control_variable_synonyms, function(x) x$category))
+  categories <-  unique(sapply(control_variable_synonyms, function(x) x$category))
   category_presence <- matrix(FALSE, 
                             nrow = nrow(df_unique), 
                             ncol = length(categories),

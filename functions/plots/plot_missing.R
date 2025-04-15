@@ -108,9 +108,11 @@ plot_missing <- function(df,
                          group_bar_pos = "dodge",
                          show_wordy_title = FALSE,
                          x_lab = "Methodological Choice",
-                         x_ticks = TRUE) {
-  
-  # Flatten columns if needed.
+                         x_ticks = TRUE,
+                         pipeline_steps = NULL,
+                         pipeline_colors = NULL,
+                         fixed_order = NULL) {
+  # Flatten columns if needed
   if (is.list(columns)) {
     flat_cols <- unlist(columns)
   } else {
@@ -155,11 +157,25 @@ plot_missing <- function(df,
     }
   }
   
-  # Apply column mapping.
+  # First apply column mapping
   results_df$Column <- apply_column_mapping(results_df$Column, column_mapping_readable)
+
+  # Add Step column based on the ORIGINAL variable names (before mapping)
+  results_df$Step <- sapply(results_df$Column, function(readable) {
+    var_name <- column_mapping_readable[readable]  # because 'readable' is the name in the mapping
+    if (is.na(var_name)) var_name <- readable      # fallback if not found
+    get_pipeline_step(var_name)
+  })
   
-  # Define axis labels and title.
-  y_lab <- if (percentages) "Percentage of Papers with Missing Information" else "Number of Papers with Missing Information"
+  # Set Step as factor with pipeline_colors levels
+  results_df$Step <- factor(results_df$Step, levels = names(pipeline_colors))
+
+  # Set fixed_order if provided
+  if (!is.null(fixed_order)) {
+    results_df$Column <- factor(results_df$Column, levels = fixed_order)
+  }
+
+  # Define labels
   if (show_wordy_title) {
     my_title <- if (is.null(group_var)) 
       "Missing Information per Column" 
@@ -170,22 +186,26 @@ plot_missing <- function(df,
     my_title <- paste("n =", n_unique_papers)
   }
   
-  # Call the generic column_barplot().
-  p <- column_barplot(results_df = results_df,
-                      x_col = "Column",
-                      y_col = "Metric",
-                      variables = columns,
-                      vertical = vertical,
-                      group_var = if (is.null(group_var)) NULL else "Group",
-                      align_by_magnitude = align_by_magnitude,
-                      gap = gap,
-                      x_lab = x_lab,
-                      y_lab = y_lab,
-                      plot_title = my_title,
-                      plot_fill = plot_fill,
-                      plot_theme = plot_theme,
-                      column_mapping_readable = column_mapping_readable,
-                      group_bar_pos = group_bar_pos,
-                      x_ticks = x_ticks)
+  y_lab <- if (percentages) {
+    "Percentage of Papers with Missing Information"
+  } else {
+    "Number of Papers with Missing Information"
+  }
+
+  # Build plot with proper Step coloring
+  p <- ggplot(results_df, aes(x = Column, y = Metric, fill = Step)) +
+       geom_bar(stat = "identity") +
+       scale_fill_manual(values = pipeline_colors) +
+       labs(x = x_lab, y = y_lab, title = my_title) +
+       plot_theme
+
+  if (vertical) {
+    # Flip plot and remove variable name labels (flipped x-axis), keep metric (y-axis) visible
+    p <- p + coord_flip() + scale_x_discrete(labels = NULL)
+  } else {
+    p <- p + scale_y_continuous(breaks = NULL)
+  }
+
+  # Keep legend visible for this plot
   return(p)
 }

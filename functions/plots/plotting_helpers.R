@@ -63,6 +63,80 @@ column_mapping_readable_default <- c(
   "EEG Locations" = "eeg_locations"
 )
 
+# Add pipeline step categorization - correctly categorizing all variables
+pipeline_steps <- list(
+  "Acquisition" = c(
+    "channels", "ecg_num_electrodes", "ecg_lead", "ecg_locations", 
+    "ecg_ground", "reference_online", "length_min", "hep_channels_selected"
+  ),
+  "Preprocessing" = c(
+    "reference_offline", "high_pass", "low_pass", "ICA", 
+    "ica_on_epochs", "rejected_components", "rejected_cardiac_ics",
+    "cfa_rej_approach", "cfa_rej_criteria", "other_cleaning_strategy", "other_cfa_removal_strategy"
+  ),
+  "HEP Estimation" = c(
+    "hep_relative_to", "hep_start", "hep_end",
+    "baseline_start_ms", "baseline_end_ms", "value", 
+    "averaging_channels", "averaging_time", "hep_window_type"
+  ),
+  "Statistics" = c(
+    "clustering", "statistics", "permutations", "sample_size", "trials", "conditions", "groups", "hypothesis"
+  )
+)
+
+# Define colors for pipeline steps
+pipeline_colors <- c(
+  "Acquisition" = "#4D6B89",      # Slate blue
+  "Preprocessing" = "#6A8A82",    # Muted teal
+  "HEP Estimation" = "#7D9D85",   # Sage green
+  "Statistics" = "#A4B494"        # Light olive
+)
+
+# Enhanced function to ensure we always get a valid pipeline step
+get_pipeline_step <- function(var) {
+  # Return "Other" for any invalid inputs
+  if (length(var) == 0 || 
+      all(is.null(var)) || 
+      all(is.na(var)) || 
+      all(var == "")) {
+    return("Other")
+  }
+  
+  # Check each pipeline step category
+  for (step in names(pipeline_steps)) {
+    if (var %in% pipeline_steps[[step]]) {
+      return(step)
+    }
+  }
+  
+  # If not found directly, try case-insensitive match
+  var_lower <- tolower(var)
+  for (step in names(pipeline_steps)) {
+    for (entry in pipeline_steps[[step]]) {
+      if (var_lower == tolower(entry)) {
+        return(step)
+      }
+    }
+  }
+  
+  return("Other")
+}
+
+# Map the readable names back to their variable names for pipeline categorization
+get_variable_name <- function(readable_name, mapping) {
+  var_name <- names(mapping)[which(mapping == readable_name)]
+  if (length(var_name) > 0) return(var_name[1])
+  return(readable_name)  # If not found, return the original name
+}
+
+# Function to get pipeline step for a readable variable name
+get_readable_pipeline_step <- function(readable_name, mapping) {
+  # Convert the readable name back to variable name
+  var_name <- get_variable_name(readable_name, mapping)
+  # Then get its pipeline step
+  return(get_pipeline_step(var_name))
+}
+
 save_plot <- function(p, vis_path, file_name, plot_format = "svg", plot_width = 6, plot_height = 6) {
   full_path <- file.path(vis_path, paste0(file_name, ".", plot_format))
   ggsave(filename = full_path, plot = p, width = plot_width, height = plot_height)
@@ -95,119 +169,23 @@ column_barplot <- function(results_df,
                            column_mapping_readable = column_mapping_default,
                            group_bar_pos = "dodge",
                            x_ticks = TRUE) {
-  # 1. Build a lookup table from the original variables input.
-  # If variables is a list, check whether every element is of length 1.
-  if (is.list(variables)) {
-    if (all(sapply(variables, length) == 1)) {
-      flat_vars <- unlist(variables)
-      var_group_ids <- rep(1, length(flat_vars))
-      var_group_labels <- rep("Group 1", length(flat_vars))
-    } else {
-      flat_vars <- unlist(variables)
-      var_group_ids <- rep(seq_along(variables), times = sapply(variables, length))
-      var_group_labels <- paste0("Group ", var_group_ids)
-    }
-  } else {
-    flat_vars <- variables
-    var_group_ids <- rep(1, length(flat_vars))
-    var_group_labels <- rep("Group 1", length(flat_vars))
-  }
-  lookup_df <- data.frame(VarName = flat_vars, 
-                          VarGroup = var_group_labels, 
-                          OrigOrder = seq_along(flat_vars),
-                          stringsAsFactors = FALSE)
   
-  lookup_df$VarName <- apply_column_mapping(lookup_df$VarName, column_mapping_readable)
-  
-  # 2. Merge the lookup table with results_df.
-  results_df <- merge(results_df, lookup_df, by.x = x_col, by.y = "VarName", all.x = TRUE)
-  
-  # 3. Compute ordering and x-axis positions.
-  if (is.null(group_var)) {
-    # Ungrouped: we use x_col, VarGroup, OrigOrder, and y_col.
-    methods_df <- results_df %>%
-      select(!!sym(x_col), VarGroup, OrigOrder, !!sym(y_col)) %>%
-      distinct()
-    if (align_by_magnitude) {
-      methods_df <- methods_df %>% 
-        group_by(VarGroup) %>% 
-        arrange(!!sym(y_col), .by_group = TRUE) %>% 
-        ungroup()
-    } else {
-      methods_df <- methods_df %>% 
-        group_by(VarGroup) %>% 
-        arrange(OrigOrder, .by_group = TRUE) %>% 
-        ungroup()
-    }
-  } else {
-    # Grouped case: use the original lookup table as the ordering base.
-    methods_df <- lookup_df
-    # Rename the key column to x_col.
-    names(methods_df)[names(methods_df) == "VarName"] <- x_col
-    if (align_by_magnitude) {
-      # Compute the maximum y-value per variable (ignoring group differences)
-      ordering_df <- results_df %>%
-        group_by(!!sym(x_col)) %>%
-        summarise(max_val = max(!!sym(y_col), na.rm = TRUE), .groups = "drop")
-      # Merge with the lookup table
-      methods_df <- merge(methods_df, ordering_df, by = x_col, all.x = TRUE)
-      methods_df <- methods_df %>% 
-        group_by(VarGroup) %>% 
-        arrange(max_val, .by_group = TRUE) %>% 
-        ungroup()
-    } else {
-      methods_df <- methods_df %>% arrange(OrigOrder)
-    }
+  # Don't reorder if already a factor
+  if (!is.factor(results_df[[x_col]])) {
+    results_df[[x_col]] <- factor(results_df[[x_col]], levels = unique(results_df[[x_col]]))
   }
   
-  # Assign sequential positions within each group and add gap offsets.
-  methods_df <- methods_df %>%
-    group_by(VarGroup) %>%
-    mutate(pos_in_group = row_number()) %>%
-    ungroup()
-  
-  group_info <- methods_df %>%
-    group_by(VarGroup) %>%
-    summarise(n = n(), .groups = "drop") %>%
-    arrange(VarGroup) %>%
-    mutate(offset = lag(cumsum(n), default = 0) + (row_number() - 1) * gap)
-  
-  methods_df <- merge(methods_df, group_info, by = "VarGroup")
-  methods_df <- methods_df %>% mutate(xpos = pos_in_group + offset)
-  
-  # 4. Merge x positions back into results_df.
-  results_df <- merge(results_df, methods_df[, c(x_col, "xpos")], by = x_col, all.x = TRUE)
-  
-  # 5. Build the plot.
-  if (is.null(group_var)) {
-    # If no grouping, use only the first color.
-    p <- ggplot(results_df, aes(x = xpos, y = !!sym(y_col))) +
+  # Always use fill aesthetic if Step column exists
+  p <- if ("Step" %in% names(results_df)) {
+    ggplot(results_df, aes(x = !!sym(x_col), y = !!sym(y_col), fill = Step)) +
+      geom_bar(stat = "identity") +
+      scale_fill_manual(values = plot_fill)
+  } else {
+    ggplot(results_df, aes(x = !!sym(x_col), y = !!sym(y_col))) +
       geom_bar(stat = "identity", fill = plot_fill[1])
-  } else {
-    results_df[[group_var]] <- factor(results_df[[group_var]])
-    p <- ggplot(results_df, aes(x = xpos, y = !!sym(y_col), fill = !!sym(group_var))) +
-      geom_bar(stat = "identity", position = group_bar_pos)
-    # If there are fewer groups than colors in the vector, use scale_fill_manual.
-    n_groups <- length(unique(results_df[[group_var]]))
-    if(n_groups <= length(plot_fill)) {
-      p <- p + scale_fill_manual(values = plot_fill, name = NULL)
-    } else {
-      p <- p + labs(fill = NULL)
-    }
   }
   
-  # Conditionally control the x-axis tick labels.
-  if (x_ticks) {
-    p <- p + scale_x_continuous(breaks = methods_df$xpos, 
-                                labels = methods_df[[x_col]],
-                                expand = expansion(mult = c(0.01, 0.01)))
-  } else {
-    p <- p + scale_x_continuous(breaks = methods_df$xpos, 
-                                labels = NULL,
-                                expand = expansion(mult = c(0.01, 0.01)))
-  }
-  
-  
+  # Add labels and theme
   p <- p + plot_theme +
     labs(x = ifelse(is.null(x_lab), x_col, x_lab),
          y = ifelse(is.null(y_lab), y_col, y_lab),

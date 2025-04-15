@@ -12,29 +12,62 @@ source(file.path(func_path, "plots", "plot_missing.R"))
 source(file.path(func_path, "plots", "plot_multiple_choices.R"))
 source(file.path(func_path, "plots", "plot_entropy.R"))
 
-create_combined_plot_for_columns <- function(df){
+create_combined_plot_for_columns <- function(df) {
+  analysis_steps <- colnames(df)[12:45]
   
-  analysis_steps <- colnames(df)[6:45] 
-  
-  p1 <- plot_entropy(df,method_columns = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F,  x_lab = "", x_ticks = FALSE)
-  
-  p2 <- plot_multiple_choices(df,variables = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F, x_lab = "", x_ticks = FALSE)
-  
-  p3 <- plot_missing(df, columns = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F, x_ticks = TRUE)
-  
+  p1 <- plot_entropy(df,
+    method_columns = analysis_steps,
+    pipeline_steps = pipeline_steps,
+    pipeline_colors = pipeline_colors,
+    column_mapping_readable = column_mapping_readable_default,
+    vertical = TRUE,
+    align_by_magnitude = FALSE,
+    x_lab = "",
+    x_ticks = TRUE,
+    plot_title = "Entropy by Variable"
+  )
+
+  entropy_order <- levels(p1$data$Column)
+
+  # For p2 and p3, pass pipeline_steps for coloring but use entropy_order for ordering
+  p2 <- plot_multiple_choices(df,
+    variables = analysis_steps,
+    column_mapping_readable = column_mapping_readable_default,
+    vertical = TRUE,
+    align_by_magnitude = FALSE,
+    x_lab = "",
+    x_ticks = TRUE,           
+    pipeline_steps = pipeline_steps, 
+    pipeline_colors = pipeline_colors,
+    fixed_order = entropy_order
+  )
+
+  p3 <- plot_missing(df,
+    columns = analysis_steps,
+    column_mapping_readable = column_mapping_readable_default,
+    vertical = TRUE,
+    align_by_magnitude = FALSE,
+    x_lab = "",
+    x_ticks = TRUE,           
+    pipeline_steps = pipeline_steps,  
+    pipeline_colors = pipeline_colors,
+    fixed_order = entropy_order
+  )
+
   fig_ABC <- plot_grid(
     p1, p2, p3, 
-    ncol = 1, 
-    align = "v",
+    ncol = 3, 
+    align = "h",
     axis = "l",
     labels = c("A", "B", "C"), 
     vjust = 1,
-    rel_heights = c(1, 1, 1.2)
+    rel_widths = c(1.2, 0.7, 1)
   )
   
   return(fig_ABC)
   
 }
+create_combined_plot_for_columns(df)
 
 # Create filter cutoff plots
 create_filter_plots <- function(df) {

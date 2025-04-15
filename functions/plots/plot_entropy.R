@@ -150,93 +150,62 @@ compute_entropy <- function(data, method_columns,
   return(res_df)
 }
 
-plot_entropy <- function(df, 
-                         method_columns = entropy_columns_default, 
-                         column_mapping_readable = column_mapping_readable_default, 
-                         group_var = NULL,
-                         vertical = FALSE, 
-                         num_bins = 10, 
-                         unique_threshold = 10, 
-                         align_by_magnitude = TRUE,
-                         all_char = FALSE, 
-                         norm = TRUE, 
-                         plot_fill = plot_fill_default,
+plot_entropy <- function(df,
+                         method_columns = entropy_columns_default,
+                         pipeline_steps,
+                         pipeline_colors,
+                         column_mapping_readable = column_mapping_readable_default,
                          plot_theme = plot_theme_default,
-                         drop_paper_duplicates = TRUE,
-                         gap = 0.5, 
-                         group_bar_pos = "dodge",
-                         show_wordy_title = FALSE,
-                         x_lab = "Methodological Choice",
-                         x_ticks = TRUE) {
+                         align_by_magnitude = FALSE,
+                         gap = 0.5,
+                         x_lab = "Variable",
+                         y_lab = "Entropy",
+                         plot_title = "Entropy by Variable",
+                         x_ticks = TRUE,
+                         vertical = FALSE) {
+  df_entropy <- compute_entropy(df, method_columns = method_columns,
+                               all_char = FALSE, norm = TRUE,
+                               drop_paper_duplicates = TRUE)
+  colnames(df_entropy) <- c("Column", "Entropy")
+
+  # Assign each variable a pipeline step
+  df_entropy$Step <- sapply(df_entropy$Column, get_pipeline_step)
   
-  # Flatten method_columns if needed.
-  if (is.list(method_columns)) {
-    flat_methods <- unlist(method_columns)
+  # Factor levels for pipeline steps
+  step_order <- names(pipeline_steps)
+  df_entropy$Step <- factor(df_entropy$Step, levels = step_order)
+
+  # Sort by step, then within step by ascending Entropy
+  df_entropy <- df_entropy %>%
+    arrange(Step, Entropy)
+
+  # Apply column mapping
+  df_entropy$Column <- apply_column_mapping(df_entropy$Column, column_mapping_readable)
+
+  # Convert Column to factor with new sorted order
+  df_entropy$Column <- factor(df_entropy$Column, levels = df_entropy$Column)
+
+  # Build the plot
+  p <- ggplot(df_entropy, aes(x = Column, y = Entropy, fill = Step)) +
+       geom_bar(stat = "identity") +
+       scale_fill_manual(values = pipeline_colors) +
+       labs(x = x_lab, y = y_lab, title = plot_title) +
+       plot_theme
+
+  # Option: remove the legend from the entropy plot.
+  p <- p + theme(legend.position = "none")
+
+  # Control x-axis
+  if (!x_ticks) {
+    p <- p + theme(axis.text.x = element_blank())
   } else {
-    flat_methods <- method_columns
+    p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1))
   }
   
-  # Compute entropy results.
-  if (is.null(group_var)) {
-    entropy_results <- compute_entropy(
-      data = df, 
-      method_columns = flat_methods, 
-      num_bins = num_bins, 
-      unique_threshold = unique_threshold, 
-      all_char = all_char, 
-      norm = norm,
-      drop_paper_duplicates = drop_paper_duplicates
-    )
-  } else {
-    if (!(group_var %in% names(df))) {
-      stop(paste("Grouping variable", group_var, "not found in data."))
-    }
-    groups <- unique(df[[group_var]])
-    results_list <- lapply(groups, function(g) {
-      dfg <- df[df[[group_var]] == g, ]
-      entropy_res <- compute_entropy(
-        data = dfg, 
-        method_columns = flat_methods, 
-        num_bins = num_bins, 
-        unique_threshold = unique_threshold, 
-        all_char = all_char, 
-        norm = norm,
-        drop_paper_duplicates = drop_paper_duplicates
-      )
-      entropy_res$Group <- g
-      return(entropy_res)
-    })
-    entropy_results <- do.call(rbind, results_list)
-    entropy_results$Group <- factor(entropy_results$Group)
-  }
-  
-  entropy_results$Column <- apply_column_mapping(entropy_results$Column, column_mapping_readable)
-  
-  if (show_wordy_title){
-    my_title <- if (is.null(group_var)) 
-      "Entropy of Methodological Choices" 
-    else 
-      "Entropy of Methodological Choices by Group"
-  } else{
-    n_unique_papers <- n_distinct(df$PMID)
-    my_title <- paste("n =", n_unique_papers)
+  # Flip if vertical
+  if (vertical) {
+    p <- p + coord_flip()
   }
 
-  p <- column_barplot(results_df = entropy_results, 
-                      x_col = "Column", 
-                      y_col = "Entropy",
-                      variables = method_columns,
-                      vertical = vertical,
-                      group_var = if (is.null(group_var)) NULL else "Group",
-                      align_by_magnitude = align_by_magnitude,
-                      gap = gap,
-                      x_lab = x_lab,
-                      y_lab = "Entropy",
-                      plot_title = my_title,
-                      plot_fill = plot_fill,
-                      plot_theme = plot_theme,
-                      column_mapping_readable = column_mapping_readable,
-                      group_bar_pos = group_bar_pos,
-                      x_ticks = x_ticks)
   return(p)
 }

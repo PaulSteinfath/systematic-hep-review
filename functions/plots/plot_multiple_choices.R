@@ -16,7 +16,10 @@ plot_multiple_choices <- function(df, variables = multiple_choice_columns_defaul
                                   gap = 0.5, group_bar_pos = "dodge",
                                   show_wordy_title = FALSE,
                                   x_lab = "Methodological Choice",
-                                  x_ticks = TRUE) {
+                                  x_ticks = TRUE,
+                                  pipeline_steps = NULL,
+                                  pipeline_colors = NULL,
+                                  fixed_order = NULL) {
   
   choice_analysis <- NULL
   
@@ -72,8 +75,24 @@ plot_multiple_choices <- function(df, variables = multiple_choice_columns_defaul
     choice_analysis$Group <- factor(choice_analysis$Group)
   }
   
+  # Apply column mapping
   choice_analysis$Method <- apply_column_mapping(choice_analysis$Method, column_mapping_readable)
   
+  # Add Step column based on the ORIGINAL variable names (before mapping)
+  choice_analysis$Step <- sapply(choice_analysis$Method, function(readable) {
+    var_name <- column_mapping_readable[readable]  # because 'readable' is the name in the mapping
+    if (is.na(var_name)) var_name <- readable      # fallback if not found
+    get_pipeline_step(var_name)
+  })
+  
+  # Set Step as factor with pipeline_colors levels 
+  choice_analysis$Step <- factor(choice_analysis$Step, levels = names(pipeline_colors))
+
+  # Set fixed_order if provided
+  if (!is.null(fixed_order)) {
+    choice_analysis$Method <- factor(choice_analysis$Method, levels = fixed_order)
+  }
+
   if (show_wordy_title){
     my_title <- if (is.null(group_var)) 
       "Papers with Multiple Choices per Method" 
@@ -84,21 +103,19 @@ plot_multiple_choices <- function(df, variables = multiple_choice_columns_defaul
     my_title <- paste("n =", n_unique_papers)
   }
   
-  p <- column_barplot(results_df = choice_analysis,
-                      x_col = "Method",
-                      y_col = "Metric",
-                      variables = variables,
-                      vertical = vertical,
-                      group_var = if (is.null(group_var)) NULL else "Group",
-                      align_by_magnitude = align_by_magnitude,
-                      gap = gap,
-                      x_lab = x_lab,
-                      y_lab = ifelse(percentages, "Percentage of Papers with Multiple Decisions", "Number of Papers with Multiple Decisions"),
-                      plot_title = my_title,
-                      plot_fill = plot_fill,
-                      plot_theme = plot_theme,
-                      column_mapping_readable = column_mapping_readable,
-                      group_bar_pos = group_bar_pos,
-                      x_ticks = x_ticks)
+  p <- ggplot(choice_analysis, aes(x = Method, y = Metric, fill = Step)) +
+       geom_bar(stat = "identity") +
+       scale_fill_manual(values = pipeline_colors) +
+       labs(x = x_lab, y = ifelse(percentages, "Percentage of Papers with Multiple Decisions", "Number of Papers with Multiple Decisions"), title = my_title) +
+       plot_theme
+
+  if (vertical) {
+    p <- p + coord_flip() + scale_x_discrete(labels = NULL)
+  } else {
+    p <- p + scale_y_continuous(breaks = NULL)
+  }
+
+  p <- p + theme(legend.position = "none")
+
   return(p)
 }

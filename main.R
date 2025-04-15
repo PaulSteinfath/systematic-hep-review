@@ -8,6 +8,14 @@ library(tidyr)
 library(zeallot)
 library(grid)
 library(gridExtra)
+library(cowplot)
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(gridGraphics)
+library(ggtext)
+library(scales)
+
 
 # Paths
 data_path <- file.path(getwd(), 'data')

@@ -62,7 +62,7 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
       linewidth = 0.7
     ) +
     geom_vline(xintercept = 0, linetype = "dotted", color = "gray40") +
-    geom_vline(xintercept = t_peak_offset, linetype = "dashed", color = "#E69F00") +
+    geom_vline(xintercept = t_peak_offset, linetype = "dashed", color = r_t_peak_palette["T-peak"]) +
     labs(
       x = "Time (ms)",
       y = "",
@@ -70,7 +70,7 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
       caption = "HEP windows for minimal artifact",
       color = "Reference"
     ) +
-    scale_color_manual(values = c("R-peak" = "#696969", "T-peak" = "#E69F00")) +
+    scale_color_manual(values = r_t_peak_palette) +
     theme_classic(base_family = "sans") +
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),

@@ -18,6 +18,8 @@ leads_palette <- c('Lead I' = '#fc8d62',
                    'Lead II' = '#66c2a5', 
                    'Lead III' = '#8da0cb')
 
+r_t_peak_palette <- c("R-peak" = "#696969", "T-peak" = "#E69F00")
+
 theme_set(plot_theme_default)
 
 column_mapping_readable_default <- c(

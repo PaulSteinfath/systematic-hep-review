@@ -6,7 +6,7 @@
 
 # Create time windows including ECG trace - creates separate plots
 create_time_windows_with_ecg_plot <- function(df, averaging_type = "both") {
-  # Use fixed limits from -300 to 1000 ms
+  
   shared_limits <- c(-300, 1000)
   
   # For averaging_type "both", create both plots
@@ -23,7 +23,7 @@ create_time_windows_with_ecg_plot <- function(df, averaging_type = "both") {
 
 # Helper function to create a single ECG plot with time windows
 create_single_ecg_plot <- function(df, avg_value, shared_limits, plot_title) {
-  # Filter data for the specific averaging_time value
+
   df_filtered <- df %>% filter(averaging_time == avg_value)
   
   # Create plots for HEP time windows
@@ -98,6 +98,7 @@ create_single_ecg_plot <- function(df, avg_value, shared_limits, plot_title) {
   # Create ECG trace 
   r_peak_ms <- 0
   t_peak_ms <- 300
+
   # Ensure we have finite limits for the sequence
   x_min <- max(min(shared_limits), -1000)  # Reasonable lower bound
   x_max <- min(max(shared_limits), 2000)   # Reasonable upper bound
@@ -110,8 +111,7 @@ create_single_ecg_plot <- function(df, avg_value, shared_limits, plot_title) {
     geom_line(color = "grey80", size = 1) +
     geom_vline(aes(xintercept = r_peak_ms, color = "R Peak"), linetype = "dashed", alpha = 0.5) +
     geom_vline(aes(xintercept = t_peak_ms, color = "T Peak"), linetype = "dashed", alpha = 0.5) +
-    scale_color_manual(values = c("R Peak" = "#0072B2", "T Peak" = "#E69F00"), 
-                      name = NULL) + 
+    scale_color_manual(values = r_t_peak_palette, name = NULL) + 
     labs(x = "Time relative to R-peak (ms)", y = "ECG amplitude") +
     theme_classic() +
     theme(

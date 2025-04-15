@@ -1,13 +1,12 @@
 create_time_windows_plot <- function(df, start_var, end_var, reference_var, x_label,
-                                     t_peak_offset = 300, x_limits = NULL,
-                                     fill_color = "#696969", legend_label = "Count") {
+                                     t_peak_offset = 300, x_limits = NULL) { 
 
-  # For time of interest and baseline plots:
+  # Prepare data based on whether it's for significant effects or other windows
   if (start_var != "merged_start") {
-    # Convert and filter
+    # Convert and filter for time_of_interest or baseline windows
     df_converted <- df %>%
-      filter(!is.na(.data[[start_var]]), !is.na(.data[[end_var]])) %>%
-      filter(!.data[[start_var]] %in% c("none", "unknown"), !.data[[end_var]] %in% c("none", "unknown")) %>%
+      filter(!.data[[start_var]] %in% c("none", "unknown"), 
+             !.data[[end_var]] %in% c("none", "unknown")) %>%
       mutate(
         start_time = as.numeric(as.character(.data[[start_var]])),
         end_time   = as.numeric(as.character(.data[[end_var]]))
@@ -22,111 +21,112 @@ create_time_windows_plot <- function(df, start_var, end_var, reference_var, x_la
         end_time   = end_time + t_peak_offset
       )
   } else {
-    # Convert and filter
+    # Convert and filter for significant effects windows
     df_converted <- df %>%
       filter(.data[[reference_var]] %in% c("R-peak","T-peak"), significant_test == 1) %>%
       mutate(
         hep_start = as.numeric(as.character(hep_start)),
         hep_end   = as.numeric(as.character(hep_end)),
         significant_start_ms = as.numeric(as.character(significant_start_ms)),
-        significant_end_ms   = as.numeric(as.character(significant_end_ms))
-      )
-
-    df_rpeak <- df_converted %>%
-      filter(.data[[reference_var]] == "R-peak") %>%
-      mutate(
+        significant_end_ms   = as.numeric(as.character(significant_end_ms)),
         start_time = if_else(averaging_time == "1", hep_start, significant_start_ms),
         end_time   = if_else(averaging_time == "1", hep_end, significant_end_ms)
-      ) %>%
+      ) 
+
+    df_rpeak <- df_converted %>%
+      filter(.data[[reference_var]] == "R-peak")%>%
       filter(!is.na(start_time), !is.na(end_time))
 
     df_tpeak <- df_converted %>%
       filter(.data[[reference_var]] == "T-peak") %>%
       mutate(
-        start_time = if_else(averaging_time == "1", hep_start, significant_start_ms) + t_peak_offset,
-        end_time   = if_else(averaging_time == "1", hep_end, significant_end_ms) + t_peak_offset
+        start_time = start_time + t_peak_offset,
+        end_time   = end_time + t_peak_offset
       ) %>%
       filter(!is.na(start_time), !is.na(end_time))
   }
 
-  create_density_plot <- function(df_filtered, title = "", x_limits = NULL, remove_axes = FALSE) {
-    if (nrow(df_filtered) == 0) {
-      return(ggplot() +
-        theme_void() +
-        annotate("text", x = 0, y = 0, label = "No valid data"))
+  # Calculate cumulative counts over time intervals
+  calculate_cumulative_counts <- function(df_subset, time_vec) { 
+    if (nrow(df_subset) == 0) {
+      return(rep(0, length(time_vec)))
     }
-    
-    n_bins <- 160
-    time_range <- seq(min(df_filtered$start_time),
-      max(df_filtered$end_time),
-      length.out = n_bins
-    )
-    density_matrix <- matrix(0, nrow = nrow(df_filtered), ncol = length(time_range))
-    for (i in 1:nrow(df_filtered)) {
-      time_indices <- which(time_range >= df_filtered$start_time[i] & time_range <= df_filtered$end_time[i])
-      density_matrix[i, time_indices] <- 1
-    }
-    density_df <- data.frame(
-      Time = time_range,
-      Density = colSums(density_matrix)
-    )
+    counts <- numeric(length(time_vec))
+    # Small offset to ensure intervals are checked correctly [start, end)
+    precision_offset <- (time_vec[2] - time_vec[1]) / 2 
 
-    high_fill <- fill_color
-    my_legend <- legend_label
-    if (title == "R-peak referenced") {
-      high_fill <- "#0072B2" 
-      low_fill <- "#E6F3FF"
-      my_legend <- "R Peak"
-    } else if (title == "T-peak referenced") {
-      high_fill <- "#E69F00" 
-      low_fill <- "#FFF5E6" 
-      my_legend <- "T Peak"
+    for (i in 1:nrow(df_subset)) {
+      start_i <- df_subset$start_time[i]
+      end_i <- df_subset$end_time[i]
+      indices <- which(time_vec >= (start_i - precision_offset) & time_vec < (end_i - precision_offset))
+      if (length(indices) > 0) {
+        counts[indices] <- counts[indices] + 1
+      }
     }
-
-    p <- ggplot() +
-      geom_raster(data = density_df, aes(x = Time, y = 1, fill = Density)) +
-      scale_fill_gradient(
-        low = low_fill,
-        high = high_fill,
-        name = my_legend,
-        guide = guide_colorbar(title.position = "top")
-      ) +
-      labs(x = x_label, y = "") +
-      geom_vline(xintercept = 0, color = "#0072B2", alpha = 0.5, linetype = "dashed") +
-      geom_vline(xintercept = t_peak_offset, color = "#E69F00", alpha = 0.5, linetype = "dashed") +
-      {
-        if (!is.null(x_limits)) coord_cartesian(xlim = x_limits)
-      } +
-      scale_x_continuous(expand = c(0, 0))
-
-    if (remove_axes) {
-      p <- p + theme_void() + theme(legend.position = "none")
-    } else {
-      p <- p + theme_classic() +
-        theme(
-          legend.position = "right",
-          legend.title = element_text(size = 9),
-          legend.text = element_text(size = 8),
-          legend.key.size = unit(0.8, "lines")
-        )
-    }
-    return(p)
+    return(counts) 
   }
 
-  # Combine R-peak and T-peak plots
-  p_rpeak <- create_density_plot(
-    df_rpeak,
-    "R-peak referenced",
-    x_limits, remove_axes = TRUE
+  # Determine overall time range from data
+  all_times <- c(
+      if(nrow(df_rpeak) > 0) c(df_rpeak$start_time, df_rpeak$end_time) else numeric(0),
+      if(nrow(df_tpeak) > 0) c(df_tpeak$start_time, df_tpeak$end_time) else numeric(0)
   )
-  
-  p_tpeak <- create_density_plot(
-    df_tpeak,
-    "T-peak referenced",
-    x_limits, remove_axes = TRUE
+
+  # Handle case with no valid time data
+  if (length(all_times) == 0 || all(is.na(all_times))) {
+      return(no_valid_data_stub("No valid time window data"))
+  }
+
+  x_min <- min(all_times, na.rm = TRUE)
+  x_max <- max(all_times, na.rm = TRUE)
+
+  # Define time vector for calculating counts
+   x_time <- seq(floor(x_min), ceiling(x_max), by = 1)
+
+  # Calculate counts for R-peak and T-peak references
+  r_counts <- calculate_cumulative_counts(df_rpeak, x_time) 
+  t_counts <- calculate_cumulative_counts(df_tpeak, x_time) 
+
+  # Combine into a single dataframe for plotting
+  plot_data <- data.frame(
+    Time = rep(x_time, 2),
+    Count = c(r_counts, t_counts), 
+    Reference = factor(rep(c("R-peak", "T-peak"), each = length(x_time)), levels = c("R-peak", "T-peak"))
   )
-  
-  combined_plot <- plot_grid(p_rpeak, p_tpeak, ncol = 1, align = "v")
-  
+
+  # Split data for separate geom_area layers
+  plot_data_r_full <- plot_data %>% filter(Reference == "R-peak")
+  plot_data_t_full <- plot_data %>% filter(Reference == "T-peak")
+
+  # Create the cumulative plot using geom_area
+  combined_plot <- ggplot() + 
+    geom_area(data = plot_data_r_full, aes(x = Time, y = Count, fill = "R-peak", color = "R-peak"), alpha = 0.3, position = "identity") +
+    geom_area(data = plot_data_t_full, aes(x = Time, y = Count, fill = "T-peak", color = "T-peak"), alpha = 0.3, position = "identity") +
+    geom_vline(xintercept = 0, color = r_t_peak_palette["R-peak"], alpha = 0.7, linetype = "dashed") +
+    geom_vline(xintercept = t_peak_offset, color = r_t_peak_palette["T-peak"], alpha = 0.7, linetype = "dashed") +
+    scale_color_manual(
+        name = "Reference", 
+        values = r_t_peak_palette, 
+        breaks = c("R-peak", "T-peak"), 
+        labels = c("R-peak", "T-peak")
+    ) +
+    scale_fill_manual( 
+        name = "Reference", 
+        values = r_t_peak_palette, 
+        breaks = c("R-peak", "T-peak"), 
+        labels = c("R-peak", "T-peak")
+    ) +
+    labs(x = x_label, y = "Number of Pipelines") + 
+    scale_y_continuous() +
+    theme_classic() +
+    theme(
+      legend.position = "none", # Hide legend here via theme for external placement/alignment
+      axis.text.y = element_text(size = 8),
+      axis.title.y = element_blank(), # Hide y-title here and add back later as grob
+      axis.text.x = element_text(size = 8),
+      axis.title.x = element_text(size = 10)
+    ) +
+    coord_cartesian(xlim = x_limits, expand = FALSE) 
+
   return(combined_plot)
 }

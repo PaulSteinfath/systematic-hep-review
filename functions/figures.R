@@ -19,7 +19,7 @@ source(file.path(func_path, "plots", "plot_ecg_locations.R"))
 source(file.path(func_path, "plots", "plot_missing.R"))
 source(file.path(func_path, "plots", "plot_multiple_choices.R"))
 source(file.path(func_path, "plots", "plot_entropy.R"))
-source(file.path(func_path, "plots", "create_time_windows_with_ecg_plot.R"))
+source(file.path(func_path, "plots", "create_ecg_visualizations.R"))
 source(file.path(func_path, "plots", "create_time_windows_plot.R"))
 source(file.path(func_path, "plots", "create_single_ecg_plot.R"))
 
@@ -327,8 +327,8 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
   show(ecg_summary_plot)
 
-  #HEP time windows for averaging and clustering
-  hep_time_plots <- create_time_windows_with_ecg_plot(df, "both")
+
+hep_time_plots <- create_time_windows_with_ecg_plot(df, "both")
 
   ggsave(
     filename = file.path(save_path, paste0("hep_time_windows_averaging.", ext)),

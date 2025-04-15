@@ -23,18 +23,6 @@ ui <- page_navbar(
     plotOutput("controlVariablesPlot", height = "800px")
   ),
   nav_panel(
-    "Time Windows",
-    layout_sidebar(
-      sidebar = sidebar(
-        radioButtons("timeWindowType", "Analysis Type:",
-                     choices = c("Averaging" = "1", 
-                                "Clustering" = "0"),
-                     selected = "1")
-      ),
-      plotOutput("timeWindowsPlot", height = "800px")
-    )
-  ),
-  nav_panel(
     "ECG Acquistion",
     plotOutput("ecgSummaryPlot", height = "500px")
   ),
@@ -42,11 +30,12 @@ ui <- page_navbar(
     "HEP Time Windows",
     radioButtons(
       "hepWindowType",
-      "Select HEP Window",
-      choices = c("averaging", "clustering"),
+      "Select Analysis Type:", 
+      choices = c("Averaging" = "averaging", "Clustering" = "clustering"), 
+      selected = "averaging", 
       inline = TRUE
     ),
-    plotOutput("hepTimeWindowsPlot", height = "400px")
+    plotOutput("hepTimeWindowsPlot", height = "600px")
   ),
   title = "Methods in HEP research"
 )

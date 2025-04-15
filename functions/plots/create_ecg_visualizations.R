@@ -7,6 +7,7 @@
 # Create time windows including ECG trace - creates separate plots
 create_time_windows_with_ecg_plot <- function(df, averaging_type = "both") {
   
+  # Use fixed limits from -300 to 1000 ms
   shared_limits <- c(-300, 1000)
   
   # For averaging_type "both", create both plots
@@ -23,7 +24,7 @@ create_time_windows_with_ecg_plot <- function(df, averaging_type = "both") {
 
 # Helper function to create a single ECG plot with time windows
 create_single_ecg_plot <- function(df, avg_value, shared_limits, plot_title) {
-
+  # Filter data for the specific averaging_time value
   df_filtered <- df %>% filter(averaging_time == avg_value)
   
   # Create plots for HEP time windows

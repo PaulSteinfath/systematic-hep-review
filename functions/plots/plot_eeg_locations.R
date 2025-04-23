@@ -29,7 +29,7 @@ get_channel_freq <- function(df, col, ch, divide.over = "n_rows") {
 }
 
 
-count_occurrences <- function(df, col, group_col = 'PMID', 
+count_occurrences <- function(df, col, channels = ch_names, group_col = 'PMID', 
                               divide.over = "n_rows", add.locs = T) {
   layout <- unique(df$meeg_layout)
   if (length(layout) > 1) {
@@ -40,12 +40,15 @@ count_occurrences <- function(df, col, group_col = 'PMID',
   
   df_distinct <- df %>% distinct(meeg_layout, eeg_locations,
                                  !!sym(group_col), !!sym(col))
-  freqs <- sapply(ch_names[[layout]], get_channel_freq,
+  freqs <- sapply(channels[[layout]], get_channel_freq,
                   df = df_distinct, col = col, divide.over = divide.over)
+  
+  print(layout)
+  print(channels[[layout]])
   
   df_freq <- data.frame(meeg_layout = layout,
                         num_rows = nrow(df_distinct),
-                        electrode = ch_names[[layout]],
+                        electrode = channels[[layout]],
                         freq = freqs)
   
   if (add.locs) {

@@ -2,9 +2,6 @@ source(file.path(getwd(), '..', 'functions', 'layouts.R'))
 source(file.path(getwd(), '..', 'functions', 'plots', 'plot_eeg_locations.R'))
 
 create_test_data <- function() {
-  # Add a test layout for debugging
-  ch_names[["test"]] <- c("Ch1", "Ch2", "Ch3", "Ch4")
-  
   data.frame(
     PMID = c(1, 2, 3),
     meeg_layout = "test",
@@ -29,9 +26,14 @@ test_that("get_channel_freq, channel is NOT present in the layouts", {
 })
 
 test_that("count_occurrences, all PMIDs are unique", {
+  # Use a special layout for testing
+  ch_names <- list(
+    "test" = c("Ch1", "Ch2", "Ch3", "Ch4")
+  )
+  
   df <- create_test_data()
-  df_freqs <- count_occurrences(df, "hep_channels_selected", 
-                                add.locs = F, divide.over = "n_used")
+  df_freqs <- count_occurrences(df, "hep_channels_selected", channels = ch_names,
+                                add.locs = F, divide.over = "n_rows")
   
   # only channel 1 is present in the selection
   expect_equal(df_freqs$freq, c(1.0, 0.0, 0.0, 0.0))

@@ -1,10 +1,14 @@
-validate_row <- function(row) {
+validate_row <- function(row, col_names) {
+  # Add column names for easier manipulation of the data
+  names(row) <- col_names
+  row <- as.list(row)
+  
   # Only EEG locations for supported layouts should be validated
   if (row$modality != "EEG") {
     return(list())
   }
   
-  supported_layouts = c("standard19", "standard32", "standard61", "biosemi128")
+  supported_layouts = names(ch_names)
   if (!(row$meeg_layout %in% supported_layouts)) {
     return(list())
   }
@@ -38,11 +42,14 @@ validate_row <- function(row) {
       "failure_case" = paste(missing, collapse = ", ")
     )))
   }
+  
+  errors
 }
 
 validate_preprocessed <- function(df) {
   # validate the data after preprocessing, iterating over rows
-  errors <- apply(X = df, MARGIN = 1, FUN = validate_row, simplify = F)
+  errors <- apply(X = df, MARGIN = 1, FUN = validate_row, 
+                  col_names = colnames(df), simplify = F)
   errors <- unlist(errors, recursive = F)
   errors <- as.data.frame(do.call(rbind, errors))
   

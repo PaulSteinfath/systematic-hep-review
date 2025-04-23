@@ -32,6 +32,6 @@ df_full <- load_data(pubmed_path, manual_path)
 c(df_screening, df_included) %<-% preprocess(df_full)
 # TODO: figure out the problem with named lists :(
 # errors <- validate_preprocessed(df_included)
-p_prisma <- generate_prisma(df_screening, prisma_template_path,
-                            derivatives_path, results_path, ext = 'png')
+generate_prisma(df_screening, prisma_template_path,
+                derivatives_path, results_path, ext = 'png')
 make_figures(df_included, results_path, ext = 'png')

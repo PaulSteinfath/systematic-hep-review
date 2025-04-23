@@ -42,10 +42,7 @@ count_occurrences <- function(df, col, channels = ch_names, group_col = 'PMID',
                                  !!sym(group_col), !!sym(col))
   freqs <- sapply(channels[[layout]], get_channel_freq,
                   df = df_distinct, col = col, divide.over = divide.over)
-  
-  print(layout)
-  print(channels[[layout]])
-  
+
   df_freq <- data.frame(meeg_layout = layout,
                         num_rows = nrow(df_distinct),
                         electrode = channels[[layout]],

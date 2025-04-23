@@ -19,9 +19,10 @@ column_mapping <- c(
   "hypothesis" = "Hypothesis",
   "hep_start" = "HEP...Start..ms.",
   "hep_end" = "HEP...End..ms.",
+  "modality" = "Modality",
   "eeg_locations" = "EEG.Locations",
-  "channels" = "X.Channels",
-  "layout" = "Layout",
+  "meeg_num_electrodes" = "X.Channels",
+  "meeg_layout" = "Layout",
   "reference_online" = "Reference..online.",
   "reference_offline" = "Reference..offline.",
   "high_pass" = "High.pass",
@@ -59,7 +60,7 @@ column_mapping <- c(
 )
 
 columns_to_drop <- c("Other.notes..unclassified.", "Motivation", "DOI", "Link", "Analyst", "Include", "Comment", "Citation", "ECG.Description", "Multiple.Comparisons")
-convert_to_numeric <- c("Year", "sample_size", "channels", "length_min", "high_pass", "low_pass", "groups", "conditions", "hep_start", "hep_end", 
+convert_to_numeric <- c("Year", "sample_size", "meeg_num_electrodes", "length_min", "high_pass", "low_pass", "groups", "conditions", "hep_start", "hep_end", 
                         "baseline_start_ms", "baseline_end_ms", "permutations", "significant_start_ms", "significant_end_ms")
 convert_to_factors <- c("rsHEP", "Modality", "ICA", "ica_on_epochs", "hep_relative_to", "averaging_channels", "averaging_time", "clustering", "significant_test", 
                         "significant_relative_to")
@@ -76,6 +77,39 @@ load_data <- function(pubmed.path, manual.path) {
   
   return(df_full)
 }
+
+
+resolve_all_except <- function(row) {
+  # Expected input: list(all_locs, except_locs)
+  all_locs <- unlist(strsplit(row[[1]], ", "))
+
+  except_locs <- gsub("All except ", "", row[[2]])
+  except_locs <- unlist(strsplit(except_locs, ", "))
+  
+  kept_cols <- setdiff(all_locs, except_locs)
+  paste(kept_cols, collapse = ", ")
+}
+
+
+preprocess_channels <- function(df) {
+  # Fill in standard EEG locations if the whole layout was used
+  use_layout <- df$eeg_locations == "layout"
+  df$eeg_locations[use_layout] <- sapply(df$meeg_layout[use_layout], 
+                                         \(x) paste(ch_names[[x]], collapse = ", "))
+  
+  # If all channels were selected, copy from EEG Locations
+  all_selected <- df$hep_channels_selected == "All"
+  df$hep_channels_selected[all_selected] <- df$eeg_locations[all_selected]
+  
+  # Resolve All except XX, XX
+  all_except <- grepl("All except", df$hep_channels_selected)
+  df$hep_channels_selected[all_except] <- 
+    apply(X = df[all_except, c("eeg_locations", "hep_channels_selected")], 
+          MARGIN = 1, FUN = resolve_all_except)
+  
+  df
+}
+
 
 preprocess_screening <- function(df_screening) {
   df_screening %>%
@@ -198,7 +232,9 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
     df_included <- adjust_data_type(df_included, convert_to_numeric, convert_to_factors)
   }
   
-  df_included <- preprocess_ecg(df_included)
+  df_included <- df_included %>%
+    preprocess_ecg() %>%
+    preprocess_channels()
   
   # transform included IC data
   df_included$rejected_cardiac_ics <- sapply(df_included$rejected_cardiac_ics, clean_cardiac_ics)

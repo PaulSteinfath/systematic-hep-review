@@ -10,6 +10,7 @@
   * `HEP - Manual.csv` - the CSV file of our table (Manual tab).
 * `functions` - helper functions for different parts of the analysis.
 * `results` - all plots can be stored here (this folder is ignored by Git).
+* `tests` - if needed, tests for our functions.
 
 ## Development
 
@@ -18,3 +19,5 @@ Validating the table against the codebook: run the `validate.py` script.
 Main analysis: run the `main.R` script. 
 
 Web application: run `runApp("app")` from the root directory.
+
+Running tests: ``testthat::test_dir("tests")``

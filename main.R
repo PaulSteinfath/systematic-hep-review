@@ -29,6 +29,7 @@ dir.create(results_path, showWarnings = F)
 
 # Imports
 source(file.path(func_path, 'figures.R'))
+source(file.path(func_path, 'layouts.R'))
 source(file.path(func_path, 'preprocess.R'))
 source(file.path(func_path, 'prisma.R'))
 source(file.path(func_path, 'validate.R'))
@@ -36,8 +37,8 @@ source(file.path(func_path, 'validate.R'))
 # Main analysis
 # TODO: download the data from OSF / wherever we put it?
 df_full <- load_data(pubmed_path, manual_path)
-validate_data(df_full)
 c(df_screening, df_included) %<-% preprocess(df_full)
-p_prisma <- generate_prisma(df_screening, prisma_template_path,
-                            derivatives_path, results_path, ext = 'png')
+errors <- validate_preprocessed(df_included)
+generate_prisma(df_screening, prisma_template_path,
+                derivatives_path, results_path, ext = 'png')
 make_figures(df_included, results_path, ext = 'png')

@@ -30,8 +30,8 @@ column_mapping_readable_default <- c(
   "Hypothesis" = "hypothesis",
   "HEP Start (ms)" = "hep_start",
   "HEP End (ms)" = "hep_end",
-  "Number of channels" = "channels",
-  "Layout" = "layout",
+  "Number of channels" = "meeg_num_electrodes",
+  "Layout" = "meeg_layout",
   "Online Reference" = "reference_online",
   "Offline Reference" = "reference_offline",
   "High-Pass Filter (Hz)" = "high_pass",
@@ -63,7 +63,7 @@ column_mapping_readable_default <- c(
   "Sample Size" = "sample_size",
   "Cluster-Based Permutation" = "clustering",
   "Length (min)" = "length_min", 
-  "Modality (EEG/MEG)" = "Modality",
+  "Modality (EEG/MEG)" = "modality",
   "EEG Locations" = "eeg_locations"
 )
 

@@ -1,16 +1,8 @@
-#' This function creates a combined plot of high / low pass filter cutoffs and their density distribution.
-
-library(ggplot2)
-library(dplyr)
-library(scales)
-library(patchwork)
-library(grid)
-
 create_combined_plot <- function(
   df,
   start_var,
   end_var,
-  x_scale = "log",
+  x_scale,
   custom_breaks,
   x_label,
   y_label = "Individual Studies",
@@ -19,9 +11,13 @@ create_combined_plot <- function(
 
   # Remove missing data and validate ranges
   df_filtered <- df %>%
-    filter(!is.na(.data[[start_var]]) & !is.na(.data[[end_var]])) %>%
-    filter(.data[[start_var]] > 0 & .data[[end_var]] > 0)  # ensure positive values for log scale
+    filter(!is.na(.data[[start_var]]) & !is.na(.data[[end_var]])) 
   
+  # Only apply positive value filter if using log scale
+  if (x_scale == "log") {
+    df_filtered <- df_filtered %>% filter(.data[[start_var]] > 0 & .data[[end_var]] > 0)
+  }
+        
   # Return empty plot if no valid data
   if (nrow(df_filtered) == 0) {
     return(no_valid_data_stub(message = "No valid data selected"))
@@ -84,7 +80,7 @@ create_combined_plot <- function(
     geom_raster() +
     scale_fill_gradient(
       low = "white", 
-      high = "#696969",
+      high = plot_fill_default_single,
       limits = c(0, max(density_df$Density, na.rm = TRUE)),
       breaks = scales::pretty_breaks(n = 4)
     ) +
@@ -96,13 +92,7 @@ create_combined_plot <- function(
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank(),
       axis.title.y = element_blank(),
-      plot.margin = unit(c(0, 0.5, 0.5, 0.5), "cm"),
-      # legend.position = "bottom",
-      # legend.text = element_text(size = 9),
-      # legend.title = element_text(size = 10, hjust = 0.5),
-      # legend.title.position = 'bottom',
-      # legend.key.height = unit(0.3, 'cm'),
-      # legend.key.width = unit(0.5, 'cm'),
+      plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm"),
       legend.position = "none"  # Remove legend for now.
     )
 

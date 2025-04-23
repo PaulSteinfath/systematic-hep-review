@@ -2,9 +2,9 @@
 create_ica_usage_plot <- function(df) {
     # Colors for the plot
     colors <- c(
-        "No ICA" = "#666363",
-        "Epoched" = "#8a8888",
-        "Continuous" = "#A9A9A9"
+        "No ICA" = plot_fill_default_single,
+        "Epoched" = plot_fill_default[3],
+        "Continuous" = plot_fill_default[2]
     )
 
     # Count No ICA studies

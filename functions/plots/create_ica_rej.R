@@ -2,13 +2,17 @@ create_ica_rej <- function(df) {
   # Filter for ICA=1 and get distinct PMIDs with their rejected components
   df_ica <- df %>%
     filter(ICA == 1) %>%
-    distinct(PMID, rejected_components)
+    distinct(PMID, rejected_components) %>%
+    filter(rejected_components != "", rejected_components != "unknown") %>%
+    mutate(pipeline_id = row_number())  
+
+
 
   # Clean rejected_components: replace newlines with a comma, collapse multiple commas, and trim spaces/commas
   df_ica$rejected_components <- sapply(df_ica$rejected_components, function(x) {
-    x <- gsub("[\r\n]+", ",", x)    # replace any newline characters with comma
-    x <- gsub(",+", ",", x)         # collapse multiple commas
-    x <- gsub("^,|,$", "", x)        # remove leading and trailing commas
+    x <- gsub("[\r\n]+", ",", x)    
+    x <- gsub(",+", ",", x)         
+    x <- gsub("^,|,$", "", x)       
     comps <- unlist(strsplit(x, ","))
     comps <- unique(trimws(comps))
     comps <- comps[comps != ""]
@@ -38,22 +42,26 @@ create_ica_rej <- function(df) {
 
   df_long <- df_long %>%
     mutate(
-      rejected_components = component_mapping[rejected_components] %>% coalesce(rejected_components)
+      rejected_components = component_mapping[rejected_components] %>% coalesce(rejected_components) # Map to standardized names
+    ) %>% filter(rejected_components != "")
+
+  counts_df <- df_long %>%
+    group_by(rejected_components) %>%
+    summarise(count = n_distinct(pipeline_id)) %>%
+    arrange(desc(count)) %>%
+    mutate(prop = count / pipeline_n)
+
+
+  p <- ggplot(counts_df, aes(x = reorder(rejected_components, count, decreasing = TRUE),
+                             y = prop)) +
+    geom_bar(stat = "identity", fill = "#696969", color = "white", linewidth = 0.5) +
+    theme_classic(base_family = "sans") +
+    scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, .1))) +
+    labs(
+      x = "Types of rejected ICA components",
+      y = "Proportion of pipelines",
+      title = paste("n = ", pipeline_n, "pipelines")
     )
-  
-  # Remove duplicate rows and filter out "unknown" components
-  df_long_dedup <- df_long %>% 
-    distinct(PMID, rejected_components, .keep_all = TRUE) %>%
-    filter(tolower(rejected_components) != "unknown")  # Exclude "unknown"
-  
-  # Use hist_panel to generate the histogram plot
-  hist_panel(
-    df_long_dedup,
-    col = "rejected_components",
-    group_col = "PMID",
-    discrete = TRUE,
-    x.label = "Types of rejected ICA components",
-    tilt_labels = FALSE,
-    use_proportion = TRUE
-  )
+
+  print(p)
 }

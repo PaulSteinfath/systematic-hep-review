@@ -79,6 +79,18 @@ load_data <- function(pubmed.path, manual.path) {
 }
 
 
+resolve_all_except <- function(row) {
+  # Expected input: list(all_locs, except_locs)
+  all_locs <- unlist(strsplit(row[[1]], ", "))
+
+  except_locs <- gsub("All except ", "", row[[2]])
+  except_locs <- unlist(strsplit(except_locs, ", "))
+  
+  kept_cols <- setdiff(all_locs, except_locs)
+  paste(kept_cols, collapse = ", ")
+}
+
+
 preprocess_channels <- function(df) {
   # Fill in standard EEG locations if the whole layout was used
   use_layout <- df$eeg_locations == "layout"
@@ -89,7 +101,11 @@ preprocess_channels <- function(df) {
   all_selected <- df$hep_channels_selected == "All"
   df$hep_channels_selected[all_selected] <- df$eeg_locations[all_selected]
   
-  # TODO: resolve All except ...
+  # Resolve All except XX, XX
+  all_except <- grepl("All except", df$hep_channels_selected)
+  df$hep_channels_selected[all_except] <- 
+    apply(X = df[all_except, c("eeg_locations", "hep_channels_selected")], 
+          MARGIN = 1, FUN = resolve_all_except)
   
   df
 }

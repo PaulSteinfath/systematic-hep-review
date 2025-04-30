@@ -234,34 +234,17 @@ ecg_summary <- function(df) {
   fig
 }
 
-eeg_locations_summary <- function(df) {
-  # Temporary function for testing the display of EEG locations
-  p_separate_primary <- plot_eeg_locations(df[df$hep_window_type == "Primary",], 
-                                           "hep_channels_selected", combined = F) +
-    guides(fill = guide_none())
-  p_separate_secondary <- plot_eeg_locations(df[df$hep_window_type == "Secondary",],
-                                             "hep_channels_selected", combined = F) +
-    guides(fill = guide_none())
-  p_separate_significant <- plot_eeg_locations(df, "significant_channels", 
-                                               lim = NULL, combined = F) +
-    guides(fill = guide_none())
+eeg_locations_summary <- function(df, reference_var, reference_values) {
+  p_selected <- lapply(reference_values, \(x) plot_eeg_locations(df[df[reference_var] == x,], 
+                                                                "hep_channels_selected", combined = T) + labs(title = paste(x, " | selected channels")))
+  p_significant <- lapply(reference_values, \(x) plot_eeg_locations(df[df[reference_var] == x,], 
+                                                                    "significant_channels", 
+                                                                    lim = NULL, combined = T) + labs(title = paste(x, " | significant channels")))
 
-  p_combined_primary <- plot_eeg_locations(df[df$hep_window_type == "Primary",], 
-                                           "hep_channels_selected", combined = T) +
-    labs(title = "Primary")
-  p_combined_secondary <- plot_eeg_locations(df[df$hep_window_type == "Secondary",],
-                                             "hep_channels_selected", combined = T) +
-    labs(title = "Secondary")
-  p_combined_significant <- plot_eeg_locations(df, "significant_channels", 
-                                               lim = NULL, combined = T) +
-    labs(title = "Significant")
-
-  fig <- plot_grid(
-    p_separate_primary, p_combined_primary,
-    p_separate_secondary, p_combined_secondary,
-    p_separate_significant, p_combined_significant,
-    nrow = 3, ncol = 2, rel_widths = c(4, 1.5)
-    )
+  fig <- inject(plot_grid(
+    !!!p_selected, !!!p_significant, nrow = 2
+  ))
+  
   fig
 }
 
@@ -355,10 +338,16 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
   show(ecg_summary_plot)
 
-  eeg_summary_plot <- eeg_locations_summary(df)
+  df$hep_approach <- factor(case_when(
+    df$averaging_time == 1 ~ "Averaging", 
+    df$clustering == 1 ~ "Clustering"
+  ))
+  
+  eeg_locations_by_approach <- eeg_locations_summary(df, reference_var = "hep_approach",
+                                                     reference_values = c("Averaging", "Clustering"))
   ggsave(
-    filename = file.path(save_path, paste0("eeg_summary_plot.", ext)),
-    plot = eeg_summary_plot,
+    filename = file.path(save_path, paste0("eeg_locations_by_approach.", ext)),
+    plot = eeg_locations_by_approach,
     width = 10,
     height = 6,
     units = "in",
@@ -366,10 +355,23 @@ make_figures <- function(df, save_path, ext = "svg") {
     device = ext,
     bg = "white"
   )
-  show(eeg_summary_plot)
+  
+  eeg_locations_by_window_type <- eeg_locations_summary(df, reference_var = "hep_window_type",
+                                                        reference_values = c("Primary", "Secondary"))
+  ggsave(
+    filename = file.path(save_path, paste0("eeg_locations_by_window_type.", ext)),
+    plot = eeg_locations_by_window_type,
+    width = 10,
+    height = 6,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
+  
 
  
-   hep_average_plot <- create_single_ecg_plot(df,
+  hep_average_plot <- create_single_ecg_plot(df,
                                              avg_value = "Averaging",
                                              shared_limits = c(-300, 1000),
                                              plot_title = "HEP Windows (Averaging)",

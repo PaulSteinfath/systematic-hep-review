@@ -53,7 +53,7 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
 
   ggplot() +
     geom_line(data = ecg_data, aes(x = time, y = voltage),
-              color = plot_fill_default_single, size = 1, alpha = 0.3) +
+              color = plot_fill_default_single, linewidth = 1, alpha = 0.3) +
     geom_segment(
       data = df_minimal,
       aes(x = hep_start, xend = hep_end, 
@@ -67,7 +67,7 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
       x = "Time (ms)",
       y = "",
       title = paste("n =", nrow(df_minimal)),
-      caption = "HEP windows for minimal artifact",
+      caption = "HER windows for minimal artifact",
       color = "Reference"
     ) +
     scale_color_manual(values = r_t_peak_palette) +
@@ -83,5 +83,6 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
           legend.title = element_text(size = 9),
           legend.text = element_text(size = 8),
           legend.margin = margin(0, 0, 0, 0),
-          legend.box.margin = margin(-5, 0, 0, 0))
+          legend.box.margin = margin(-5, 0, 0, 0),
+          axis.title.x = element_text(hjust = 0.5))
 }

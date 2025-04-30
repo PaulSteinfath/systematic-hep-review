@@ -35,6 +35,7 @@ source(file.path(func_path, 'layouts.R'))
 source(file.path(func_path, 'preprocess.R'))
 source(file.path(func_path, 'prisma.R'))
 source(file.path(func_path, 'validate.R'))
+source("config.R")
 
 # Main analysis
 # TODO: download the data from OSF / wherever we put it?

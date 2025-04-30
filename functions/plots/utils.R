@@ -28,3 +28,24 @@ create_ecg_data <- function(x_min, x_max, n_points = 500) {
     voltage = scale(p_wave + q_wave + r_wave + s_wave + t_wave, scale = FALSE)
   )
 }
+
+  # Calculate cumulative counts over time intervals
+  calculate_cumulative_counts <- function(df_subset, time_vec) { 
+    if (nrow(df_subset) == 0) {
+      return(rep(0, length(time_vec)))
+    }
+    counts <- numeric(length(time_vec))
+    # Small offset to ensure intervals are checked correctly [start, end)
+    precision_offset <- (time_vec[2] - time_vec[1]) / 2 
+
+    for (i in 1:nrow(df_subset)) {
+      start_i <- df_subset$start_time[i]
+      end_i <- df_subset$end_time[i]
+      indices <- which(time_vec >= (start_i - precision_offset) & time_vec < (end_i - precision_offset))
+      if (length(indices) > 0) {
+        counts[indices] <- counts[indices] + 1
+      }
+    }
+    return(counts) 
+  }
+

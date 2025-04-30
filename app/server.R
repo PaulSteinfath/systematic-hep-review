@@ -41,11 +41,21 @@ function(input, output) {
   )
 
   output$hepTimeWindowsPlot <- renderPlot({
-    hep_time_plots <- create_time_windows_with_ecg_plot(df_selected(), "both")
+    shared_limits <- c(-300, 1000)
     if (input$hepWindowType == "averaging") {
-      hep_time_plots$averaging
+      create_single_ecg_plot(df_selected(),
+                                             avg_value = "Averaging",
+                                             shared_limits = c(-300, 1000),
+                                             plot_title = "HEP Windows (Averaging)",
+                                             reference_var = "hep_relative_to",
+                                             reference_values = c("R-peak", "T-peak"))
     } else {
-      hep_time_plots$clustering
+      create_single_ecg_plot(df_selected(),
+                                             avg_value = "Clustering",
+                                             shared_limits = c(-300, 1000),
+                                             plot_title = "HEP Windows (Clustering)",
+                                             reference_var = "hep_relative_to",
+                                             reference_values = c("R-peak", "T-peak"))
     }
   })
 }

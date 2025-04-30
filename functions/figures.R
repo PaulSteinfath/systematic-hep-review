@@ -38,9 +38,7 @@ create_combined_plot_for_columns <- function(df){
     ncol = 1, 
     align = "v",
     axis = "l",
-    labels = c("A", "B", "C"), 
-    label_x = 0.01,
-    hjust = 0,
+    labels = c("A", "B", "C"),
     vjust = 1,
     rel_heights = c(1, 1, 1.2)
   )
@@ -378,7 +376,7 @@ make_figures <- function(df, save_path, ext = "svg") {
                                              reference_var = "hep_relative_to",
                                              reference_values = c("R-peak", "T-peak"))
 
-  hep_cluster_plot <- create_single_ecg_plot(df, # Use create_single_ecg_plot
+  hep_cluster_plot <- create_single_ecg_plot(df,
                                              avg_value = "Clustering",
                                              shared_limits = c(-300, 1000),
                                              plot_title = "HEP Windows (Clustering)",

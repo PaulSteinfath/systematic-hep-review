@@ -135,7 +135,7 @@
 <polyline points='700.39,229.63 700.39,226.89 ' style='stroke-width: 1.07; stroke: #333333; stroke-linecap: butt;' />
 <text transform='translate(11.91,123.13) rotate(-90)' text-anchor='middle' style='font-size: 9.00px; font-family: "Arial";' textLength='33.11px' lengthAdjust='spacingAndGlyphs'>Entropy</text>
 <text x='37.13' y='11.91' style='font-size: 9.00px; font-family: "Arial";' textLength='30.84px' lengthAdjust='spacingAndGlyphs'>n = 132</text>
-<text x='7.20' y='10.00' style='font-size: 14.00px; font-weight: bold; font-family: "Arial";' textLength='9.66px' lengthAdjust='spacingAndGlyphs'>A</text>
+<text x='4.83' y='10.00' style='font-size: 14.00px; font-weight: bold; font-family: "Arial";' textLength='9.66px' lengthAdjust='spacingAndGlyphs'>A</text>
 </g>
 <defs>
   <clipPath id='cpMC4wMHw3MjAuMDB8MjQ3LjUwfDQ5NS4wMA=='>
@@ -246,7 +246,7 @@
 <polyline points='700.39,477.13 700.39,474.39 ' style='stroke-width: 1.07; stroke: #333333; stroke-linecap: butt;' />
 <text transform='translate(18.58,370.63) rotate(-90)' text-anchor='middle' style='font-size: 9.00px; font-family: "Arial";' textLength='190.51px' lengthAdjust='spacingAndGlyphs'>Percentage of Papers with Multiple Decisions</text>
 <text x='37.13' y='259.41' style='font-size: 9.00px; font-family: "Arial";' textLength='30.84px' lengthAdjust='spacingAndGlyphs'>n = 132</text>
-<text x='7.20' y='257.50' style='font-size: 14.00px; font-weight: bold; font-family: "Arial";' textLength='9.41px' lengthAdjust='spacingAndGlyphs'>B</text>
+<text x='4.71' y='257.50' style='font-size: 14.00px; font-weight: bold; font-family: "Arial";' textLength='9.41px' lengthAdjust='spacingAndGlyphs'>B</text>
 </g>
 <defs>
   <clipPath id='cpMC4wMHw3MjAuMDB8NDk1LjAwfDc5Mi4wMA=='>
@@ -400,6 +400,6 @@
 <text x='375.82' y='784.54' text-anchor='middle' style='font-size: 9.00px; font-family: "Arial";' textLength='96.56px' lengthAdjust='spacingAndGlyphs'>Methodological Choice</text>
 <text transform='translate(18.58,598.42) rotate(-90)' text-anchor='middle' style='font-size: 9.00px; font-family: "Arial";' textLength='199.15px' lengthAdjust='spacingAndGlyphs'>Percentage of Papers with Missing Information</text>
 <text x='37.13' y='506.91' style='font-size: 9.00px; font-family: "Arial";' textLength='30.84px' lengthAdjust='spacingAndGlyphs'>n = 132</text>
-<text x='7.20' y='505.00' style='font-size: 14.00px; font-weight: bold; font-family: "Arial";' textLength='8.92px' lengthAdjust='spacingAndGlyphs'>C</text>
+<text x='4.46' y='505.00' style='font-size: 14.00px; font-weight: bold; font-family: "Arial";' textLength='8.92px' lengthAdjust='spacingAndGlyphs'>C</text>
 </g>
 </svg>

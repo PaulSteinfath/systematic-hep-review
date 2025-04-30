@@ -14,7 +14,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   }
 
   # --- Create Time Window Plots ---
-  title_hjust <- -0.02 # move titles to left
+  title_hjust <- -0.02 
 
  # Create plot for HER Time of Interest
   if (nrow(df_filtered %>% filter(!is.na(hep_start), !is.na(hep_end))) > 0) {

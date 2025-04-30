@@ -1,6 +1,3 @@
-library(dplyr) 
-library(stringr)
-
 # Columns that describe the screening
 screening_columns <- c(
   "source", "PMID", "DOI", "Analyst", "Include",

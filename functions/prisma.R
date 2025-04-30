@@ -1,6 +1,3 @@
-library(PRISMA2020)     # PRISMA_data, PRISMA_flowdiagram, PRISMA_save
-
-
 plot_prisma_diagram <- function(df_prisma) {
   prisma_data <- PRISMA_data(df_prisma)
   PRISMA_flowdiagram(prisma_data, previous = F, other = T, 

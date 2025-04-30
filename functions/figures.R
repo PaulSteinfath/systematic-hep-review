@@ -329,7 +329,6 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
   show(cfa_removal_plot)
 
-  
   combined_plot_for_columns <- create_combined_plot_for_columns(df)
   
   ggsave(
@@ -339,7 +338,7 @@ make_figures <- function(df, save_path, ext = "svg") {
     height = 11,
     units = "in",
     dpi = 300,
-    device = "svg",
+    device = ext,
     bg = "white"
   )
 

@@ -267,9 +267,39 @@ eeg_locations_summary <- function(df) {
   fig
 }
 
+
+studies_overview <- function(df) {
+  p_year <- hist_panel(df, "Year", force.numeric = T, 
+                       x.label = "Publication year", binwidth = 2)
+  
+  p_modality <- hist_panel(df, "modality", discrete = T,
+                           x.label = "Imaging modality")
+  
+  p_condition <- hist_panel(df, "rsHEP", discrete = T,
+                            x.label = "Experimental condition",
+                            custom_labels = c("Task", "Resting-state"))
+  
+  fig <- plot_grid(p_year, p_modality, p_condition,
+                   nrow = 1, labels = c("B", "C", "D"))
+  
+  fig
+}
+
 # Here we generate all figures
 make_figures <- function(df, save_path, ext = "svg") {
 
+  fig1BCD_studies <- studies_overview(df)
+  ggsave(
+    filename = file.path(save_path, paste0("studies_overview.", ext)),
+    plot = fig1BCD_studies,
+    width = 10,
+    height = 3,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
+  
   eeg_acq_prep_plot <- eeg_acq_prep(df)
 
   ggsave(

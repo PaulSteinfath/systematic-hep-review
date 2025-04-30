@@ -35,24 +35,27 @@ function(input, output) {
     create_control_variables_plot(df_selected())
   }, res = 96)
   
-  output$timeWindowsPlot <- renderPlot({
-    # Show either the averaging or clustering plot based on user selection
-    result <- create_time_windows_with_ecg_plot(df_selected(), input$timeWindowType)
-    
-    # If only one plot is requested, result is the plot itself
-    # If both plots are requested, we need to extract the right one
-    if (inherits(result, "list")) {
-      if (input$timeWindowType == "1") {
-        return(result$averaging)
-      } else {
-        return(result$clustering)
-      }
-    } else {
-      return(result)
-    }
-  }, res = 96)
   output$ecgSummaryPlot <- renderPlot({
       ecg_summary(df_selected())
     }, res = 96
   )
+
+  output$hepTimeWindowsPlot <- renderPlot({
+    shared_limits <- c(-300, 1000)
+    if (input$hepWindowType == "averaging") {
+      create_single_ecg_plot(df_selected(),
+                                             avg_value = "Averaging",
+                                             shared_limits = c(-300, 1000),
+                                             plot_title = "HEP Windows (Averaging)",
+                                             reference_var = "hep_relative_to",
+                                             reference_values = c("R-peak", "T-peak"))
+    } else {
+      create_single_ecg_plot(df_selected(),
+                                             avg_value = "Clustering",
+                                             shared_limits = c(-300, 1000),
+                                             plot_title = "HEP Windows (Clustering)",
+                                             reference_var = "hep_relative_to",
+                                             reference_values = c("R-peak", "T-peak"))
+    }
+  })
 }

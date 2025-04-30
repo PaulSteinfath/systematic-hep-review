@@ -53,7 +53,7 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
 
   ggplot() +
     geom_line(data = ecg_data, aes(x = time, y = voltage),
-              color = plot_fill_default_single, size = 1, alpha = 0.3) +
+              color = plot_fill_default_single, linewidth = 1, alpha = 0.3) +
     geom_segment(
       data = df_minimal,
       aes(x = hep_start, xend = hep_end, 
@@ -62,15 +62,15 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
       linewidth = 0.7
     ) +
     geom_vline(xintercept = 0, linetype = "dotted", color = "gray40") +
-    geom_vline(xintercept = t_peak_offset, linetype = "dashed", color = "#E69F00") +
+    geom_vline(xintercept = t_peak_offset, linetype = "dashed", color = r_t_peak_palette["T-peak"]) +
     labs(
       x = "Time (ms)",
       y = "",
       title = paste("n =", nrow(df_minimal)),
-      caption = "HEP windows for minimal artifact",
+      caption = "HER windows for minimal artifact",
       color = "Reference"
     ) +
-    scale_color_manual(values = c("R-peak" = "#696969", "T-peak" = "#E69F00")) +
+    scale_color_manual(values = r_t_peak_palette) +
     theme_classic(base_family = "sans") +
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
@@ -83,5 +83,6 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
           legend.title = element_text(size = 9),
           legend.text = element_text(size = 8),
           legend.margin = margin(0, 0, 0, 0),
-          legend.box.margin = margin(-5, 0, 0, 0))
+          legend.box.margin = margin(-5, 0, 0, 0),
+          axis.title.x = element_text(hjust = 0.5))
 }

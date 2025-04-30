@@ -20,29 +20,31 @@ source(file.path(func_path, "plots", "plot_ecg_locations.R"))
 source(file.path(func_path, "plots", "plot_missing.R"))
 source(file.path(func_path, "plots", "plot_multiple_choices.R"))
 source(file.path(func_path, "plots", "plot_entropy.R"))
+source(file.path(func_path, "plots", "create_time_windows_plot.R"))
+source(file.path(func_path, "plots", "create_single_ecg_plot.R"))
 
 create_combined_plot_for_columns <- function(df){
-  
+
   analysis_steps <- colnames(df)[6:45] 
-  
+
   p1 <- plot_entropy(df,method_columns = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F,  x_lab = "", x_ticks = FALSE)
-  
+
   p2 <- plot_multiple_choices(df,variables = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F, x_lab = "", x_ticks = FALSE)
-  
+
   p3 <- plot_missing(df, columns = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F, x_ticks = TRUE)
-  
+
   fig_ABC <- plot_grid(
     p1, p2, p3, 
     ncol = 1, 
     align = "v",
     axis = "l",
-    labels = c("A", "B", "C"), 
+    labels = c("A", "B", "C"),
     vjust = 1,
     rel_heights = c(1, 1, 1.2)
   )
-  
+
   return(fig_ABC)
-  
+
 }
 
 # Create filter cutoff plots
@@ -58,7 +60,6 @@ create_filter_plots <- function(df) {
   )
   return(filter_plot)
 }
-
 
 # Create EEG Acquisition & Preprocessing
 eeg_acq_prep <- function(df) {
@@ -167,7 +168,7 @@ cfa_removal <- function(df) {
   other_strategies_plot <- other_strategy_plot(df)
   rr_plot <- rr_intervals_plot(df)
   minimal_artifact_plot <- minimal_artifact_windows_plot(df, t_peak_offset = 300)
-      
+ 
   # Combine subplots into rows
   top_row <- plot_grid(
     ica_usage_plot,
@@ -212,7 +213,6 @@ ecg_summary <- function(df) {
                       na.value = plot_fill_default_single,
                       guide = "none") 
   p_ecg_locations <- plot_ecg_locations(df, leads_palette)
-  
   fig_AB = plot_grid(
     p_ecg_num_electrodes,
     p_ecg_leads,
@@ -221,7 +221,7 @@ ecg_summary <- function(df) {
     align = "v",
     axis = "lr"
   )
-  
+
   fig <- plot_grid(
     fig_AB,
     p_ecg_locations,
@@ -231,7 +231,6 @@ ecg_summary <- function(df) {
     align = "h",
     axis = "tb"
   )
-  
   fig
 }
 
@@ -246,7 +245,7 @@ eeg_locations_summary <- function(df) {
   p_separate_significant <- plot_eeg_locations(df, "significant_channels", 
                                                lim = NULL, combined = F) +
     guides(fill = guide_none())
-  
+
   p_combined_primary <- plot_eeg_locations(df[df$hep_window_type == "Primary",], 
                                            "hep_channels_selected", combined = T) +
     labs(title = "Primary")
@@ -256,7 +255,7 @@ eeg_locations_summary <- function(df) {
   p_combined_significant <- plot_eeg_locations(df, "significant_channels", 
                                                lim = NULL, combined = T) +
     labs(title = "Significant")
-  
+
   fig <- plot_grid(
     p_separate_primary, p_combined_primary,
     p_separate_secondary, p_combined_secondary,
@@ -330,7 +329,7 @@ make_figures <- function(df, save_path, ext = "svg") {
   show(cfa_removal_plot)
 
   combined_plot_for_columns <- create_combined_plot_for_columns(df)
-  
+
   ggsave(
     filename = file.path(save_path, paste0("combined_plot_for_columns.", ext)),
     plot = combined_plot_for_columns,
@@ -343,7 +342,7 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
 
   control_vars_plot <- create_control_variables_plot(df)
-  
+
   ggsave(
     filename = file.path(save_path, paste0("control_variables_plot.", ext)),
     plot = control_vars_plot,
@@ -358,7 +357,7 @@ make_figures <- function(df, save_path, ext = "svg") {
 
 
   control_categories_plot <- create_control_categories_plot(df)
-  
+
   ggsave(
     filename = file.path(save_path, paste0("control_categories_plot.", ext)),
     plot = control_categories_plot,
@@ -370,8 +369,8 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(control_categories_plot)
-  
-  
+
+
   ecg_summary_plot <- ecg_summary(df)
 
   ggsave(
@@ -385,7 +384,7 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(ecg_summary_plot)
-  
+
   eeg_summary_plot <- eeg_locations_summary(df)
   ggsave(
     filename = file.path(save_path, paste0("eeg_summary_plot.", ext)),
@@ -397,4 +396,43 @@ make_figures <- function(df, save_path, ext = "svg") {
     device = ext,
     bg = "white"
   )
+  show(eeg_summary_plot)
+
+ 
+   hep_average_plot <- create_single_ecg_plot(df,
+                                             avg_value = "Averaging",
+                                             shared_limits = c(-300, 1000),
+                                             plot_title = "HEP Windows (Averaging)",
+                                             reference_var = "hep_relative_to",
+                                             reference_values = c("R-peak", "T-peak"))
+
+  hep_cluster_plot <- create_single_ecg_plot(df,
+                                             avg_value = "Clustering",
+                                             shared_limits = c(-300, 1000),
+                                             plot_title = "HEP Windows (Clustering)",
+                                             reference_var = "hep_relative_to",
+                                             reference_values = c("R-peak", "T-peak"))
+ 
+  hep_time_windows_combined <- plot_grid(
+    hep_average_plot, 
+    hep_cluster_plot,
+    ncol = 2,
+    align = "hv",
+    axis = "tblr"
+    # labels = c("A", "B"),
+    # label_x = 0.01,
+    # hjust = 0,
+  )
+
+  ggsave(
+    filename = file.path(save_path, paste0("hep_time_windows_combined.", ext)),
+    plot = hep_time_windows_combined,
+    width = 13, 
+    height = 7,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
+  show(hep_time_windows_combined)
 }

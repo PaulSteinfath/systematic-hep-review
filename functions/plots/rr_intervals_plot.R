@@ -48,5 +48,6 @@ rr_intervals_plot <- function(df) {
           panel.grid.major.y = element_blank(),
           panel.grid.minor = element_blank(),
           title = element_text(hjust = 0, size = 9), 
-          plot.caption = element_text(hjust = 0.5, size = 9, margin = margin(t = 10)))
+          plot.caption = element_text(hjust = 0.5, size = 9, margin = margin(t = 10)),
+          axis.title.x = element_text(hjust = 0.5))
 }

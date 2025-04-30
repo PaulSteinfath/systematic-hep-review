@@ -24,9 +24,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
       reference_values = reference_values,
       t_peak_offset = t_peak_offset,
       x_limits = shared_limits) +
-      # Add legend and title
-      scale_color_manual(name = "", values = setNames(r_t_peak_palette[1:2], reference_values), breaks = reference_values) +
-      scale_fill_manual(name = "", values = setNames(r_t_peak_palette[1:2], reference_values), breaks = reference_values) +
+   
       ggtitle("HEP Time of Interest") +
       theme(plot.title = element_text(hjust = title_hjust, size = 11, margin = margin(b = 5)))
   } else {
@@ -125,7 +123,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
 
     hep_plot_aligned <- hep_plot +
     theme(
-      legend.position = c(0.98, 0.98), 
+      legend.position.inside = c(0.98, 0.98), 
       legend.justification = c("right", "top"), 
       legend.background = element_rect(fill = alpha("white", 0.5)),
       legend.title = element_text(size = 8), 

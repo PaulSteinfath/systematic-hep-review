@@ -170,6 +170,7 @@ cfa_removal <- function(df) {
   other_strategies_plot <- other_strategy_plot(df)
   rr_plot <- rr_intervals_plot(df)
   minimal_artifact_plot <- minimal_artifact_windows_plot(df, t_peak_offset = 300)
+ 
   # Combine subplots into rows
   top_row <- plot_grid(
     ica_usage_plot,
@@ -389,7 +390,7 @@ make_figures <- function(df, save_path, ext = "svg") {
     hep_cluster_plot,
     ncol = 2,
     align = "hv",
-    axis = "tblr",
+    axis = "tblr"
     # labels = c("A", "B"),
     # label_x = 0.01,
     # hjust = 0,

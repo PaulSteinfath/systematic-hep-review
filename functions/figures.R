@@ -269,13 +269,14 @@ eeg_locations_summary <- function(df) {
 
 studies_overview <- function(df) {
   p_year <- hist_panel(df, "Year", force.numeric = T, 
-                       x.label = "Publication year", binwidth = 2)
+                       x.label = "Publication year", 
+                       binwidth = 2, use_proportion = F)
   
   p_modality <- hist_panel(df, "modality", discrete = T,
                            x.label = "Imaging modality")
   
   p_condition <- hist_panel(df, "rsHEP", discrete = T,
-                            x.label = "Experimental condition",
+                            x.label = "Experimental setting",
                             custom_labels = c("Task", "Resting-state"))
   
   fig <- plot_grid(p_year, p_modality, p_condition,

@@ -236,14 +236,22 @@ ecg_summary <- function(df) {
 
 eeg_locations_summary <- function(df, reference_var, reference_values) {
   p_selected <- lapply(reference_values, \(x) plot_eeg_locations(df[df[reference_var] == x,], 
-                                                                "hep_channels_selected", combined = T) + labs(title = paste(x, " | selected channels")))
+                                                                "hep_channels_selected", combined = T,
+                                                                main_title = "Selected", show_colorbar = F))
+  names(p_selected) <- reference_values
   p_significant <- lapply(reference_values, \(x) plot_eeg_locations(df[df[reference_var] == x,], 
-                                                                    "significant_channels", 
-                                                                    lim = NULL, combined = T) + labs(title = paste(x, " | significant channels")))
-
-  fig <- inject(plot_grid(
-    !!!p_selected, !!!p_significant, nrow = 2
-  ))
+                                                                    "significant_channels", combined = T,
+                                                                    main_title = "Significant", show_colorbar = F))
+  names(p_significant) <- reference_values
+  
+  # XXX: rather hacky approach that works only for two reference values (seems
+  # to be enough for now)
+  fig <- plot_grid(
+    p_selected[[reference_values[[1]]]], p_significant[[reference_values[[1]]]], 
+    NULL,
+    p_selected[[reference_values[[2]]]], p_significant[[reference_values[[2]]]], 
+    nrow = 1, rel_widths = c(1, 1, 0.1, 1, 1)
+  )
   
   fig
 }
@@ -323,7 +331,6 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
   show(control_categories_plot)
 
-
   ecg_summary_plot <- ecg_summary(df)
 
   ggsave(
@@ -337,11 +344,6 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(ecg_summary_plot)
-
-  df$hep_approach <- factor(case_when(
-    df$averaging_time == 1 ~ "Averaging", 
-    df$clustering == 1 ~ "Clustering"
-  ))
   
   eeg_locations_by_approach <- eeg_locations_summary(df, reference_var = "hep_approach",
                                                      reference_values = c("Averaging", "Clustering"))
@@ -349,7 +351,7 @@ make_figures <- function(df, save_path, ext = "svg") {
     filename = file.path(save_path, paste0("eeg_locations_by_approach.", ext)),
     plot = eeg_locations_by_approach,
     width = 10,
-    height = 6,
+    height = 2,
     units = "in",
     dpi = 300,
     device = ext,
@@ -362,7 +364,7 @@ make_figures <- function(df, save_path, ext = "svg") {
     filename = file.path(save_path, paste0("eeg_locations_by_window_type.", ext)),
     plot = eeg_locations_by_window_type,
     width = 10,
-    height = 6,
+    height = 2,
     units = "in",
     dpi = 300,
     device = ext,

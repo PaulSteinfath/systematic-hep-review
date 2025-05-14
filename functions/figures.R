@@ -261,13 +261,45 @@ eeg_locations_summary <- function(df) {
     p_separate_secondary, p_combined_secondary,
     p_separate_significant, p_combined_significant,
     nrow = 3, ncol = 2, rel_widths = c(4, 1.5)
-    )
+  )
+  
+  fig
+}
+
+
+studies_overview <- function(df) {
+  p_year <- hist_panel(df, "Year", force.numeric = T, 
+                       x.label = "Publication year", 
+                       binwidth = 2, use_proportion = F)
+  
+  p_modality <- hist_panel(df, "modality", discrete = T,
+                           x.label = "Imaging modality")
+  
+  p_condition <- hist_panel(df, "rsHEP", discrete = T,
+                            x.label = "Experimental setting",
+                            custom_labels = c("Task", "Resting-state"))
+  
+  fig <- plot_grid(p_year, p_modality, p_condition,
+                   nrow = 1, labels = c("B", "C", "D"))
+  
   fig
 }
 
 # Here we generate all figures
 make_figures <- function(df, save_path, ext = "svg") {
 
+  fig1BCD_studies <- studies_overview(df)
+  ggsave(
+    filename = file.path(save_path, paste0("studies_overview.", ext)),
+    plot = fig1BCD_studies,
+    width = 10,
+    height = 3,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
+  
   eeg_acq_prep_plot <- eeg_acq_prep(df)
 
   ggsave(
@@ -297,7 +329,6 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
   show(cfa_removal_plot)
 
-
   combined_plot_for_columns <- create_combined_plot_for_columns(df)
 
   ggsave(
@@ -307,7 +338,7 @@ make_figures <- function(df, save_path, ext = "svg") {
     height = 11,
     units = "in",
     dpi = 300,
-    device = "svg",
+    device = ext,
     bg = "white"
   )
 

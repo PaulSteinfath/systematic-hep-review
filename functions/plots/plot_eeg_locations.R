@@ -1,10 +1,3 @@
-library(eegUtils)
-library(ggplot2)
-library(purrr)
-library(tidyr)
-library(viridis)
-
-
 get_channel_freq <- function(df, col, ch, divide.over = "n_rows") {
   # NOTE: this function should be adjusted if we decide to normalize
   # the study / pipeline counts differently

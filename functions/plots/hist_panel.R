@@ -98,11 +98,11 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
     p <- p + xlab(x.label)
   }
   
-  if (use_proportion) {
-    p <- p + scale_y_continuous(labels = scales::percent,
-                                expand = expansion(mult = c(0, .1)),
-                                limits = y_limits)  # Apply y-axis limits if provided
-  }
+  # Add percent signs to labels, remove empty space below the bars, apply y-axis
+  # limits if provided
+  p <- p + scale_y_continuous(labels = if (use_proportion) scales::percent else waiver(),
+                              expand = expansion(mult = c(0, .1)),
+                              limits = y_limits)
   
   # Update y-axis label to use the same label_type
   if (use_proportion) {

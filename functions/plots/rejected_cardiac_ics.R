@@ -1,4 +1,3 @@
-
 rejected_cardiac_ics <- function(df) {
 
   df_rej_ic <- df %>%

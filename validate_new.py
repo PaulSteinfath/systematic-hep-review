@@ -136,6 +136,7 @@ def load_codebook(codebook_path):
     """
 
     df_codebook = pd.read_csv(codebook_path, header=1)
+    df_codebook["checks"] = df_codebook["checks"].fillna("")
     return df_codebook
 
 
@@ -531,7 +532,7 @@ def validate(df, codebook, ignore_cols):
                     'codebook': codebook_col.data_type
                 })
 
-            checks = codebook_col.checks.split(', ')
+            checks = [el for el in str(codebook_col.checks).split(', ') if el.strip()]
             for check in checks:
                 if check not in CHECK_FN_MAPPING:
                     unknown_checks.add(check)
@@ -539,7 +540,7 @@ def validate(df, codebook, ignore_cols):
 
                 check_fn, needs_codebook = CHECK_FN_MAPPING[check]
                 if needs_codebook:
-                    allowed_values = codebook_col.allowed_values.split(', ')
+                    allowed_values = [el for el in str(codebook_col.allowed_values).split(', ') if el.strip()]
                     if not check_fn(value, allowed_values, col=col):
                         errors.append({
                             'line': idx,

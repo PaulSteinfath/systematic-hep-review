@@ -272,8 +272,8 @@ create_hep_time_windows_summary_plot <- function(df) {
   df_hep_method_prop <- df %>%
     mutate(
       method_category = case_when(
-        averaging_time == "1" ~ "Averaging",
-        clustering == "1" ~ "Clustering",
+        averaging_time == "1" & clustering == "0" ~ "Averaging",
+        clustering == "1" & averaging_time == "0" ~ "Clustering",
         TRUE ~ "Other"
       )
     ) %>%
@@ -303,11 +303,10 @@ create_hep_time_windows_summary_plot <- function(df) {
     tilt_labels = FALSE
   )
  
- #baseline correction histogram
+  #baseline correction histogram
   df_baseline_prop <- df %>%
     mutate(baseline_defined = case_when(
-      !is.na(baseline_start_ms) & baseline_start_ms != "none" & baseline_start_ms != "unknown" &
-      !is.na(baseline_end_ms) & baseline_end_ms != "none" & baseline_end_ms != "unknown" ~ 1,
+      !is.na(baseline_start_ms) & !is.na(baseline_end_ms) ~ 1,
       TRUE ~ 0
     )) %>%
     mutate(baseline_defined_numeric = as.numeric(baseline_defined))

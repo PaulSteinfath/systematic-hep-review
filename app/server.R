@@ -40,22 +40,7 @@ function(input, output) {
     }, res = 96
   )
 
-  output$hepTimeWindowsPlot <- renderPlot({
-    shared_limits <- c(-300, 1000)
-    if (input$hepWindowType == "averaging") {
-      create_single_ecg_plot(df_selected(),
-                                             avg_value = "Averaging",
-                                             shared_limits = c(-300, 1000),
-                                             plot_title = "HEP Windows (Averaging)",
-                                             reference_var = "hep_relative_to",
-                                             reference_values = c("R-peak", "T-peak"))
-    } else {
-      create_single_ecg_plot(df_selected(),
-                                             avg_value = "Clustering",
-                                             shared_limits = c(-300, 1000),
-                                             plot_title = "HEP Windows (Clustering)",
-                                             reference_var = "hep_relative_to",
-                                             reference_values = c("R-peak", "T-peak"))
-    }
-  })
+  output$hepTimeWindowsCombinedPlot <- renderPlot({
+    create_hep_time_windows_summary_plot(df_selected())
+  }, res = 96)
 }

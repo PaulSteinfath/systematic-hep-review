@@ -5,9 +5,15 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
                                    x_label_main = "Time (ms)") {
 
   # Filter based on avg_value
-  if (!is.null(avg_value) && avg_value %in% c("Averaging", "Clustering")) {
-    avg_val <- ifelse(avg_value == "Averaging", "1", "0")
-    df_filtered <- df %>% filter(averaging_time == avg_val)
+  if (!is.null(avg_value)) {
+    if (avg_value == "Averaging") {
+      df_filtered <- df %>% filter(averaging_time == "1" & clustering == "0")
+    } else if (avg_value == "Clustering") {
+      df_filtered <- df %>% filter(clustering == "1" & averaging_time == "0")
+    } else {
+      # If avg_value is something else (e.g. "Both"), don't filter on these criteria
+      df_filtered <- df
+    }
   } else {
     # If avg_value is NULL -> don't filter by averaging_time
     df_filtered <- df

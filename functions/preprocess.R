@@ -241,6 +241,21 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   
   # add Paper column (readable unique identifier)
   df_included$paper <- create_author_column(df_included)
+
+  # Add columns averaging / clustering & baseline
+  df_included <- df_included %>%
+    mutate(
+      method_category = case_when(
+        averaging_time == "1" & clustering == "0" ~ "Averaging",
+        clustering == "1" & averaging_time == "0" ~ "Clustering",
+        TRUE ~ "Other"
+      ),
+      method_numeric = ifelse(method_category == "Averaging", 1, 0),
+      baseline_defined = case_when(
+        !is.na(baseline_start_ms) & !is.na(baseline_end_ms) ~ 1,
+        TRUE ~ 0
+      )
+    )
   
   if (output_screening){
     list(df_screening, df_included)

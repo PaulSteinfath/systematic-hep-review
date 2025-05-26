@@ -270,17 +270,7 @@ create_hep_time_windows_summary_plot <- function(df) {
 
   #cluster / average histogram
   df_hep_method_prop <- df %>%
-    mutate(
-      method_category = case_when(
-        averaging_time == "1" & clustering == "0" ~ "Averaging",
-        clustering == "1" & averaging_time == "0" ~ "Clustering",
-        TRUE ~ "Other"
-      )
-    ) %>%
-    filter(method_category %in% c("Averaging", "Clustering")) %>%
-    mutate(
-      method_numeric = ifelse(method_category == "Averaging", 1, 0)
-    )
+    filter(method_category %in% c("Averaging", "Clustering"))
 
   avg_cluster_prop_plot <- hist_panel(
     df_hep_method_prop,
@@ -292,11 +282,8 @@ create_hep_time_windows_summary_plot <- function(df) {
   )
   
   #R-/T-peak histogram
-  df_rt_peak_prop <- df %>%
-    filter(hep_relative_to %in% c("R-peak", "T-peak"))
-  
   rt_peak_prop_plot <- hist_panel(
-    df_rt_peak_prop,
+    df,
     col = "hep_relative_to",
     discrete = TRUE, use_proportion = TRUE,
     x.label = "HEP Reference",
@@ -304,16 +291,9 @@ create_hep_time_windows_summary_plot <- function(df) {
   )
  
   #baseline correction histogram
-  df_baseline_prop <- df %>%
-    mutate(baseline_defined = case_when(
-      !is.na(baseline_start_ms) & !is.na(baseline_end_ms) ~ 1,
-      TRUE ~ 0
-    )) %>%
-    mutate(baseline_defined_numeric = as.numeric(baseline_defined))
-
   baseline_def_prop_plot <- hist_panel(
-    df_baseline_prop,
-    col = "baseline_defined_numeric",
+    df,
+    col = "baseline_defined",
     discrete = TRUE, use_proportion = TRUE,
     x.label = "Baseline Correction",
     custom_labels = c("No", "Yes"),
@@ -321,11 +301,8 @@ create_hep_time_windows_summary_plot <- function(df) {
   )
 
   #primary / secondary histogram
-  df_hep_type_prop <- df %>%
-    filter(hep_window_type %in% c("Primary", "Secondary"))
-  
   hep_type_prop_plot <- hist_panel(
-    df_hep_type_prop,
+    df,
     col = "hep_window_type",
     discrete = TRUE, use_proportion = TRUE,
     x.label = "HEP Window Type",

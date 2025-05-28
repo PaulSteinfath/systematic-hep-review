@@ -573,10 +573,6 @@ def load_data(data_path):
     df['CFA Rej. Criteria'] = df['CFA Rej. Criteria'].fillna('')
     df.Controls = df.Controls.fillna('')
 
-    # Fix weird dash signs
-    df['# rejected cardiac ICs'] = df['# rejected cardiac ICs'].str.replace('–', '-')
-    df['Layout'] = df['Layout'].str.replace('–', '-')
-
     # Check that every paper has either 0 or 1 in Include column but not both 
     # (ignoring empty cells for now)
     include_check = df.loc[df.Include.notna(), ['PMID', 'Include']]\

@@ -162,6 +162,9 @@ def is_numeric(x):
 
 
 def should_be_0_or_1(x):
+    if not is_numeric(x):
+        return False
+    
     return int(x) in [0, 1]
 
 
@@ -209,43 +212,37 @@ def validate_analyst(x):
 ## Multi-column validation rules
 
 
-def csd_as_reference(row, idx):
+def csd_as_reference(row, col, idx):
     csd_applied = any(x in str(row['Other CFA removal strategy'])
                       for x in ['CSD', 'Laplacian', 'Laplace', 'Hjorth'])
-    lap_reference = row['Reference (offline)'] == 'Laplacian reference'
+    lap_reference = row[col] == 'Laplacian reference'
     if csd_applied and not lap_reference:
         return [{
             'line': idx,
-            'column': 'Reference (offline)',
-            'check': "should be set to 'Laplacian reference' if CSD was used", 
-            'failure_case': row['Reference (offline)'],
+            'column': col,
+            'error': "should be set to Laplacian if CSD was used", 
+            'failure_case': row[col],
             'codebook': ''
         }]
     
     return []
 
 
-def ica_details_for_cfa_only(row, idx):
+def ica_details_for_cfa_only(row, col, idx):
     cfa_ica_removed = 'CFA' in str(row['Rejected components'])
-    cfa_detail_columns = [
-        '# rejected cardiac ICs',
-        'CFA Rej. Approach',
-        'CFA Rej. Criteria'
-    ]
 
     if cfa_ica_removed:
         return []
     
     errors = []
-    for col in cfa_detail_columns:
-        if not pd.isna(row[col]) and str(row[col]):
-            errors.append({
-                'line': idx,
-                'column': col,
-                'check': "should be empty if no CFA-related ICs were removed", 
-                'failure_case': row[col],
-                'codebook': ''
-            })
+    if not pd.isna(row[col]) and str(row[col]):
+        errors.append({
+            'line': idx,
+            'column': col,
+            'error': "should be filled only if CFA ICs were removed", 
+            'failure_case': row[col],
+            'codebook': ''
+        })
 
     return errors
 
@@ -263,7 +260,7 @@ def channels_eeg_meg(row, idx):
         return [{
             'line': idx,
             'column': channels_col,
-            'check': "should be a single number for EEG", 
+            'error': "should be a single number for EEG", 
             'failure_case': row[channels_col],
             'codebook': ''
         }]
@@ -272,7 +269,7 @@ def channels_eeg_meg(row, idx):
     errors = [{
         'line': idx,
         'column': channels_col,
-        'check': "should be a list of numbers with magnetometers/gradiometers for MEG", 
+        'error': "should be a list of numbers with magnetometers/gradiometers for MEG", 
         'failure_case': row[channels_col],
         'codebook': ''
     }]
@@ -316,6 +313,7 @@ assert should_be_0_or_1(0)
 assert should_be_0_or_1('1')
 assert not should_be_0_or_1(10)
 assert not should_be_0_or_1('2')
+assert not should_be_0_or_1('a')
 
 assert validate_analyst('Paul')
 assert validate_analyst('Maria')
@@ -325,38 +323,38 @@ assert not validate_analyst('XYZ')
 assert not csd_as_reference({
     'Reference (offline)': 'Laplacian reference',
     'Other CFA removal strategy': 'CSD transformation'
-}, 0)
+}, 'Reference (offline)', 0)
 assert not csd_as_reference({
     'Reference (offline)': 'Common average',
     'Other CFA removal strategy': ''
-}, 0)
+}, 'Reference (offline)', 0)
 assert len(csd_as_reference({
     'Reference (offline)': 'Common average',
     'Other CFA removal strategy': 'CSD transformation'
-}, 0)) == 1
+}, 'Reference (offline)', 0)) == 1
 assert len(csd_as_reference({
     'Reference (offline)': 'Common average',
     'Other CFA removal strategy': 'Laplacian transformation'
-}, 0)) == 1
+}, 'Reference (offline)', 0)) == 1
 
 assert not ica_details_for_cfa_only({
     'Rejected components': 'CFA',
     'CFA Rej. Approach': 'Manual',
     'CFA Rej. Criteria': 'Topography',
     '# rejected cardiac ICs': 2.03
-}, 0)
+}, 'CFA Rej. Approach', 0)
 assert not ica_details_for_cfa_only({
     'Rejected components': 'Blinks',
     'CFA Rej. Approach': pd.NA,
     'CFA Rej. Criteria': pd.NA,
     '# rejected cardiac ICs': ''
-}, 0)
+}, 'CFA Rej. Approach', 0)
 assert len(ica_details_for_cfa_only({
     'Rejected components': 'Blinks',
     'CFA Rej. Approach': 'Manual',
     'CFA Rej. Criteria': 'Topography',
     '# rejected cardiac ICs': 2.03
-}, 0)) == 3
+}, '# rejected cardiac ICs', 0)) == 1
 
 assert not channels_eeg_meg({
     'Modality': 'EEG',
@@ -383,6 +381,7 @@ assert not channels_eeg_meg({
 ## Mapping of validation functions to the codebook names
 
 CHECK_MAPPING = {
+    # Single-column
     'should be one of the codebook options': Check(
         fun=validate_single, 
         single_column=True,
@@ -402,17 +401,26 @@ CHECK_MAPPING = {
     'should be 0 or 1': Check(
         fun=should_be_0_or_1, 
         single_column=True,
-        needs_codebook=False)
+        needs_codebook=False),
+    # Multi-column
+    'should be filled only if CFA ICs were removed': Check(
+        fun=ica_details_for_cfa_only,
+        single_column=False,
+        needs_codebook=False
+    ),
+    'should be set to Laplacian if CSD was used': Check(
+        fun=csd_as_reference,
+        single_column=False,
+        needs_codebook=False
+    )
 }
 
 # The list below is not used anymore -- everything should be moved eventually
 MULTICOLUMN_CHECKS = [
-    csd_as_reference,
-    ica_details_for_cfa_only,
     channels_eeg_meg
 ]
 
-def validate_column_wise(row, idx, ignore_cols, missing_cols, codebook):
+def validate_row(row, idx, ignore_cols, missing_cols, codebook):
     errors = []
     unknown_checks = set()
 
@@ -494,7 +502,10 @@ def validate_column_wise(row, idx, ignore_cols, missing_cols, codebook):
                 continue
 
             check = CHECK_MAPPING[check_name]
+
+            # Provide the whole row to multi-column checks
             if not check.single_column:
+                errors.extend(check.fun(row, col, idx))
                 continue
 
             if check.needs_codebook:
@@ -503,7 +514,7 @@ def validate_column_wise(row, idx, ignore_cols, missing_cols, codebook):
                     errors.append({
                         'line': idx,
                         'column': col,
-                        'error': check, 
+                        'error': check_name, 
                         'failure_case': value,
                         'codebook': allowed_values
                     })
@@ -512,7 +523,7 @@ def validate_column_wise(row, idx, ignore_cols, missing_cols, codebook):
                     errors.append({
                         'line': idx,
                         'column': col,
-                        'error': check, 
+                        'error': check_name, 
                         'failure_case': value,
                         'codebook': ''
                     })  
@@ -533,17 +544,15 @@ def validate(df, codebook, ignore_cols):
             f"and will thus be ignored during validation: {', '.join(missing_cols)}"
         )
 
+    # Validate the data frame row by row
     errors = []
     unknown_checks = set()
     for idx, row in df.iterrows():
         row_dict = row.to_dict()
-        
-        # Perform single column checks
-        validate_column_wise(row_dict, idx, ignore_cols, missing_cols, codebook)
-
-        # Perform multi-column checks
-        # for check_fn in MULTICOLUMN_CHECKS:
-        #     errors.extend(check_fn(row, idx))
+        col_errors, col_unknown_checks = validate_row(row_dict, idx, ignore_cols, 
+                                                      missing_cols, codebook)
+        errors.extend(col_errors)
+        unknown_checks |= col_unknown_checks
 
     if unknown_checks:
         warnings.warn(f'There were unknown checks in the schema: {unknown_checks}')

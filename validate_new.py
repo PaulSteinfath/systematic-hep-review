@@ -180,26 +180,12 @@ def validate_single(x, allowed, col, lower=True):
 
 
 def number_or_range(x):
-    if '-' in str(x):
-        chunks = x.split('-')
+    if '-' in str(x) or '+-' in str(x):
+        delim = '+-' if '+-' in str(x) else '-'
+        chunks = x.split(delim)
         return len(chunks) == 2 and is_numeric(chunks[0]) and is_numeric(chunks[1])
     else:
         return is_numeric(x)
-
-
-def number_if_known(x):
-    """
-    Accepts None, unknown or a number
-    """
-    if x.lower() in ['none', 'unknown']:
-        return True
-    
-    return is_numeric(x)
-
-
-def number_plus_minus_sd(x):
-    chunks = x.split('+-') if '+-' in x else [x]
-    return all([is_numeric(el) for el in chunks])
 
 
 def validate_analyst(x):
@@ -331,15 +317,11 @@ assert validate_list('a, b, c', ['a', 'b', 'c'], col='test')
 assert validate_list('A, B, C', ['a', 'B', 'c'], col='test')
 assert not validate_list('a, d', ['a', 'b', 'c'], col='test')
 
-assert number_if_known('1.234')
-assert number_if_known('123')
-assert number_if_known('none')
-assert number_if_known('Unknown')
-assert not number_if_known('aaa')
-
-assert number_plus_minus_sd('200')
-assert number_plus_minus_sd('200+-20')
-assert not number_plus_minus_sd('200+-')
+assert number_or_range('200')
+assert number_or_range('200-210')
+assert number_or_range('200+-20')
+assert not number_or_range('200+-')
+assert not number_or_range('200-')
 
 assert should_be_0_or_1(0)
 assert should_be_0_or_1(1)
@@ -431,10 +413,8 @@ assert len(cluster_based_permutations({
 CHECK_FN_MAPPING = {
     'should be one of the codebook options': (validate_single, True),
     'should be a list of codebook options': (validate_list, True),
-    'number_plus_minus_sd': (number_plus_minus_sd, False),
-    'number_or_range': (number_or_range, False),
+    'should be a number or a range': (number_or_range, False),
     'analyst': (validate_analyst, False),
-    'number_none_or_unknown': (number_if_known, False),
     'should be 0 or 1': (should_be_0_or_1, False)
 }
 MULTICOLUMN_CHECKS = [

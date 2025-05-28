@@ -226,8 +226,9 @@ def validate_single(x, allowed, col, lower=True):
 
 
 def number_or_range(x):
-    if '-' in str(x):
-        chunks = x.split('-')
+    if '-' in str(x) or '+-' in str(x):
+        delim = '+-' if '+-' in str(x) else '-'
+        chunks = x.split(delim)
         return len(chunks) == 2 and is_number(chunks[0]) and is_number(chunks[1])
     else:
         return is_number(x)
@@ -241,11 +242,6 @@ def number_if_known(x):
         return True
     
     return is_number(x)
-
-
-def number_plus_minus_sd(x):
-    chunks = x.split('+-') if '+-' in x else [x]
-    return all([is_number(el) for el in chunks])
 
 
 def validate_analyst(x):
@@ -383,9 +379,11 @@ assert number_if_known('none')
 assert number_if_known('Unknown')
 assert not number_if_known('aaa')
 
-assert number_plus_minus_sd('200')
-assert number_plus_minus_sd('200+-20')
-assert not number_plus_minus_sd('200+-')
+assert number_or_range('200')
+assert number_or_range('200-210')
+assert number_or_range('200+-20')
+assert not number_or_range('200+-')
+assert not number_or_range('200-')
 
 assert should_be_0_or_1(0)
 assert should_be_0_or_1(1)
@@ -477,7 +475,6 @@ assert len(cluster_based_permutations({
 CHECK_FN_MAPPING = {
     'cb_single': (validate_single, True),
     'cb_multiple': (validate_list, True),
-    'number_plus_minus_sd': (number_plus_minus_sd, False),
     'number_or_range': (number_or_range, False),
     'analyst': (validate_analyst, False),
     'number_none_or_unknown': (number_if_known, False),
@@ -667,9 +664,9 @@ special_columns = {
                                            element_wise=True),
                                      nullable=True),
     '#Trials(+-SD)': Column(str,
-                            Check(lambda x: number_plus_minus_sd(x),
-                                  name='number_plus_minus_sd',
-                                  error="should be number or number+-sd",
+                            Check(lambda x: number_or_range(x),
+                                  name='number_or_range',
+                                  error="should be number or a range",
                                   element_wise=True),
                             nullable=True),
     '#Channels': Column(str,

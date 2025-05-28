@@ -46,6 +46,8 @@ import numpy as np
 import pandas as pd
 import warnings
 
+from dataclasses import dataclass
+
 from urllib.request import urlretrieve
 
 
@@ -140,6 +142,15 @@ def load_codebook(codebook_path):
     return df_codebook
 
 
+## Checks
+
+@dataclass
+class Check:
+    fun: callable
+    single_column: bool
+    needs_codebook: bool
+
+
 ## Validation rules
 
 def is_numeric(x):
@@ -180,6 +191,9 @@ def validate_single(x, allowed, col, lower=True):
 
 
 def number_or_range(x):
+    """
+    Supported formats: XX-YY, XX+-YY
+    """
     if '-' in str(x) or '+-' in str(x):
         delim = '+-' if '+-' in str(x) else '-'
         chunks = x.split(delim)
@@ -368,12 +382,27 @@ assert not channels_eeg_meg({
 
 ## Own validation function since pandera one did not work
 
-CHECK_FN_MAPPING = {
-    'should be one of the codebook options': (validate_single, True),
-    'should be a list of codebook options': (validate_list, True),
-    'should be a number or a range': (number_or_range, False),
-    'analyst': (validate_analyst, False),
-    'should be 0 or 1': (should_be_0_or_1, False)
+CHECK_MAPPING = {
+    'should be one of the codebook options': Check(
+        fun=validate_single, 
+        single_column=True,
+        needs_codebook=True),
+    'should be a list of codebook options': Check(
+        fun=validate_list, 
+        single_column=True,
+        needs_codebook=True),
+    'should be a number or a range': Check(
+        fun=number_or_range, 
+        single_column=True,
+        needs_codebook=False),
+    'analyst': Check(
+        fun=validate_analyst, 
+        single_column=True,
+        needs_codebook=False),
+    'should be 0 or 1': Check(
+        fun=should_be_0_or_1, 
+        single_column=True,
+        needs_codebook=False)
 }
 MULTICOLUMN_CHECKS = [
     csd_as_reference,
@@ -470,15 +499,18 @@ def validate(df, codebook, ignore_cols):
                 })
 
             checks = [el for el in str(codebook_col.checks).split(', ') if el.strip()]
-            for check in checks:
-                if check not in CHECK_FN_MAPPING:
-                    unknown_checks.add(check)
+            for check_name in checks:
+                if check_name not in CHECK_MAPPING:
+                    unknown_checks.add(check_name)
                     continue
 
-                check_fn, needs_codebook = CHECK_FN_MAPPING[check]
-                if needs_codebook:
+                check = CHECK_MAPPING[check_name]
+                if not check.single_column:
+                    continue
+
+                if check.needs_codebook:
                     allowed_values = [el for el in str(codebook_col.allowed_values).split(', ') if el.strip()]
-                    if not check_fn(value, allowed_values, col=col):
+                    if not check.fun(value, allowed_values, col=col):
                         errors.append({
                             'line': idx,
                             'column': col,
@@ -487,7 +519,7 @@ def validate(df, codebook, ignore_cols):
                             'codebook': allowed_values
                         })
                 else:
-                    if not check_fn(value):
+                    if not check.fun(value):
                         errors.append({
                             'line': idx,
                             'column': col,

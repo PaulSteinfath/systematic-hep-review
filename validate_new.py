@@ -274,31 +274,6 @@ def channels_eeg_meg(row, idx):
     return []
 
 
-def cluster_based_permutations(row, idx):
-    comp = row['Multiple Comparisons']
-    perm = row['Cluster-based Permutation']
-
-    if 'Cluster-based' in comp and str(perm) != '1':
-        return [{
-            'line': idx,
-            'column': 'Cluster-based permutation',
-            'check': "should be set to 1 if cluster-based permutations were used", 
-            'failure_case': perm,
-            'codebook': ''
-        }]
-    
-    if 'Cluster-based' not in comp and str(perm) == '1':
-        return [{
-            'line': idx,
-            'column': 'Cluster-based permutation',
-            'check': "should NOT be set to 1 if cluster-based permutations were NOT used", 
-            'failure_case': perm,
-            'codebook': ''
-        }]
-    
-    return []
-
-
 ## Some tests for validation rules
 
 assert is_numeric('123.45')
@@ -390,24 +365,6 @@ assert not channels_eeg_meg({
 }, 0)
 
 
-assert not cluster_based_permutations({
-    'Multiple Comparisons': 'Cluster-based',
-    'Cluster-based Permutation': 1
-}, 0)
-assert not cluster_based_permutations({
-    'Multiple Comparisons': 'Bonferroni',
-    'Cluster-based Permutation': 0
-}, 0)
-assert len(cluster_based_permutations({
-    'Multiple Comparisons': 'Cluster-based',
-    'Cluster-based Permutation': 0
-}, 0)) == 1
-assert len(cluster_based_permutations({
-    'Multiple Comparisons': 'Bonferroni',
-    'Cluster-based Permutation': 1
-}, 0)) == 1
-
-
 ## Own validation function since pandera one did not work
 
 CHECK_FN_MAPPING = {
@@ -420,8 +377,7 @@ CHECK_FN_MAPPING = {
 MULTICOLUMN_CHECKS = [
     csd_as_reference,
     ica_details_for_cfa_only,
-    channels_eeg_meg,
-    cluster_based_permutations
+    channels_eeg_meg
 ]
 
 def validate(df, codebook, ignore_cols):

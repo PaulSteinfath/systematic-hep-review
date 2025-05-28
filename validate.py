@@ -334,7 +334,7 @@ def cluster_based_permutations(row, idx):
     comp = row['Multiple Comparisons']
     perm = row['Cluster-based Permutation']
 
-    if 'Cluster-based' in comp and str(perm) != '1':
+    if 'Cluster-based' in comp and int(perm) != 1:
         return [{
             'line': idx,
             'column': 'Cluster-based permutation',
@@ -343,7 +343,7 @@ def cluster_based_permutations(row, idx):
             'codebook': ''
         }]
     
-    if 'Cluster-based' not in comp and str(perm) == '1':
+    if 'Cluster-based' not in comp and int(perm) == 1:
         return [{
             'line': idx,
             'column': 'Cluster-based permutation',

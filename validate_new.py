@@ -380,7 +380,7 @@ assert not channels_eeg_meg({
 }, 0)
 
 
-## Own validation function since pandera one did not work
+## Mapping of validation functions to the codebook names
 
 CHECK_MAPPING = {
     'should be one of the codebook options': Check(
@@ -404,11 +404,121 @@ CHECK_MAPPING = {
         single_column=True,
         needs_codebook=False)
 }
+
+# The list below is not used anymore -- everything should be moved eventually
 MULTICOLUMN_CHECKS = [
     csd_as_reference,
     ica_details_for_cfa_only,
     channels_eeg_meg
 ]
+
+def validate_column_wise(row, idx, ignore_cols, missing_cols, codebook):
+    errors = []
+    unknown_checks = set()
+
+    for col, value in row.items():
+        # Ignore columns during validation as well
+        # Helps if some columns were added but not defined in the script
+        if col in ignore_cols or col in missing_cols:
+            continue
+        codebook_col = codebook[codebook.column == col]
+        assert len(codebook_col) == 1, f"Could not find column {col} in the codebook"
+        codebook_col = codebook_col.squeeze()
+
+        # Check if the value allowed to be empty
+        if pd.isna(value):
+            if not codebook_col.allow_empty:
+                logger.debug(f'Should not be empty: col={col} | value={value}')
+                errors.append({
+                    'line': idx,
+                    'column': col,
+                    'error': 'should not be empty', 
+                    'failure_case': value,
+                    'codebook': ''
+                })
+            else:
+                logger.debug(f'Skipping checks: col={col} | value={value}')
+            continue
+
+        # Check if the value allowed to be none
+        if value == "none":
+            if not codebook_col.allow_none:
+                logger.debug(f'Should not be none: col={col} | value={value}')
+                errors.append({
+                    'line': idx,
+                    'column': col,
+                    'error': 'should not be none', 
+                    'failure_case': value,
+                    'codebook': ''
+                })
+            else:
+                logger.debug(f'Skipping checks: col={col} | value={value}')
+            continue
+
+        # Check if the value allowed to be unknown
+        if value == "unknown":
+            if not codebook_col.allow_unknown:
+                logger.debug(f'Should not be unknown: col={col} | value={value}')
+                errors.append({
+                    'line': idx,
+                    'column': col,
+                    'error': 'should not be unknown', 
+                    'failure_case': value,
+                    'codebook': ''
+                })
+            else:
+                logger.debug(f'Skipping checks: col={col} | value={value}')
+            continue
+
+        # Accept everything in square brackets if allowed
+        value_str = str(value)
+        has_brackets = value_str and value_str[0] == '[' and str(value)[-1] == ']'
+        if codebook_col.allow_brackets and has_brackets:
+            logger.debug(f'Skipping checks: col={col} | value={value}')
+            continue
+
+        # Check data type
+        if codebook_col.data_type == "numeric" and not is_numeric(value):
+            errors.append({
+                'line': idx,
+                'column': col,
+                'error': 'wrong data type', 
+                'failure_case': value,
+                'codebook': codebook_col.data_type
+            })
+
+        checks = [el for el in str(codebook_col.checks).split(', ') if el.strip()]
+        for check_name in checks:
+            if check_name not in CHECK_MAPPING:
+                unknown_checks.add(check_name)
+                continue
+
+            check = CHECK_MAPPING[check_name]
+            if not check.single_column:
+                continue
+
+            if check.needs_codebook:
+                allowed_values = [el for el in str(codebook_col.allowed_values).split(', ') if el.strip()]
+                if not check.fun(value, allowed_values, col=col):
+                    errors.append({
+                        'line': idx,
+                        'column': col,
+                        'error': check, 
+                        'failure_case': value,
+                        'codebook': allowed_values
+                    })
+            else:
+                if not check.fun(value):
+                    errors.append({
+                        'line': idx,
+                        'column': col,
+                        'error': check, 
+                        'failure_case': value,
+                        'codebook': ''
+                    })  
+
+    return errors, unknown_checks      
+
 
 def validate(df, codebook, ignore_cols):
     # Focus only on columns that need to be validated
@@ -427,107 +537,11 @@ def validate(df, codebook, ignore_cols):
     unknown_checks = set()
     for idx, row in df.iterrows():
         row_dict = row.to_dict()
-        for col, value in row_dict.items():
-            # Ignore columns during validation as well
-            # Helps if some columns were added but not defined in the script
-            if col in ignore_cols or col in missing_cols:
-                continue
-            codebook_col = codebook[codebook.column == col]
-            assert len(codebook_col) == 1, f"Could not find column {col} in the codebook"
-            codebook_col = codebook_col.squeeze()
+        
+        # Perform single column checks
+        validate_column_wise(row_dict, idx, ignore_cols, missing_cols, codebook)
 
-            # Check if the value allowed to be empty
-            if pd.isna(value):
-                if not codebook_col.allow_empty:
-                    logger.debug(f'Should not be empty: col={col} | value={value}')
-                    errors.append({
-                        'line': idx,
-                        'column': col,
-                        'error': 'should not be empty', 
-                        'failure_case': value,
-                        'codebook': ''
-                    })
-                else:
-                    logger.debug(f'Skipping checks: col={col} | value={value}')
-                continue
-
-            # Check if the value allowed to be none
-            if value == "none":
-                if not codebook_col.allow_none:
-                    logger.debug(f'Should not be none: col={col} | value={value}')
-                    errors.append({
-                        'line': idx,
-                        'column': col,
-                        'error': 'should not be none', 
-                        'failure_case': value,
-                        'codebook': ''
-                    })
-                else:
-                    logger.debug(f'Skipping checks: col={col} | value={value}')
-                continue
-
-            # Check if the value allowed to be unknown
-            if value == "unknown":
-                if not codebook_col.allow_unknown:
-                    logger.debug(f'Should not be unknown: col={col} | value={value}')
-                    errors.append({
-                        'line': idx,
-                        'column': col,
-                        'error': 'should not be unknown', 
-                        'failure_case': value,
-                        'codebook': ''
-                    })
-                else:
-                    logger.debug(f'Skipping checks: col={col} | value={value}')
-                continue
-
-            # Accept everything in square brackets if allowed
-            value_str = str(value)
-            has_brackets = value_str and value_str[0] == '[' and str(value)[-1] == ']'
-            if codebook_col.allow_brackets and has_brackets:
-                logger.debug(f'Skipping checks: col={col} | value={value}')
-                continue
-
-            # Check data type
-            if codebook_col.data_type == "numeric" and not is_numeric(value):
-                errors.append({
-                    'line': idx,
-                    'column': col,
-                    'error': 'wrong data type', 
-                    'failure_case': value,
-                    'codebook': codebook_col.data_type
-                })
-
-            checks = [el for el in str(codebook_col.checks).split(', ') if el.strip()]
-            for check_name in checks:
-                if check_name not in CHECK_MAPPING:
-                    unknown_checks.add(check_name)
-                    continue
-
-                check = CHECK_MAPPING[check_name]
-                if not check.single_column:
-                    continue
-
-                if check.needs_codebook:
-                    allowed_values = [el for el in str(codebook_col.allowed_values).split(', ') if el.strip()]
-                    if not check.fun(value, allowed_values, col=col):
-                        errors.append({
-                            'line': idx,
-                            'column': col,
-                            'error': check, 
-                            'failure_case': value,
-                            'codebook': allowed_values
-                        })
-                else:
-                    if not check.fun(value):
-                        errors.append({
-                            'line': idx,
-                            'column': col,
-                            'error': check, 
-                            'failure_case': value,
-                            'codebook': ''
-                        })        
-
+        # Perform multi-column checks
         # for check_fn in MULTICOLUMN_CHECKS:
         #     errors.extend(check_fn(row, idx))
 

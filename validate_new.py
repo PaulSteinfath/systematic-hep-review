@@ -151,7 +151,7 @@ def is_numeric(x):
 
 
 def should_be_0_or_1(x):
-    return x in [0, 1]
+    return int(x) in [0, 1]
 
 
 def validate_list(x, allowed, col, lower=True):
@@ -299,8 +299,9 @@ assert not number_or_range('200+-')
 assert not number_or_range('200-')
 
 assert should_be_0_or_1(0)
-assert should_be_0_or_1(1)
+assert should_be_0_or_1('1')
 assert not should_be_0_or_1(10)
+assert not should_be_0_or_1('2')
 
 assert validate_analyst('Paul')
 assert validate_analyst('Maria')

@@ -28,11 +28,11 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
       t_peak_offset = t_peak_offset,
       x_limits = shared_limits) +
    
-      ggtitle("HEP Time of Interest") +
+      ggtitle("HER Time of Interest") +
       theme(plot.title = element_text(hjust = title_hjust, size = 11, margin = margin(b = 5)))
   } else {
     hep_plot <- no_valid_data_stub("No valid data") +
-      ggtitle("HEP Time of Interest") +
+      ggtitle("HER Time of Interest") +
       theme(plot.title = element_text(hjust = title_hjust, size = 11, margin = margin(b = 5)),
         legend.position = "none")
     }

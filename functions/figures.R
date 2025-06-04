@@ -276,7 +276,7 @@ create_hep_time_windows_summary_plot <- function(df) {
     df_hep_method_prop,
     col = "method_numeric",
     discrete = TRUE, use_proportion = TRUE,
-    x.label = "HEP Determination",
+    x.label = "HER Determination",
     custom_labels = c("Clustering", "Averaging"), 
     tilt_labels = FALSE
   )
@@ -286,7 +286,7 @@ create_hep_time_windows_summary_plot <- function(df) {
     df,
     col = "hep_relative_to",
     discrete = TRUE, use_proportion = TRUE,
-    x.label = "HEP Reference",
+    x.label = "HER Reference",
     tilt_labels = FALSE
   )
  
@@ -305,7 +305,7 @@ create_hep_time_windows_summary_plot <- function(df) {
     df,
     col = "hep_window_type",
     discrete = TRUE, use_proportion = TRUE,
-    x.label = "HEP Window Type",
+    x.label = "HER Window Type",
     tilt_labels = FALSE
   )
 
@@ -323,7 +323,7 @@ create_hep_time_windows_summary_plot <- function(df) {
     df,
     avg_value = "Averaging",
     shared_limits = c(-300, 1000),
-    plot_title = "E) HEP Windows (Averaging)",
+    plot_title = "E) HER Windows (Averaging)",
     reference_var = "hep_relative_to",
     reference_values = c("R-peak", "T-peak")
   )
@@ -332,7 +332,7 @@ create_hep_time_windows_summary_plot <- function(df) {
     df,
     avg_value = "Clustering",
     shared_limits = c(-300, 1000),
-    plot_title = "F) HEP Windows (Clustering)",
+    plot_title = "F) HER Windows (Clustering)",
     reference_var = "hep_relative_to",
     reference_values = c("R-peak", "T-peak")
   )

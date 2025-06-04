@@ -8,9 +8,9 @@ get_control_variable_mappings <- function() {
     "Surrogate Heartbeats" = list(category = "ECG and Heartbeat-Related Controls", synonyms = c("Permuted Heartbeats")),
     "RR Interval" = list(category = "ECG and Heartbeat-Related Controls", synonyms = c("Interbeat Interval", "IBI", "RR", "HR")),
     "Number of Heartbeats" = list(category = "ECG and Heartbeat-Related Controls", synonyms = c()),
-    "QT Interval" = list(category = "ECG and Heartbeat-Related Controls", synonyms = c("QT-Interval")),
-    "Control interval" = list(category = "ECG and Heartbeat-Related Controls", synonyms = c("control interval 180-400 ms")), 
-    "T-Wave Latency" = list(category = "ECG and Heartbeat-Related Controls", synonyms = c("t-wave mean latency", "t-wave mean latencey variability")),
+    "QT Interval" = list(category = "ECG and Heartbeat-Related Controls", synonyms = c()),
+    "Control interval" = list(category = "ECG and Heartbeat-Related Controls", synonyms = c("control time window")), 
+    "T-Wave Latency" = list(category = "ECG and Heartbeat-Related Controls", synonyms = c("t-wave mean latency", "t-wave mean latency variability")),
 
     # Heart Rate Variability Controls
     "SDRR" = list(category = "Heart Rate Variability (HRV) Controls", synonyms = c()),
@@ -23,7 +23,7 @@ get_control_variable_mappings <- function() {
     "LF/HF" = list(category = "Heart Rate Variability (HRV) Controls", synonyms = c("LF/HF Ratio")),
     "HFlog" = list(category = "Heart Rate Variability (HRV) Controls", synonyms = c()),
     "HRV" = list(category = "Heart Rate Variability (HRV) Controls", synonyms = c("IBI Variability")),
-    "rrHRV" = list(category = "Heart Rate Variability (HRV) Controls", synonyms = c("Vollmer2015", "hrv (vollmer2015)")),
+    "rrHRV" = list(category = "Heart Rate Variability (HRV) Controls", synonyms = c()),
   
     # Cardiovascular and Blood Pressure Controls
     "Systolic Volume" = list(category = "Cardiovascular and Blood Pressure Controls", synonyms = c()), 
@@ -37,7 +37,7 @@ get_control_variable_mappings <- function() {
     "Sex" = list(category = "Demographic and Psychosocial Controls", synonyms = c()),
     "Gender" = list(category = "Demographic and Psychosocial Controls", synonyms = c()),
     "BMI" = list(category = "Demographic and Psychosocial Controls", synonyms = c("Body Mass Index")),
-    "Depression" = list(category = "Demographic and Psychosocial Controls", synonyms = c("bdi")),
+    "Depression" = list(category = "Demographic and Psychosocial Controls", synonyms = c()),
     "Anxiety" = list(category = "Demographic and Psychosocial Controls", synonyms = c()),
     "Affective Disorders" = list(category = "Demographic and Psychosocial Controls", synonyms = c()),
     "Education" = list(category = "Demographic and Psychosocial Controls", synonyms = c()),

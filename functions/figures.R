@@ -56,7 +56,8 @@ create_filter_plots <- function(df) {
     x_scale = "log",
     custom_breaks = c(0.01, 0.1, 0.5, 1, 20, 40, 80),
     x_label = "Filter Cutoff (Hz)",
-    y_label = "Individual Studies"
+    y_label = "Individual Studies",
+    show_legend = TRUE 
   )
   return(filter_plot)
 }

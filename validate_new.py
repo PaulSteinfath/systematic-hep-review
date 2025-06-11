@@ -248,44 +248,6 @@ def ica_details_for_cfa_only(row, col, idx):
     return errors
 
 
-def channels_eeg_meg(row, idx):
-    channels_col = '#Channels'
-    if row[channels_col] == 'unknown':
-        return []
-
-    # For EEG, a single number is expected
-    if row['Modality'] == 'EEG':
-        if is_numeric(row[channels_col]):
-            return []
-        
-        return [{
-            'line': idx,
-            'column': channels_col,
-            'error': "should be a single number for EEG", 
-            'failure_case': row[channels_col],
-            'codebook': ''
-        }]
-    
-    # Otherwise, mag/grad should be specified for MEG
-    errors = [{
-        'line': idx,
-        'column': channels_col,
-        'error': "should be a list of numbers with magnetometers/gradiometers for MEG", 
-        'failure_case': row[channels_col],
-        'codebook': ''
-    }]
-    chunks = [ch.strip() for ch in row[channels_col].split(',')]
-    for ch in chunks:
-        if len(ch.split(' ')) != 2:
-            return errors
-        
-        num, desc = ch.split(' ')
-        if not is_numeric(num) or desc.lower() not in ['magnetometers', 'gradiometers']:
-            return errors
-        
-    return []
-
-
 ## Some tests for validation rules
 
 assert is_numeric('123.45')
@@ -357,28 +319,6 @@ assert len(ica_details_for_cfa_only({
     '# rejected cardiac ICs': 2.03
 }, '# rejected cardiac ICs', 0)) == 1
 
-assert not channels_eeg_meg({
-    'Modality': 'EEG',
-    '#Channels': '60'
-}, 0)
-assert channels_eeg_meg({
-    'Modality': 'MEG',
-    '#Channels': '60'
-}, 0)
-assert not channels_eeg_meg({
-    'Modality': 'MEG',
-    '#Channels': '60 Magnetometers'
-}, 0)
-assert not channels_eeg_meg({
-    'Modality': 'MEG',
-    '#Channels': '60 Gradiometers'
-}, 0)
-assert not channels_eeg_meg({
-    'Modality': 'MEG',
-    '#Channels': '60 magnetometers, 60 gradiometers'
-}, 0)
-
-
 ## Mapping of validation functions to the codebook names
 
 CHECK_MAPPING = {
@@ -416,10 +356,6 @@ CHECK_MAPPING = {
     )
 }
 
-# The list below is not used anymore -- everything should be moved eventually
-MULTICOLUMN_CHECKS = [
-    channels_eeg_meg
-]
 
 def validate_row(row, idx, ignore_cols, missing_cols, codebook):
     errors = []

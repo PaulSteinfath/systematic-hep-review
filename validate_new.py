@@ -138,6 +138,7 @@ def load_codebook(codebook_path):
     """
 
     df_codebook = pd.read_csv(codebook_path, header=1)
+    df_codebook["run_checks"] = df_codebook["run_checks"].fillna(False)
     df_codebook["checks"] = df_codebook["checks"].fillna("")
     return df_codebook
 
@@ -531,18 +532,25 @@ def validate_row(row, idx, ignore_cols, missing_cols, codebook):
     return errors, unknown_checks      
 
 
-def validate(df, codebook, ignore_cols):
-    # Focus only on columns that need to be validated
+def validate(df, codebook, ignore_cols, included=True):
+    # Focus only on columns that need to be validated and match the `included`
+    # argument
     codebook = codebook[codebook.run_checks]
+    codebook = codebook[codebook.included == included]
     checked_columns = list(codebook.column.values)
+
+    desc = "included" if included else "all"
+    col_desc = ", ".join(checked_columns)
+    logging.info(f"Validating the following columns for {desc} papers: {col_desc}")
 
     # Check if any columns are not validated
     missing_cols = set(df.columns) - set(checked_columns)
     if missing_cols:
         logging.warning(
-            f"The following columns are not defined in the schema "
-            f"and will thus be ignored during validation: {', '.join(missing_cols)}"
+            "Some columns will be ignored during validation "
+            "(use --debug to see the full list)"
         )
+        logging.debug(f"Ignored columns: {', '.join(missing_cols)}")
 
     # Validate the data frame row by row
     errors = []
@@ -578,7 +586,6 @@ def load_data(data_path):
     df['Channels selected'] = df['Channels selected'].fillna('')
     df.Topic = df.Topic.fillna('')
     df['Rejected components'] = df['Rejected components'].fillna('')
-    df['Multiple Comparisons'] = df['Multiple Comparisons'].fillna('')
     df['CFA Rej. Criteria'] = df['CFA Rej. Criteria'].fillna('')
     df.Controls = df.Controls.fillna('')
 
@@ -608,7 +615,7 @@ def load_data(data_path):
     return df
 
 
-def filter_rows(df_full, analyst=None):
+def filter_rows(df_full, analyst=None, included=True):
     """
     Filter rows to be validated by conditions:
      - paper was included in the further analysis (Include == 1)
@@ -617,8 +624,9 @@ def filter_rows(df_full, analyst=None):
     df = df_full.copy()
 
     # Pick only the included papers
-    pmids_included = list(df.PMID[df.Include == 1])
-    df = df[df.PMID.isin(pmids_included)]
+    if included:
+        pmids_included = list(df.PMID[df.Include == 1])
+        df = df[df.PMID.isin(pmids_included)]
 
     # Filter rows by the analyst
     if analyst:
@@ -627,12 +635,14 @@ def filter_rows(df_full, analyst=None):
     return df
 
 
-def validate_own(df, codebook, 
+def validate_own(df, df_all, codebook, 
                  ignore_rows=[], ignore_cols=[], 
                  only_rows=[], only_cols=[],
                  n=20, debug=False):
     logger.info('Validating the table...')
-    errors_df = validate(df, codebook, ignore_cols)
+    errors_df_included = validate(df, codebook, ignore_cols, included=True)
+    errors_df_all = validate(df_all, codebook, ignore_cols, included=False)
+    errors_df = pd.concat([errors_df_all, errors_df_included])
     if not len(errors_df):
         logger.info('Nothing to complain about')
         return
@@ -690,7 +700,8 @@ def main(args):
     codebook = load_codebook(TABLE_CODEBOOK_CSV_PATH)
     df_full = load_data(table_csv_path)
 
-    df = filter_rows(df_full, analyst=args.analyst)
+    df = filter_rows(df_full, analyst=args.analyst, included=True)
+    df_all = filter_rows(df_full, analyst=args.analyst, included=False)
 
     ignore_cols = [col.strip() for col in args.no_cols.split(',') if col.strip()]
     ignore_cols_exist = [col in df.columns for col in ignore_cols if col]
@@ -726,7 +737,7 @@ def main(args):
         ignore_rows = []
         logger.info(f'Rows to be shown: {only_rows}')
 
-    validate_own(df, codebook, ignore_rows,
+    validate_own(df, df_all, codebook, ignore_rows,
                  ignore_cols, only_rows, only_cols,
                  args.show, args.debug)
 

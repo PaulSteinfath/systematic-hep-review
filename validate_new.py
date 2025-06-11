@@ -44,6 +44,7 @@ import argparse
 import logging
 import numpy as np
 import pandas as pd
+import re
 import warnings
 
 from dataclasses import dataclass
@@ -248,6 +249,48 @@ def ica_details_for_cfa_only(row, col, idx):
     return errors
 
 
+layout_regex = {
+    "standard": r"(?:Fp|AF|F|FC|FT|C|T|CP|TP|P|PO|O|I|A|M)(?:\d{1,2}|z)",
+    "biosemi": r"(?:A|B|C|D)\d{1,2}",
+    "GSN": r"(?:E\d{1,3}|Cz)",
+    "easycap": r"\d{1,2}",
+    "QuikCap": r"\d{1,3}",
+    "Elekta": "",
+    "KRISS": ""
+}
+
+def locations_belong_to_layout(row, col, idx):
+    # 'layout' should always pass
+    if row[col] == "layout":
+        return []
+
+    # Channel names should be separated by comma+space
+    chunks = str(row[col]).split(", ")
+
+    pattern = None
+    for k, v in layout_regex.items():
+        if k in row["Layout"]:
+            pattern = v
+    assert pattern is not None, f"Could not find regex for layout {row['Layout']}"
+
+    # Empty pattern - no validation required
+    if not pattern:
+        return []
+
+    matches = [re.fullmatch(pattern, ch) for ch in chunks]
+    bad_chunks = [ch for ch, m in zip(chunks, matches) if m is None]
+    if any(bad_chunks):
+        return [{
+            'line': idx,
+            'column': col,
+            'error': "should belong to the layout", 
+            'failure_case': ', '.join([f"<{ch}>" for ch in bad_chunks]),
+            'codebook': ''
+        }]
+    
+    return []
+
+
 ## Some tests for validation rules
 
 assert is_numeric('123.45')
@@ -319,6 +362,44 @@ assert len(ica_details_for_cfa_only({
     '# rejected cardiac ICs': 2.03
 }, '# rejected cardiac ICs', 0)) == 1
 
+assert not locations_belong_to_layout({
+    "Layout": "standard61",
+    "EEG Locations": "layout"
+}, "EEG Locations", 0)
+assert not locations_belong_to_layout({
+    "Layout": "standard32",
+    "EEG Locations": "Fp1, T8, P10, FCz, Cz, Iz"
+}, "EEG Locations", 0)
+assert locations_belong_to_layout({
+    "Layout": "standard19",
+    "EEG Locations": "Fp1,T8,P10,FCz,Cz,Iz"
+}, "EEG Locations", 0)
+assert not locations_belong_to_layout({
+    "Layout": "biosemi128",
+    "EEG Locations": "A4, B8, C12, D16"
+}, "EEG Locations", 0)
+assert locations_belong_to_layout({
+    "Layout": "biosemi128",
+    "EEG Locations": "E12"
+}, "EEG Locations", 0)
+assert not locations_belong_to_layout({
+    "Layout": "GSN-HydroCel-65",
+    "EEG Locations": "Cz, E1, E16, E64"
+}, "EEG Locations", 0)
+assert locations_belong_to_layout({
+    "Layout": "GSN-HydroCel-129",
+    "EEG Locations": "F123"
+}, "EEG Locations", 0)
+assert not locations_belong_to_layout({
+    "Layout": "easycap-M10",
+    "EEG Locations": "2, 4, 8, 16"
+}, "EEG Locations", 0)
+assert locations_belong_to_layout({
+    "Layout": "easycap-M10",
+    "EEG Locations": "C4"
+}, "EEG Locations", 0)
+
+
 ## Mapping of validation functions to the codebook names
 
 CHECK_MAPPING = {
@@ -351,6 +432,11 @@ CHECK_MAPPING = {
     ),
     'should be set to Laplacian if CSD was used': Check(
         fun=csd_as_reference,
+        single_column=False,
+        needs_codebook=False
+    ),
+    'should belong to the layout': Check(
+        fun=locations_belong_to_layout,
         single_column=False,
         needs_codebook=False
     )

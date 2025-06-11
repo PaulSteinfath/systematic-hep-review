@@ -48,7 +48,7 @@ import re
 import warnings
 
 from dataclasses import dataclass
-
+from functools import partial
 from urllib.request import urlretrieve
 
 
@@ -252,20 +252,36 @@ def ica_details_for_cfa_only(row, col, idx):
 layout_regex = {
     "standard": r"(?:Fp|AF|F|FC|FT|C|T|CP|TP|P|PO|O|I|A|M|Ad)(?:\d{1,2}|z)",
     "biosemi": r"(?:A|B|C|D)\d{1,2}",
-    "GSN": r"(?:E\d{1,3}|Cz)",
-    "easycap": r"\d{1,2}",
+    # NOTE: GSN positions are sometimes referred to by their 10-10 equivalents:
+    # https://www.egi.com/images/HydroCelGSN_10-10.pdf
+    "GSN": r"(?:E\d{1,3}|Cz|)|(?:Fp|AF|F|FC|FT|C|T|CP|TP|P|PO|O|I|A|M|Ad)(?:\d{1,2}|z)",
+    # NOTE: easycap-M10 positions are sometimes referred to by their 10-10 equivalents:
+    # https://www.easycap.de/wp-content/uploads/2018/02/Easycap-Equidistant-Layouts.pdf
+    "easycap": r"(?:\d{1,2})|(?:Fp|AF|F|FC|FT|C|T|CP|TP|P|PO|O|I|A|M|Ad)(?:\d{1,2}|z)",
     "QuikCap": r"\d{1,3}",
     "Elekta": r"na",
     "KRISS": r"na"
 }
 
-def locations_belong_to_layout(row, col, idx):
+
+def locations_belong_to_layout(row, col, idx, allow_all=False):
+    test_string = row[col]
+
     # 'layout' should always pass
-    if row[col] == "layout":
+    if test_string == "layout":
         return []
+    
+    # For selected channels, we accept All as a valid entry
+    # Also, we accept All except ...
+    if allow_all and test_string == "All":
+        return []
+    
+    all_except_prefix = "All except "
+    if allow_all and all_except_prefix in test_string:
+        test_string = test_string.removeprefix(all_except_prefix)
 
     # Channel names should be separated by comma+space
-    chunks = str(row[col]).split(", ")
+    chunks = str(test_string).split(", ")
 
     pattern = None
     for k, v in layout_regex.items():
@@ -277,18 +293,40 @@ def locations_belong_to_layout(row, col, idx):
     if not pattern:
         return []
 
+    # Report all chunks that do not match the regex
+    errors = []
     matches = [re.fullmatch(pattern, ch) for ch in chunks]
     bad_chunks = [ch for ch, m in zip(chunks, matches) if m is None]
     if any(bad_chunks):
-        return [{
+        errors.append({
             'line': idx,
             'column': col,
             'error': "should belong to the layout", 
             'failure_case': ', '.join([f"<{ch}>" for ch in bad_chunks]),
             'codebook': ''
-        }]
+        })
+
+    # For 10-20 and derivatives, check T3/T7 and so on
+    names_1020 = set(chunks) & set(["T3", "T4", "T5", "T6"])
+    names_1010 = set(chunks) & set(["T7", "T8", "P7", "P8"])
+    if row["Layout"] == "standard19" and names_1010:
+        errors.append({
+            'line': idx,
+            'column': col,
+            'error': "should not have 10-10 names", 
+            'failure_case': ', '.join(names_1010),
+            'codebook': ''
+        })
+    if row["Layout"] != "standard19" and names_1020:
+        errors.append({
+            'line': idx,
+            'column': col,
+            'error': "should not have 10-20 names", 
+            'failure_case': ', '.join(names_1020),
+            'codebook': ''
+        })
     
-    return []
+    return errors
 
 
 ## Some tests for validation rules
@@ -396,8 +434,16 @@ assert not locations_belong_to_layout({
 }, "EEG Locations", 0)
 assert locations_belong_to_layout({
     "Layout": "easycap-M10",
-    "EEG Locations": "C4"
+    "EEG Locations": "B12"
 }, "EEG Locations", 0)
+assert not locations_belong_to_layout({
+    "Layout": "easycap-M10",
+    "Channels selected": "All"
+}, "Channels selected", 0, allow_all=True)
+assert locations_belong_to_layout({
+    "Layout": "easycap-M10",
+    "Channels selected": "All"
+}, "Channels selected", 0, allow_all=False)
 
 
 ## Mapping of validation functions to the codebook names
@@ -435,11 +481,16 @@ CHECK_MAPPING = {
         single_column=False,
         needs_codebook=False
     ),
-    'should belong to the layout': Check(
+    'should belong to the layout (used)': Check(
         fun=locations_belong_to_layout,
         single_column=False,
         needs_codebook=False
-    )
+    ),
+    'should belong to the layout (selected)': Check(
+        fun=partial(locations_belong_to_layout, allow_all=True),
+        single_column=False,
+        needs_codebook=False
+    ),
 }
 
 

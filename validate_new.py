@@ -250,7 +250,7 @@ def ica_details_for_cfa_only(row, col, idx):
 
 
 layout_regex = {
-    "standard": r"(?:Fp|AF|F|FC|FT|C|T|CP|TP|P|PO|O|I|A|M)(?:\d{1,2}|z)",
+    "standard": r"(?:Fp|AF|F|FC|FT|C|T|CP|TP|P|PO|O|I|A|M|Ad)(?:\d{1,2}|z)",
     "biosemi": r"(?:A|B|C|D)\d{1,2}",
     "GSN": r"(?:E\d{1,3}|Cz)",
     "easycap": r"\d{1,2}",

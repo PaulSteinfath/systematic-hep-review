@@ -255,8 +255,8 @@ layout_regex = {
     "GSN": r"(?:E\d{1,3}|Cz)",
     "easycap": r"\d{1,2}",
     "QuikCap": r"\d{1,3}",
-    "Elekta": "",
-    "KRISS": ""
+    "Elekta": r"na",
+    "KRISS": r"na"
 }
 
 def locations_belong_to_layout(row, col, idx):

@@ -115,13 +115,13 @@ def update(table_csv_url, table_csv_path):
     Download the latest version of the codebook and the table
     from Google Drive.
     """
-    logging.info('Updating the codebook...')
+    logger.info('Updating the codebook...')
     urlretrieve(TABLE_CODEBOOK_CSV_URL, TABLE_CODEBOOK_CSV_PATH)
-    logging.info('Done')
+    logger.info('Done')
 
-    logging.info('Updating the table...')
+    logger.info('Updating the table...')
     urlretrieve(table_csv_url, table_csv_path)
-    logging.info('Done')
+    logger.info('Done')
 
 
 ## Codebook
@@ -477,16 +477,16 @@ def validate(df, codebook, ignore_cols, included=True):
 
     desc = "included" if included else "all"
     col_desc = ", ".join(checked_columns)
-    logging.info(f"Validating the following columns for {desc} papers: {col_desc}")
+    logger.info(f"Validating the following columns for {desc} papers: {col_desc}")
 
     # Check if any columns are not validated
     missing_cols = set(df.columns) - set(checked_columns)
     if missing_cols:
-        logging.warning(
+        logger.warning(
             "Some columns will be ignored during validation "
             "(use --debug to see the full list)"
         )
-        logging.debug(f"Ignored columns: {', '.join(missing_cols)}")
+        logger.debug(f"Ignored columns: {', '.join(missing_cols)}")
 
     # Validate the data frame row by row
     errors = []
@@ -537,14 +537,14 @@ def load_data(data_path):
     # Check that Include is set for all papers
     include_missing = set(df.PMID.values) - set(include_check.PMID.values)
     if include_missing:
-        logging.error(f"The following PMIDs were not screened: {include_missing}")
+        logger.error(f"The following PMIDs were not screened: {include_missing}")
 
     # Print all combinations of Include and Comment values
     # (weird ones should be fixed)
     include_comment = df.loc[df.Include.notna(), ['Include', 'Comment']]\
                         .value_counts()\
                         .reset_index()
-    logging.info('Unique combinations of Include and Comment in the table:')
+    logger.info('Unique combinations of Include and Comment in the table:')
     print(include_comment)
     print(f"{include_comment['count'].sum()} / {len(set(df.PMID.values))}")
 

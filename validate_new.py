@@ -491,6 +491,11 @@ CHECK_MAPPING = {
         single_column=False,
         needs_codebook=False
     ),
+    'should belong to the layout (significant)': Check(
+        fun=locations_belong_to_layout,
+        single_column=False,
+        needs_codebook=False
+    ),
 }
 
 
@@ -619,11 +624,17 @@ def validate(df, codebook, ignore_cols, included=True):
     # Check if any columns are not validated
     missing_cols = set(df.columns) - set(checked_columns)
     if missing_cols:
-        logger.warning(
-            "Some columns will be ignored during validation "
-            "(use --debug to see the full list)"
-        )
-        logger.debug(f"Ignored columns: {', '.join(missing_cols)}")
+        missing_desc = ', '.join(missing_cols)
+        if included:
+            logger.warning(
+                f"Some columns will be ignored during validation: {missing_desc}"
+            )
+        else:
+            logger.warning(
+                "Some columns will be ignored during validation "
+                "(use --debug to see the full list)"
+            )
+            logger.debug(f"Ignored columns: {missing_desc}")
 
     # Validate the data frame row by row
     errors = []

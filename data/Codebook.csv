@@ -1,0 +1,58 @@
+"The order of columns correspond to the order of performed checks - first NA/None/unknown/brackets, then data type (for all values except none/unknown/brackets), then everything else",,,,,,,,
+column,run_checks,allow_empty,allow_none,allow_unknown,allow_brackets,data_type,checks,allowed_values
+PMID,FALSE,,,,,numeric,,
+DOI,FALSE,,,,,character,,
+Analyst,TRUE,FALSE,FALSE,FALSE,FALSE,character,analyst,
+Include,FALSE,,,,,numeric,,
+Comment,FALSE,,,,,character,,
+Title,FALSE,,,,,character,,
+Authors,FALSE,,,,,character,,
+Citation,FALSE,,,,,character,,
+Year,TRUE,FALSE,FALSE,FALSE,FALSE,numeric,,
+Topic,FALSE,,,,,character,,
+Sample size,FALSE,,,,,numeric,,
+rsHEP,FALSE,,,,,numeric,,
+Modality,TRUE,FALSE,FALSE,FALSE,FALSE,character,should be one of the codebook options,"EEG, MEG"
+#Channels,FALSE,,,,,numeric,,
+Layout,FALSE,,,,,character,,
+EEG Locations,FALSE,,,,,character,,
+Length (min),FALSE,,,,,numeric,,
+#ECG Channels,FALSE,,,,,numeric,,
+ECG Lead,FALSE,,,,,character,,
+ECG Locations,FALSE,,,,,character,,
+ECG Ground,FALSE,,,,,character,,
+Reference (online),TRUE,FALSE,FALSE,TRUE,TRUE,character,should be one of the codebook options,"Common average, Linked mastoids, Left mastoid, Right mastoid, Cz, FCz, Fpz, Fz, Linked earlobes, CMS, CMS and DRL, Nose, [C3 and C4], [Cz-Pz], Unknown, na"
+Reference (offline),TRUE,FALSE,FALSE,TRUE,TRUE,character,"should be one of the codebook options, should be set to Laplacian if CSD was used","Common average, Cz, Laplacian reference, Linked earlobes, Linked Mastoids, na, REST, unknown "
+High-pass,TRUE,FALSE,TRUE,TRUE,FALSE,numeric,,
+Low-pass,TRUE,FALSE,TRUE,TRUE,FALSE,numeric,,
+ICA,TRUE,FALSE,FALSE,FALSE,FALSE,numeric,should be 0 or 1,
+ICA on epochs,TRUE,TRUE,FALSE,TRUE,FALSE,numeric,should be 0 or 1,
+Rejected components,TRUE,TRUE,FALSE,TRUE,FALSE,character,should be a list of codebook options,"blinks, muscle, cfa, eye movements, channel noise, line noise, other, unknown"
+# rejected cardiac ICs,TRUE,TRUE,FALSE,FALSE,FALSE,character,should be filled only if CFA ICs were removed,
+CFA Rej. Approach,TRUE,TRUE,FALSE,TRUE,FALSE,character,"should be one of the codebook options, should be filled only if CFA ICs were removed","Manual, Automatic, Semi-automatic, unknown"
+CFA Rej. Criteria,TRUE,FALSE,FALSE,TRUE,FALSE,character,"should be a list of codebook options, should be filled only if CFA ICs were removed","Topography, Time course, Power spectrum, Correlation, Phase consistency, ICLabel, MARA, CORRMAP, SASICA, unknown"
+Other CFA removal strategy,TRUE,TRUE,FALSE,FALSE,FALSE,character,,
+Other cleaning strategy,TRUE,TRUE,FALSE,FALSE,FALSE,character,,
+Channels selected,FALSE,,,,,character,,
+#Groups,FALSE,,,,,numeric,,
+#Conditions,FALSE,,,,,numeric,,
+#Trials(+-SD),FALSE,,,,,character,,
+HEP / Window Type,TRUE,FALSE,FALSE,FALSE,FALSE,character,should be one of the codebook options,"Primary, Secondary"
+HEP / Relative to,TRUE,FALSE,FALSE,FALSE,FALSE,character,should be one of the codebook options,"R-peak, T-peak"
+HEP / Start (ms),TRUE,FALSE,FALSE,TRUE,FALSE,numeric,,
+HEP / End (ms),TRUE,FALSE,FALSE,TRUE,FALSE,numeric,,
+Baseline / Start (ms),TRUE,FALSE,TRUE,TRUE,FALSE,numeric,,
+Baseline / End (ms),TRUE,FALSE,TRUE,TRUE,FALSE,numeric,,
+Hypothesis,FALSE,,,,,character,,
+Value,TRUE,FALSE,TRUE,FALSE,FALSE,character,should be one of the codebook options,"Amplitude, Peak-to-peak amplitude, Global Field Power, Latency, Variance, AUC, Topography, Lempel-Ziv complexity, Segregation-Integration Index, Wavelet entropy, Stability, Source Current Distribution, none"
+Averaging (channels),TRUE,FALSE,FALSE,FALSE,FALSE,numeric,,
+Averaging (time),TRUE,FALSE,FALSE,FALSE,FALSE,numeric,,
+Statistics,FALSE,,,,,character,,
+Cluster-based Permutation,FALSE,,,,,numeric,,
+#Permutations,FALSE,,,,,numeric,,
+Significant test,FALSE,,,,,numeric,,
+Significant / Channels,FALSE,,,,,character,,
+Significant / Relative to,TRUE,TRUE,FALSE,FALSE,FALSE,character,should be one of the codebook options,"R-peak, T-peak"
+Significant / Start (ms),TRUE,TRUE,FALSE,FALSE,FALSE,numeric,,
+Significant / End (ms),TRUE,TRUE,FALSE,FALSE,FALSE,numeric,,
+Controls,FALSE,,,,,character,,

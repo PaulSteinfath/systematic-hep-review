@@ -27,15 +27,8 @@ ui <- page_navbar(
     plotOutput("ecgSummaryPlot", height = "500px")
   ),
   nav_panel(
-    "HEP Time Windows",
-    radioButtons(
-      "hepWindowType",
-      "Select Analysis Type:", 
-      choices = c("Averaging" = "averaging", "Clustering" = "clustering"), 
-      selected = "averaging", 
-      inline = TRUE
-    ),
-    plotOutput("hepTimeWindowsPlot", height = "600px")
+    "HEP Time Windows Summary",
+    plotOutput("hepTimeWindowsCombinedPlot", height = "900px") # Adjusted height for combined plot
   ),
   title = "Methods in HEP research"
 )

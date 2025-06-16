@@ -286,6 +286,97 @@ studies_overview <- function(df) {
   fig
 }
 
+
+create_hep_time_windows_summary_plot <- function(df) {
+
+  #cluster / average histogram
+  df_hep_method_prop <- df %>%
+    filter(method_category %in% c("Averaging", "Clustering"))
+
+  avg_cluster_prop_plot <- hist_panel(
+    df_hep_method_prop,
+    col = "method_numeric",
+    discrete = TRUE, use_proportion = TRUE,
+    x.label = "HER Determination",
+    custom_labels = c("Clustering", "Averaging"), 
+    tilt_labels = FALSE
+  )
+  
+  #R-/T-peak histogram
+  rt_peak_prop_plot <- hist_panel(
+    df,
+    col = "hep_relative_to",
+    discrete = TRUE, use_proportion = TRUE,
+    x.label = "HER Reference",
+    tilt_labels = FALSE
+  )
+ 
+  #baseline correction histogram
+  baseline_def_prop_plot <- hist_panel(
+    df,
+    col = "baseline_defined",
+    discrete = TRUE, use_proportion = TRUE,
+    x.label = "Baseline Correction",
+    custom_labels = c("No", "Yes"),
+    tilt_labels = FALSE
+  )
+
+  #primary / secondary histogram
+  hep_type_prop_plot <- hist_panel(
+    df,
+    col = "hep_window_type",
+    discrete = TRUE, use_proportion = TRUE,
+    x.label = "HER Window Type",
+    tilt_labels = FALSE
+  )
+
+  first_row_histograms <- plot_grid(
+    avg_cluster_prop_plot, rt_peak_prop_plot,
+    baseline_def_prop_plot, hep_type_prop_plot,
+    ncol = 4,
+    labels = c("A", "B", "C", "D"),
+    align = "hv",
+    axis = "tblr"
+  )
+
+  # Main HEP time windows plots
+  hep_average_plot <- create_single_ecg_plot(
+    df,
+    avg_value = "Averaging",
+    shared_limits = c(-300, 1000),
+    plot_title = "E) HER Windows (Averaging)",
+    reference_var = "hep_relative_to",
+    reference_values = c("R-peak", "T-peak")
+  )
+
+  hep_cluster_plot <- create_single_ecg_plot(
+    df,
+    avg_value = "Clustering",
+    shared_limits = c(-300, 1000),
+    plot_title = "F) HER Windows (Clustering)",
+    reference_var = "hep_relative_to",
+    reference_values = c("R-peak", "T-peak")
+  )
+
+  hep_comparison_row <- plot_grid(
+    hep_average_plot, 
+    hep_cluster_plot,
+    ncol = 2,
+    align = "hv",
+    axis = "tblr",
+    label_x = 0.01,
+    hjust = 0
+  )
+
+  hep_time_windows_combined <- plot_grid(
+    first_row_histograms,
+    hep_comparison_row,
+    ncol = 1,
+    rel_heights = c(0.25, 0.75)
+  )
+  return(hep_time_windows_combined)
+}
+
 # Here we generate all figures
 make_figures <- function(df, save_path, ext = "svg") {
 
@@ -401,36 +492,12 @@ make_figures <- function(df, save_path, ext = "svg") {
   show(eeg_summary_plot)
 
  
-   hep_average_plot <- create_single_ecg_plot(df,
-                                             avg_value = "Averaging",
-                                             shared_limits = c(-300, 1000),
-                                             plot_title = "HEP Windows (Averaging)",
-                                             reference_var = "hep_relative_to",
-                                             reference_values = c("R-peak", "T-peak"))
-
-  hep_cluster_plot <- create_single_ecg_plot(df,
-                                             avg_value = "Clustering",
-                                             shared_limits = c(-300, 1000),
-                                             plot_title = "HEP Windows (Clustering)",
-                                             reference_var = "hep_relative_to",
-                                             reference_values = c("R-peak", "T-peak"))
- 
-  hep_time_windows_combined <- plot_grid(
-    hep_average_plot, 
-    hep_cluster_plot,
-    ncol = 2,
-    align = "hv",
-    axis = "tblr"
-    # labels = c("A", "B"),
-    # label_x = 0.01,
-    # hjust = 0,
-  )
-
+  hep_time_windows_combined <- create_hep_time_windows_summary_plot(df)
   ggsave(
     filename = file.path(save_path, paste0("hep_time_windows_combined.", ext)),
     plot = hep_time_windows_combined,
     width = 13, 
-    height = 7,
+    height = 9,
     units = "in",
     dpi = 300,
     device = ext,

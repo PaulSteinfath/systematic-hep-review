@@ -1,5 +1,5 @@
 ---
-title: "Manuscript Statistics Summary"
+title: "Manuscript Summary"
 subtitle: "A Systematic Review of Methods Used for Studying Heartbeat Evoked Responses"
 output: 
   html_document:
@@ -13,17 +13,6 @@ date: "`r Sys.Date()`"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
-# libraries
-library(dplyr)
-library(ggplot2)
-library(kableExtra)
-library(stringr)
-library(scales)
-library(tidyr)
-
-# Load preprocessed data (created by main.R)
-load("data/preprocessed_data.RData")
-
 # Create study-level and pipeline-level datasets for efficiency
 df_studies <- df_included %>% distinct(PMID, .keep_all = TRUE)
 df_pipelines <- df_included
@@ -31,6 +20,9 @@ df_pipelines <- df_included
 # EEG-only datasets
 eeg_studies <- df_studies %>% filter(modality == "EEG")
 eeg_pipelines <- df_pipelines %>% filter(modality == "EEG")
+
+meg_studies <- df_studies %>% filter(modality == "MEG")
+meg_pipelines <- df_pipelines %>% filter(modality == "MEG")
 ```
 
 # Overview
@@ -128,9 +120,7 @@ for(i in 1:nrow(study_type_analysis)) {
 ## Channel Information
 
 ```{r channels}
-# EEG channel statistics following hist_panel methodology from figures.R
-
-# Get unique (group_col, col) combinations to match hist_panel approach
+# EEG channel statistics
 channel_data <- eeg_studies %>%
   filter(!is.na(meeg_num_electrodes) & meeg_num_electrodes != "unknown") %>%
   distinct(PMID, meeg_num_electrodes) %>%
@@ -146,7 +136,7 @@ channel_stats <- channel_data %>%
   )
 
 cat("## EEG Channel Statistics\n")
-cat("- **Number of EEG studies with channel data**: ", channel_stats$n_studies, "\n")
+cat("- **Number of EEG studies**: ", channel_stats$n_studies, "\n")
 cat("- **Channel range**: ", channel_stats$min_channels, "-", channel_stats$max_channels, "\n")
 cat("- **Median channels**: ", channel_stats$median_channels, "\n")
 ```
@@ -154,16 +144,14 @@ cat("- **Median channels**: ", channel_stats$median_channels, "\n")
 ## Reference Schemes
 
 ```{r references}
-# Reference processing following eeg_acq_prep() methodology from figures.R
-
-# Define major reference categories (from figures.R)
+# Reference processing
 major_categories <- tolower(c(
   "Cz", "Nose", "Linked earlobes", "Linked mastoids",
   "FCz", "Common average", "Fpz", "CMS", "CMS and DRL",
   "unknown", "Laplacian reference", "REST"
 ))
 
-# Process reference categories following eeg_acq_prep methodology
+# Process reference categories
 eeg_studies_ref <- eeg_studies %>%
   mutate(across(
     .cols = c(reference_online, reference_offline),
@@ -173,7 +161,7 @@ eeg_studies_ref <- eeg_studies %>%
     )
   ))
 
-# Common reference category mapping (from figures.R)
+# Common reference category mapping 
 ref_categories <- c(
   "common average" = "CAR",
   "linked mastoids" = "LM", 
@@ -190,7 +178,7 @@ ref_categories <- c(
   "unknown" = "N/M"
 )
 
-# Online reference distribution (studies) - following hist_panel methodology
+# Online reference distribution (studies) 
 online_ref_counts <- eeg_studies_ref %>%
   filter(!is.na(reference_online)) %>%
   count(reference_online) %>%
@@ -201,7 +189,7 @@ online_ref_counts <- eeg_studies_ref %>%
   ) %>%
   arrange(desc(n))
 
-# Offline reference distribution (studies) - following hist_panel methodology
+# Offline reference distribution (studies)
 offline_ref_counts <- eeg_studies_ref %>%
   filter(!is.na(reference_offline)) %>%
   count(reference_offline) %>%
@@ -222,9 +210,6 @@ for(i in 1:min(5, nrow(offline_ref_counts))) {
   cat("- **", offline_ref_counts$display_name[i], "**: ", offline_ref_counts$percentage[i], "%\n")
 }
 
-# Most common offline reference
-most_common_offline <- offline_ref_counts$display_name[1]
-cat("\n**Most dominant offline reference choice**: ", most_common_offline, "\n")
 ```
 
 ## Artifact Removal
@@ -233,13 +218,13 @@ cat("\n**Most dominant offline reference choice**: ", most_common_offline, "\n")
 # Artifact removal statistics (pipelines)
 artifact_stats <- df_pipelines %>%
   summarise(
-    # Noisy epochs removal (look in other_cleaning_strategy)
+    # Noisy epochs removal 
     noisy_epochs_pct = round(mean(grepl("noisy epoch|epoch", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
     
-    # Bad channels removal (look in other_cleaning_strategy)  
+    # Bad channels removal 
     bad_channels_pct = round(mean(grepl("bad channels", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
     
-    # Blink/EOG correction (look in other_cleaning_strategy)
+    # Blink/EOG correction
     blink_correction_pct = round(mean(grepl("blink|EOG|eye|gratton", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
 
     # ICA usage
@@ -260,28 +245,34 @@ ica_studies <- df_pipelines %>%
     ica_study_pct = round(mean(uses_ica) * 100, 1)
   )
 
-# Component rejection types (studies with ICA, following create_ica_rej.R methodology)
-component_types <- df_pipelines %>%
+# Component rejection types (studies with ICA)
+component_types_df <- df_pipelines %>%
   filter(ICA == 1) %>%
   distinct(PMID, rejected_components) %>%
   filter(rejected_components != "", rejected_components != "unknown") %>%
-  mutate(pipeline_id = row_number()) %>%
-  # Clean rejected_components: replace newlines with a comma, collapse multiple commas
-  mutate(rejected_components = sapply(rejected_components, function(x) {
-    x <- gsub("[\r\n]+", ",", x)    
-    x <- gsub(",+", ",", x)         
-    x <- gsub("^,|,$", "", x)       
-    comps <- unlist(strsplit(x, ","))
-    comps <- unique(trimws(comps))
-    comps <- comps[comps != ""]
-    paste(comps, collapse = ",")
-  })) %>%
+  mutate(pipeline_id = row_number())
+
+# Clean rejected_components
+component_types_df$rejected_components <- sapply(component_types_df$rejected_components, function(x) {
+  x <- gsub("[\r\n]+", ",", x)    
+  x <- gsub(",+", ",", x)         
+  x <- gsub("^,|,$", "", x)       
+  comps <- unlist(strsplit(x, ","))
+  comps <- unique(trimws(comps))
+  comps <- comps[comps != ""]
+  paste(comps, collapse = ",")
+})
+
+# Count total studies before splitting
+total_ica_studies <- nrow(component_types_df)
+
+component_types <- component_types_df %>%
   separate_rows(rejected_components, sep = ",") %>%
   mutate(
     rejected_components = trimws(rejected_components),
     rejected_components = tolower(rejected_components)
   ) %>%
-  # Apply component mapping from create_ica_rej.R
+  # Apply component mapping
   mutate(rejected_components = case_when(
     rejected_components == "eye movements" ~ "Ocular",
     rejected_components == "blinks" ~ "Ocular", 
@@ -296,18 +287,12 @@ component_types <- df_pipelines %>%
   group_by(rejected_components) %>%
   summarise(count = n_distinct(pipeline_id), .groups = "drop") %>%
   arrange(desc(count)) %>%
-  mutate(
-    total_ica_studies = length(unique(df_pipelines$PMID[df_pipelines$ICA == 1 & 
-                                                        df_pipelines$rejected_components != "" & 
-                                                        df_pipelines$rejected_components != "unknown"])),
-    percentage = round(count / total_ica_studies * 100, 1)
-  )
+  mutate(percentage = round(count / total_ica_studies * 100, 1))
 
 cat("## Artifact Removal Statistics\n")
 cat("- **Pipelines removing noisy epochs**: ", artifact_stats$noisy_epochs_pct, "%\n")
 cat("- **Pipelines removing bad channels**: ", artifact_stats$bad_channels_pct, "%\n")
 cat("- **Pipelines using blink correction**: ", artifact_stats$blink_correction_pct, "%\n")
-cat("- **Pipelines using eye movement correction**: ", artifact_stats$eye_movement_pct, "%\n")
 cat("- **Pipelines using ICA**: ", artifact_stats$ica_pct, "% (", artifact_stats$n_ica_pipelines, "/", artifact_stats$total_pipelines, ")\n")
 cat("- **Studies using ICA**: ", ica_studies$ica_study_pct, "% (", ica_studies$n_ica_studies, "/", ica_studies$total_studies, ")\n")
 
@@ -320,14 +305,10 @@ for(i in 1:min(nrow(component_types))) {
 ## Filter Settings
 
 ```{r filters}
-# Filter statistics following create_combined_plot methodology from figures.R
-
-# Following create_filter_plots approach from figures.R - filters studies with valid filter data
+# Filter statistics
 filter_data <- df_pipelines %>%
   filter(!is.na(high_pass) & !is.na(low_pass)) %>%
-  distinct(PMID, high_pass, low_pass, .keep_all = TRUE) %>%
-  # Apply positive value filter (as used in create_combined_plot for log scale)
-  filter(high_pass > 0 & low_pass > 0)
+  distinct(PMID, high_pass, low_pass, .keep_all = TRUE)
 
 filter_stats <- filter_data %>%
   summarise(
@@ -338,13 +319,12 @@ filter_stats <- filter_data %>%
     low_pass_range_max = max(low_pass, na.rm = TRUE)
   )
 
-# Most common high-pass filter values (studies) - following distinct methodology
+# Most common high-pass filter values (studies)
 common_highpass <- filter_data %>%
   count(high_pass, sort = TRUE) %>%
   head(3)
 
 cat("## Filter Settings\n")
-cat("- **Pipelines with complete filter data**: ", filter_stats$n_valid, "\n")
 cat("- **High-pass filter range**: ", filter_stats$high_pass_range_min, "-", filter_stats$high_pass_range_max, " Hz\n")
 cat("- **Low-pass filter range**: ", filter_stats$low_pass_range_min, "-", filter_stats$low_pass_range_max, " Hz\n")
 cat("- **Most common high-pass cutoffs**: ", paste(common_highpass$high_pass, collapse = ", "), " Hz\n")
@@ -353,60 +333,12 @@ cat("- **Most common high-pass cutoffs**: ", paste(common_highpass$high_pass, co
 # ECG Acquisition
 
 ```{r ecg}
-# ECG acquisition statistics following ecg_summary() methodology from figures.R
-
-# Map "unknown" to 9 for consistent processing (following ecg_summary methodology)
-ecg_data <- df_pipelines %>%
-  mutate(ecg_num_electrodes = replace(ecg_num_electrodes,
-                                      ecg_num_electrodes == "unknown", 9))
-
-# ECG electrode statistics (studies)
-ecg_electrode_stats <- ecg_data %>%
-  distinct(PMID, ecg_num_electrodes) %>%
-  filter(!is.na(ecg_num_electrodes)) %>%
-  mutate(ecg_num_electrodes_numeric = as.numeric(ecg_num_electrodes)) %>%
-  filter(!is.na(ecg_num_electrodes_numeric)) %>%
-  summarise(
-    n_studies = n(),
-    min_electrodes = min(ecg_num_electrodes_numeric, na.rm = TRUE),
-    max_electrodes = max(ecg_num_electrodes_numeric, na.rm = TRUE),
-    median_electrodes = median(ecg_num_electrodes_numeric, na.rm = TRUE)
-  )
-
-# ECG lead distribution (studies) - following hist_panel with distinct methodology
-ecg_lead_counts <- df_pipelines %>%
-  distinct(PMID, ecg_lead) %>%
-  filter(!is.na(ecg_lead) & ecg_lead != "unknown") %>%
-  count(ecg_lead, sort = TRUE) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1))
-
-# ECG locations analysis (studies) - following plot_ecg_locations methodology
-ecg_location_data <- df_pipelines %>%
-  distinct(PMID, ecg_lead, ecg_locations) %>%
-  filter(
-    ecg_lead %in% c("Lead I", "Lead II", "Lead III"), 
-    ecg_locations != "unknown",
-    !is.na(ecg_locations)
-  )
-
-cat("## ECG Electrode Statistics\n")
-cat("- **Studies with ECG electrode data**: ", ecg_electrode_stats$n_studies, "\n")
-cat("- **ECG electrode range**: ", ecg_electrode_stats$min_electrodes, "-", ecg_electrode_stats$max_electrodes, "\n")
-cat("- **Median ECG electrodes**: ", ecg_electrode_stats$median_electrodes, "\n")
-
-cat("\n## ECG Lead Distribution\n")
-for(i in 1:min(5, nrow(ecg_lead_counts))) {
-  cat("- **", ecg_lead_counts$ecg_lead[i], "**: ", ecg_lead_counts$percentage[i], "%\n")
-}
-
-cat("\n## ECG Location Information\n")
-cat("- **Studies with standard lead location data**: ", nrow(ecg_location_data), "\n")
 ```
 
 # CFA Removal Strategies
 
 ```{r cfa}
-# ICA timing (studies using ICA) - following epoch_continuous_ica.R methodology
+# ICA timing (studies using ICA)
 ica_timing <- df_studies %>%
   filter(ICA == 1 & !is.na(ica_on_epochs)) %>%
   count(ica_on_epochs) %>%
@@ -429,18 +361,16 @@ cfa_approach_counts <- df_studies %>%
   mutate(percentage = round(n / sum(n) * 100, 1)) %>%
   rename(cfa_rej_approach = cfa_rej_approach_clean)
 
-# CFA identification criteria (studies) - following summarize_cfa_criteria.R methodology
+# CFA identification criteria (studies)
 cfa_criteria_counts <- df_studies %>%
   mutate(cfa_rej_criteria = tolower(cfa_rej_criteria)) %>%
   filter(!is.na(cfa_rej_criteria), cfa_rej_criteria != "", cfa_rej_criteria != "unknown") %>%
   distinct(PMID, cfa_rej_criteria) %>%
   mutate(pipeline_id = row_number()) %>%
-  # Expand and process the criteria
   separate_rows(cfa_rej_criteria, sep = ",") %>%
   mutate(
     cfa_rej_criteria = str_replace_all(cfa_rej_criteria, "[\r\n]", " "),
     cfa_rej_criteria = str_trim(cfa_rej_criteria, side = "both"),
-    # Apply category mapping from summarize_cfa_criteria.R
     cfa_rej_criteria = case_when(
       cfa_rej_criteria == "time course" ~ "Time Course",
       cfa_rej_criteria == "topography" ~ "Topography", 
@@ -475,13 +405,13 @@ cardiac_ic_stats <- df_studies %>%
     median_ics = median(rejected_cardiac_ics, na.rm = TRUE)
   )
 
-# Other CFA removal strategies (studies) - using same logic as other_strategy_plot.R
+# Other CFA removal strategies (studies)
 other_cfa_strategies <- df_studies %>%
   filter(!is.na(other_cfa_removal_strategy) & 
          other_cfa_removal_strategy != "" & 
          tolower(str_trim(other_cfa_removal_strategy)) != "unknown") %>%
   mutate(
-    # Clean and standardize strategy names (based on other_strategy_plot.R)
+    # Clean and standardize strategy names
     strategy_clean = case_when(
       other_cfa_removal_strategy == "limit analysis to time of minimal artifact" ~ 
         "Minimal artifact window",
@@ -538,140 +468,17 @@ for(i in 1:min(nrow(other_cfa_strategies))) {
 # Missing Information Analysis
 
 ```{r missing}
-# Key variables for missing analysis (following plot_missing.R methodology)
-key_variables <- c(
-  "rejected_cardiac_ics", "ecg_ground", "ecg_locations", 
-  "baseline_start_ms", "baseline_end_ms", "cfa_rej_approach", 
-  "cfa_rej_criteria", "trials", "permutations"
-)
-
-# ICA-specific columns (only counted as missing if ICA == 1)
-ica_columns <- c(
-  "ica_on_epochs", "rejected_components", 
-  "rejected_cardiac_ics", "cfa_rej_approach", "cfa_rej_criteria"
-)
-
-# Function to check if value is missing (following plot_missing.R)
-is_missing <- function(x) {
-  x_char <- tolower(as.character(x))
-  is.na(x) | x == "" | x_char %in% c("unknown", "na")
-}
-
-# Calculate missing percentages with proper conditions
-missing_stats <- data.frame(
-  variable = key_variables,
-  missing_pct = sapply(key_variables, function(var) {
-    if(var %in% names(df_pipelines)) {
-      missing_values <- is_missing(df_pipelines[[var]])
-      
-      # For ICA columns: only count missing if ICA == 1
-      if (var %in% ica_columns) {
-        condition <- df_pipelines$ICA == 1
-        relevant_rows <- sum(condition, na.rm = TRUE)
-        missing_in_relevant <- sum(missing_values & condition, na.rm = TRUE)
-        if (relevant_rows == 0) return(NA)
-        return(round(missing_in_relevant / relevant_rows * 100, 0))
-      }
-      
-      # For permutations: only count if clustering == 1
-      if (grepl("perm", var, ignore.case = TRUE)) {
-        condition <- df_pipelines$clustering == 1
-        relevant_rows <- sum(condition, na.rm = TRUE)
-        missing_in_relevant <- sum(missing_values & condition, na.rm = TRUE)
-        if (relevant_rows == 0) return(NA)
-        return(round(missing_in_relevant / relevant_rows * 100, 0))
-      }
-      
-      # For trials: also count as missing if starts with "[est"
-      if (tolower(var) == "trials") {
-        extra_missing <- grepl("^\\[est", df_pipelines[[var]], ignore.case = TRUE)
-        missing_values <- missing_values | extra_missing
-      }
-      
-      # Regular missing calculation
-      round(mean(missing_values, na.rm = TRUE) * 100, 0)
-    } else {
-      NA
-    }
-  })
-)
-
-# Sort by missing percentage
-missing_stats <- missing_stats[order(-missing_stats$missing_pct, na.last = TRUE),]
-
-cat("## Missing Information (Top Issues)\n")
-for(i in 1:min(8, nrow(missing_stats))) {
-  if(!is.na(missing_stats$missing_pct[i])) {
-    var_display <- gsub("_", " ", missing_stats$variable[i])
-    cat("- **", var_display, "**: ", missing_stats$missing_pct[i], "% missing\n")
-  }
-}
-```
-
-# Publication Timeline
-
-```{r timeline}
-# Publication timeline (based on unique studies)
-pub_timeline <- df_studies %>%
-  count(Year) %>%
-  arrange(Year)
-
-# Last 10 years analysis (unique studies)
-last_10_years <- df_studies %>%
-  filter(Year >= (max(Year, na.rm = TRUE) - 9)) %>%
-  nrow()
-
-total_unique_studies <- nrow(df_studies)
-last_10_pct <- round(last_10_years / total_unique_studies * 100, 0)
-
-cat("## Publication Timeline\n")
-cat("- **Studies published in the last 10 years**: ", last_10_pct, "% (", last_10_years, "/", total_unique_studies, ")\n")
-cat("- **Year range**: ", min(pub_timeline$Year, na.rm = TRUE), "-", max(pub_timeline$Year, na.rm = TRUE), "\n")
 ```
 
 # Sample Sizes and Statistical Power
 
 ```{r power}
-# Sample size statistics (unique studies)
-sample_stats <- df_studies %>%
-  filter(!is.na(sample_size) & sample_size > 0) %>%
-  summarise(
-    n_studies = n(),
-    min_n = min(sample_size),
-    max_n = max(sample_size),
-    median_n = median(sample_size),
-    mean_n = round(mean(sample_size), 1)
-  )
-
-# Trial/epoch statistics (pipelines)
-trial_stats <- df_pipelines %>%
-  filter(!is.na(trials) & trials > 0) %>%
-  summarise(
-    n_pipelines = n(),
-    min_trials = min(trials),
-    max_trials = max(trials),
-    median_trials = median(trials),
-    mean_trials = round(mean(trials), 1)
-  )
-
-cat("## Sample Size Statistics\n")
-cat("- **Studies reporting sample size**: ", sample_stats$n_studies, "\n")
-cat("- **Sample size range**: ", sample_stats$min_n, "-", sample_stats$max_n, "\n")
-cat("- **Median sample size**: ", sample_stats$median_n, "\n")
-cat("- **Mean sample size**: ", sample_stats$mean_n, "\n")
-
-cat("\n## Trial/Epoch Statistics\n")
-cat("- **Pipelines reporting trial numbers**: ", trial_stats$n_pipelines, "\n")
-cat("- **Trial range**: ", trial_stats$min_trials, "-", trial_stats$max_trials, "\n")
-cat("- **Median trials**: ", trial_stats$median_trials, "\n")
 ```
 
 # Time Windows and Analysis
 
 ```{r timewindows}
-# HEP time window analysis following create_time_windows_plot.R and create_single_ecg_plot.R methodology
-
-# HEP Time of Interest windows (following create_single_ecg_plot.R methodology)
+# HEP Time of Interest windows
 hep_window_data <- df_pipelines %>%
   filter(!hep_start %in% c("none", "unknown"),
          !hep_end %in% c("none", "unknown")) %>%
@@ -721,7 +528,7 @@ rpeak_window_stats <- if(nrow(rpeak_window_data) > 0) {
              end_range_min = NA, end_range_max = NA, duration_min = NA, duration_max = NA)
 }
 
-# Most common R-peak time windows analysis (for averaging studies)
+# Most common R-peak time windows analysis
 rpeak_common_windows <- if(nrow(rpeak_window_data) > 0) {
   rpeak_window_data %>%
     # Create time window strings for grouping
@@ -788,7 +595,7 @@ tpeak_window_stats <- if(nrow(tpeak_window_data) > 0) {
              end_range_min = NA, end_range_max = NA, duration_min = NA, duration_max = NA)
 }
 
-# Baseline window analysis (following create_single_ecg_plot.R methodology) 
+# Baseline window analysis 
 baseline_window_data <- df_pipelines %>%
   filter(!is.na(baseline_start_ms), !is.na(baseline_end_ms)) %>%
   mutate(
@@ -861,7 +668,7 @@ baseline_before_qrs_by_ref <- baseline_before_qrs %>%
     .groups = "drop"
   )
 
-# Significant effects window analysis (following create_time_windows_plot.R merged methodology)
+# Significant effects window analysis (using method_category)
 significant_effects_data <- df_pipelines %>%
   filter(significant_test == 1) %>%
   mutate(
@@ -869,10 +676,22 @@ significant_effects_data <- df_pipelines %>%
     hep_end_numeric = as.numeric(hep_end),
     significant_start_numeric = as.numeric(significant_start_ms),
     significant_end_numeric = as.numeric(significant_end_ms),
-    # Use HEP windows if averaging_time == 1, otherwise use significant windows
-    start_time = if_else(averaging_time == "1", hep_start_numeric, significant_start_numeric),
-    end_time = if_else(averaging_time == "1", hep_end_numeric, significant_end_numeric),
-    reference = if_else(averaging_time == "1", hep_relative_to, significant_relative_to)
+    # Use HEP windows for Averaging, significant windows for Clustering
+    start_time = case_when(
+      method_category == "Averaging" ~ hep_start_numeric,
+      method_category == "Clustering" ~ significant_start_numeric,
+      TRUE ~ hep_start_numeric  
+    ),
+    end_time = case_when(
+      method_category == "Averaging" ~ hep_end_numeric,
+      method_category == "Clustering" ~ significant_end_numeric,
+      TRUE ~ hep_end_numeric  
+    ),
+    reference = case_when(
+      method_category == "Averaging" ~ hep_relative_to,
+      method_category == "Clustering" ~ significant_relative_to,
+      TRUE ~ hep_relative_to  
+    )
   ) %>%
   filter(!is.na(start_time), !is.na(end_time))
 
@@ -1026,18 +845,16 @@ if(nrow(significant_by_reference) > 0) {
   }
 }
 
-# Peak effect timing analysis by method and reference - core regions where most studies found effects
+# Peak effect timing analysis by method and reference
 peak_effects_analysis <- if(nrow(significant_effects_data) > 0) {
   significant_effects_data %>%
     filter(!is.na(reference), reference != "unknown") %>%
-    mutate(
-      # Determine analysis method based on averaging_time
-      analysis_method = if_else(averaging_time == "1", "Averaging", "Cluster-based")
-    ) %>%
-    group_by(analysis_method, reference) %>%
+    # Use the method_category directly
+    filter(method_category %in% c("Averaging", "Clustering")) %>%
+    group_by(method_category, reference) %>%
     summarise(
       n_pipelines = n(),
-      # Find core regions using median approach (like the HEP core window analysis)
+      # Find core regions using median approach
       median_start = median(start_time, na.rm = TRUE),
       median_end = median(end_time, na.rm = TRUE),
       # Count studies that include the core region
@@ -1057,10 +874,10 @@ peak_effects_analysis <- if(nrow(significant_effects_data) > 0) {
 
 cat("\n### Peak Effect Timing by Analysis Method:\n")
 if(nrow(peak_effects_analysis) > 0) {
-  # Cluster-based analysis
-  cluster_data <- peak_effects_analysis %>% filter(analysis_method == "Cluster-based")
+  # Clustering analysis
+  cluster_data <- peak_effects_analysis %>% filter(method_category == "Clustering")
   if(nrow(cluster_data) > 0) {
-    cat("**Cluster-based analysis core effect regions:**\n")
+    cat("**Clustering analysis core effect regions:**\n")
     for(i in 1:nrow(cluster_data)) {
       ref_peak <- cluster_data$reference[i]
       median_start <- round(cluster_data$median_start[i], 1)
@@ -1080,7 +897,7 @@ if(nrow(peak_effects_analysis) > 0) {
   }
   
   # Averaging analysis
-  avg_data <- peak_effects_analysis %>% filter(analysis_method == "Averaging")
+  avg_data <- peak_effects_analysis %>% filter(method_category == "Averaging")
   if(nrow(avg_data) > 0) {
     cat("\n**Averaging analysis core effect regions:**\n")
     for(i in 1:nrow(avg_data)) {
@@ -1105,27 +922,16 @@ if(nrow(peak_effects_analysis) > 0) {
 }
 ```
 
+# Literature Search & Screening Results
+
+```{r topography}
+```
+
+
+
 # Multiple Pipelines and Methodological Variations
 
 ```{r variations}
-# Multiple approaches per paper (studies)
-multiple_stats_tests <- df_pipelines %>%
-  group_by(PMID) %>%
-  summarise(n_tests = n_distinct(statistics, na.rm = TRUE)) %>%
-  filter(n_tests > 1) %>%
-  nrow()
-
-multiple_windows <- df_pipelines %>%
-  group_by(PMID) %>%
-  summarise(n_windows = n_distinct(paste(hep_start, hep_end), na.rm = TRUE)) %>%
-  filter(n_windows > 1) %>%
-  nrow()
-
-total_papers <- nrow(df_studies)
-
-cat("## Multiple Approaches per Study\n")
-cat("- **Papers using multiple statistical tests**: ", round(multiple_stats_tests / total_papers * 100, 0), "%\n")
-cat("- **Papers varying HEP window start/end**: ", round(multiple_windows / total_papers * 100, 0), "%\n")
 ```
 
 ---

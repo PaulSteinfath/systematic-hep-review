@@ -15,6 +15,7 @@ library(stringr)
 library(tidyr)
 library(viridis)
 library(zeallot)
+library(kableExtra)
 
 
 # Paths
@@ -42,6 +43,10 @@ source("config.R")
 df_full <- load_data(pubmed_path, manual_path)
 c(df_screening, df_included) %<-% preprocess(df_full)
 errors <- validate_preprocessed(df_included)
+
+# Render R Markdown with data available in global environment
+rmarkdown::render('manuscript_statistics.Rmd', output_format = 'html_document')
+
 generate_prisma(df_screening, prisma_template_path,
                 derivatives_path, results_path, ext = 'png')
 make_figures(df_included, results_path, ext = 'png')

@@ -65,6 +65,9 @@ pd.set_option('display.expand_frame_repr', False)
 pd.set_option('max_colwidth', None)
 
 
+EXPORT1_CSV_PATH = 'data/exports/20240115_pubmed_query1.csv'
+EXPORT2_CSV_PATH = 'data/exports/20240805_pubmed_query2.csv'
+EXPORT3_CSV_PATH = 'data/exports/20240805_pubmed_query3.csv'
 TABLE_PUBMED_CSV_URL = 'https://docs.google.com/spreadsheets/d/17iQwJ36F4KCTuSRoLa7sXqZUSSO2lyHELonZgAQoxAw/export?format=csv'
 TABLE_PUBMED_CSV_PATH = 'data/HEP - Pubmed Results.csv'
 TABLE_MANUAL_CSV_URL = 'https://docs.google.com/spreadsheets/d/17iQwJ36F4KCTuSRoLa7sXqZUSSO2lyHELonZgAQoxAw/export?format=csv&gid=1671894873'
@@ -144,6 +147,31 @@ def load_codebook(codebook_path):
     return df_codebook
 
 
+## Original export from Pubmed
+
+def get_original_data():
+    # Merge the data from all queries
+    df_query1 = pd.read_csv(EXPORT1_CSV_PATH)
+    df_query2 = pd.read_csv(EXPORT2_CSV_PATH)
+    df_query3 = pd.read_csv(EXPORT3_CSV_PATH)
+
+    df_original = pd.merge(
+        pd.merge(df_query1, df_query2, how='outer'),
+        df_query3, how='outer'
+    )
+
+    # Resolve duplicates - some entries were updated between exports
+    resolved = {k: np.max(idx) for k, idx in df_original.groupby('PMID').indices.items()}
+    df_original = df_original.loc[resolved.values(), :].sort_values('PMID', ascending=False)
+
+    # Match the columns to our format
+    df_original.rename(columns={'Publication Year': 'Year'}, inplace=True)
+    df_original.drop(columns=['First Author', 'Journal/Book', 'Create Date', 'PMCID', 'NIHMS ID'],
+                     inplace=True)
+    
+    return df_original
+
+
 ## Checks
 
 @dataclass
@@ -151,6 +179,7 @@ class Check:
     fun: callable
     single_column: bool
     needs_codebook: bool
+    needs_original: bool
 
 
 ## Validation rules
@@ -205,6 +234,11 @@ def validate_single(x, allowed, col, lower=True):
 
     logger.debug(f'Result: {valid}')
     return valid
+
+
+def match_original(x, original, col):
+    logger.debug(f'match_original: x={x}, col={col}, original={original}')
+    return x == original
 
 
 def number_or_range(x):
@@ -542,58 +576,80 @@ CHECK_MAPPING = {
     'should be one of the codebook options': Check(
         fun=validate_single, 
         single_column=True,
-        needs_codebook=True),
+        needs_codebook=True,
+        needs_original=False
+    ),
     'should be a list of codebook options': Check(
         fun=validate_list, 
         single_column=True,
-        needs_codebook=True),
+        needs_codebook=True,
+        needs_original=False
+    ),
     'should be a number or a range': Check(
         fun=number_or_range, 
         single_column=True,
-        needs_codebook=False),
+        needs_codebook=False,
+        needs_original=False
+    ),
     'analyst': Check(
         fun=validate_analyst, 
         single_column=True,
-        needs_codebook=False),
+        needs_codebook=False,
+        needs_original=False
+    ),
     'should be 0 or 1': Check(
         fun=should_be_0_or_1, 
         single_column=True,
-        needs_codebook=False),
+        needs_codebook=False,
+        needs_original=False
+    ),
+    'should match the Pubmed export': Check(
+        fun=match_original,
+        single_column=True,
+        needs_codebook=False,
+        needs_original=True
+    ),
     # Multi-column
     'should be filled only if CFA ICs were removed': Check(
         fun=ica_details_for_cfa_only,
         single_column=False,
-        needs_codebook=False
+        needs_codebook=False,
+        needs_original=False
     ),
     'should be set to Laplacian if CSD was used': Check(
         fun=csd_as_reference,
         single_column=False,
-        needs_codebook=False
+        needs_codebook=False,
+        needs_original=False
     ),
     'should belong to the layout (used)': Check(
         fun=locations_belong_to_layout,
         single_column=False,
-        needs_codebook=False
+        needs_codebook=False,
+        needs_original=False
     ),
     'should belong to the layout (selected)': Check(
         fun=partial(locations_belong_to_layout, allow_all=True),
         single_column=False,
-        needs_codebook=False
+        needs_codebook=False,
+        needs_original=False
     ),
     'should belong to the layout (significant)': Check(
         fun=locations_belong_to_layout,
         single_column=False,
-        needs_codebook=False
+        needs_codebook=False,
+        needs_original=False
     ),
     'should be filled for significant clusters': Check(
         fun=significant_info,
         single_column=False,
-        needs_codebook=False
+        needs_codebook=False,
+        needs_original=False
     )
 }
 
 
-def validate_row(row, idx, ignore_cols, missing_cols, codebook):
+def validate_row(row, idx, ignore_cols, missing_cols, codebook, original):
     errors = []
     unknown_checks = set()
 
@@ -691,6 +747,17 @@ def validate_row(row, idx, ignore_cols, missing_cols, codebook):
                         'failure_case': value,
                         'codebook': allowed_values
                     })
+            elif check.needs_original:
+                if original is not None:
+                    original_value = original[col].values[0]
+                    if not check.fun(value, original_value, col=col):
+                        errors.append({
+                            'line': idx,
+                            'column': col,
+                            'error': check_name, 
+                            'failure_case': value,
+                            'codebook': original_value
+                        })
             else:
                 if not check.fun(value):
                     errors.append({
@@ -704,7 +771,7 @@ def validate_row(row, idx, ignore_cols, missing_cols, codebook):
     return errors, unknown_checks      
 
 
-def validate(df, codebook, ignore_cols, included=True):
+def validate(df, df_original, codebook, ignore_cols, manual, included=True):
     # Focus only on columns that need to be validated and match the `included`
     # argument
     codebook = codebook[codebook.run_checks]
@@ -735,8 +802,20 @@ def validate(df, codebook, ignore_cols, included=True):
     unknown_checks = set()
     for idx, row in df.iterrows():
         row_dict = row.to_dict()
+        original = None
+        if not manual:
+            original = df_original[df_original.PMID.astype(int) == row['PMID']]            
+            if len(original) != 1:
+                errors.append({
+                    'line': idx,
+                    'column': "PMID",
+                    'error': "should match the Pubmed export", 
+                    'failure_case': row['PMID'],
+                    'codebook': ''
+                })
+                original = None
         col_errors, col_unknown_checks = validate_row(row_dict, idx, ignore_cols, 
-                                                      missing_cols, codebook)
+                                                      missing_cols, codebook, original)
         errors.extend(col_errors)
         unknown_checks |= col_unknown_checks
 
@@ -813,13 +892,13 @@ def filter_rows(df_full, analyst=None, included=True):
     return df
 
 
-def validate_own(df, df_all, codebook, 
+def validate_own(df, df_all, df_original, codebook, 
                  ignore_rows=[], ignore_cols=[], 
                  only_rows=[], only_cols=[],
-                 n=20, debug=False):
+                 n=20, manual=False, debug=False):
     logger.info('Validating the table...')
-    errors_df_included = validate(df, codebook, ignore_cols, included=True)
-    errors_df_all = validate(df_all, codebook, ignore_cols, included=False)
+    errors_df_included = validate(df, df_original, codebook, ignore_cols, manual=manual, included=True)
+    errors_df_all = validate(df_all, df_original, codebook, ignore_cols, manual=manual, included=False)
     errors_df = pd.concat([errors_df_all, errors_df_included])
     if not len(errors_df):
         logger.info('Nothing to complain about')
@@ -878,6 +957,12 @@ def main(args):
     codebook = load_codebook(TABLE_CODEBOOK_CSV_PATH)
     df_full = load_data(table_csv_path)
 
+    df_original = get_original_data()
+    if not args.manual:
+        assert len(df_original) == len(df_full.PMID.unique()), \
+            "The number of unique PMIDs in the table and in the original data " \
+            "does not match"
+
     df = filter_rows(df_full, analyst=args.analyst, included=True)
     df_all = filter_rows(df_full, analyst=args.analyst, included=False)
 
@@ -915,9 +1000,9 @@ def main(args):
         ignore_rows = []
         logger.info(f'Rows to be shown: {only_rows}')
 
-    validate_own(df, df_all, codebook, ignore_rows,
+    validate_own(df, df_all, df_original, codebook, ignore_rows,
                  ignore_cols, only_rows, only_cols,
-                 args.show, args.debug)
+                 args.show, args.manual, args.debug)
 
 
 if __name__ == "__main__":

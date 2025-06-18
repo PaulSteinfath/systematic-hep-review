@@ -268,11 +268,18 @@ def significant_info(row, col, idx):
         "Significant / Start (ms)",
         "Significant / End (ms)",
     ]
-    significant = any(not pd.isna(row[col]) for col in significant_cols)
+    permuted = int(row['Cluster-based Permutation'])
+    try:
+        test_significant = int(row['Significant test'])
+    except:
+        test_significant = False  # ['nan', 'none', 'unknown']
+    
+    cluster_expected = permuted and test_significant
+    has_significant = any(not pd.isna(row[col]) for col in significant_cols)
     missing = any(pd.isna(row[col]) for col in significant_cols)
-    assert col in significant_cols
+    assert col in (significant_cols + ['Cluster-based Permutation'])
 
-    if not significant:
+    if not (cluster_expected or has_significant):
         return []
 
     if missing:
@@ -487,29 +494,45 @@ assert locations_belong_to_layout({
 }, "Channels selected", 0, allow_all=False)
 
 assert len(significant_info({
+    "Cluster-based Permutation": 1,
+    "Significant test": 1,
     "Significant / Channels": pd.NA,
     "Significant / Relative to": "R-peak",
     "Significant / Start (ms)": 100,
     "Significant / End (ms)": 200
 }, "Significant / Channels", 0)) == 1
 assert not significant_info({
+    "Cluster-based Permutation": 1,
+    "Significant test": 1,
     "Significant / Channels": "Ch1, Ch2",
     "Significant / Relative to": "R-peak",
     "Significant / Start (ms)": 100,
     "Significant / End (ms)": 200
 }, "Significant / Start (ms)", 0)
 assert len(significant_info({
+    "Cluster-based Permutation": 1,
+    "Significant test": 1,
     "Significant / Channels": "Ch1, Ch2",
     "Significant / Relative to": pd.NA,
     "Significant / Start (ms)": pd.NA,
     "Significant / End (ms)": pd.NA
 }, "Significant / End (ms)", 0)) == 1
 assert not significant_info({
+    "Cluster-based Permutation": 1,
+    "Significant test": 0,
     "Significant / Channels": pd.NA,
     "Significant / Relative to": pd.NA,
     "Significant / Start (ms)": pd.NA,
     "Significant / End (ms)": pd.NA
 }, "Significant / Channels", 0)
+assert len(significant_info({
+    "Cluster-based Permutation": 1,
+    "Significant test": 1,
+    "Significant / Channels": pd.NA,
+    "Significant / Relative to": pd.NA,
+    "Significant / Start (ms)": pd.NA,
+    "Significant / End (ms)": pd.NA
+}, "Significant / Channels", 0)) == 1
 
 
 ## Mapping of validation functions to the codebook names

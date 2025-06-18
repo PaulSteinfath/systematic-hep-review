@@ -261,6 +261,32 @@ def ica_details_for_cfa_only(row, col, idx):
     return errors
 
 
+def significant_info(row, col, idx):
+    significant_cols = [
+        "Significant / Channels",
+        "Significant / Relative to",
+        "Significant / Start (ms)",
+        "Significant / End (ms)",
+    ]
+    significant = any(not pd.isna(row[col]) for col in significant_cols)
+    missing = any(pd.isna(row[col]) for col in significant_cols)
+    assert col in significant_cols
+
+    if not significant:
+        return []
+
+    if missing:
+        return [{
+            'line': idx,
+            'column': col,
+            'error': "should be filled for significant clusters", 
+            'failure_case': row[col],
+            'codebook': ''
+        }]
+    
+    return []
+
+
 layout_regex = {
     "standard": r"(?:Fp|AF|F|FC|FT|C|T|CP|TP|P|PO|O|I|A|M|Ad)(?:\d{1,2}|z)",
     "biosemi": r"(?:A|B|C|D)\d{1,2}",
@@ -460,6 +486,31 @@ assert locations_belong_to_layout({
     "Channels selected": "All"
 }, "Channels selected", 0, allow_all=False)
 
+assert len(significant_info({
+    "Significant / Channels": pd.NA,
+    "Significant / Relative to": "R-peak",
+    "Significant / Start (ms)": 100,
+    "Significant / End (ms)": 200
+}, "Significant / Channels", 0)) == 1
+assert not significant_info({
+    "Significant / Channels": "Ch1, Ch2",
+    "Significant / Relative to": "R-peak",
+    "Significant / Start (ms)": 100,
+    "Significant / End (ms)": 200
+}, "Significant / Start (ms)", 0)
+assert len(significant_info({
+    "Significant / Channels": "Ch1, Ch2",
+    "Significant / Relative to": pd.NA,
+    "Significant / Start (ms)": pd.NA,
+    "Significant / End (ms)": pd.NA
+}, "Significant / End (ms)", 0)) == 1
+assert not significant_info({
+    "Significant / Channels": pd.NA,
+    "Significant / Relative to": pd.NA,
+    "Significant / Start (ms)": pd.NA,
+    "Significant / End (ms)": pd.NA
+}, "Significant / Channels", 0)
+
 
 ## Mapping of validation functions to the codebook names
 
@@ -511,6 +562,11 @@ CHECK_MAPPING = {
         single_column=False,
         needs_codebook=False
     ),
+    'should be filled for significant clusters': Check(
+        fun=significant_info,
+        single_column=False,
+        needs_codebook=False
+    )
 }
 
 

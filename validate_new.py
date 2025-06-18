@@ -85,6 +85,8 @@ parser = argparse.ArgumentParser(description="Codebook-based validation of "\
 parser.add_argument('--analyst', type=str,
                     choices=['Paul', 'Maria', 'Nick'],
                     help="Filter table rows by the name of the analyst")
+parser.add_argument('--coverage', action='store_true',
+                    help="Check coverage of the codebook")
 parser.add_argument('--debug', action='store_true',
                     help="Enable debug output")
 parser.add_argument('--no-cols', type=str, default='',
@@ -134,17 +136,66 @@ def load_codebook(codebook_path):
     """
     Load the codebook values from all tables in the specified .csv file
     
-    Parameter:
-     - codebook_path - path to the .csv file
+    Parameters
+    ----------
+    codebook_path: str
+        Path to the .csv file of the codebook
 
-    Result:
-     - codebook: dataframe
+    Returns
+    -------
+    codebook: pd.DataFrame
+        Codebook table
     """
 
     df_codebook = pd.read_csv(codebook_path, header=1)
     df_codebook["run_checks"] = df_codebook["run_checks"].fillna(False)
     df_codebook["checks"] = df_codebook["checks"].fillna("")
     return df_codebook
+
+
+def codebook_coverage(df, codebook):
+    """
+    Checks and prints if all codebook values are actually present in the table.
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        Table with extracted values
+    codebook: pd.DataFrame
+        Codebook table
+    """
+
+    logger.info('Checking for potentially unused codebook values')
+    for _, row in codebook.iterrows():
+        if pd.isna(row['allowed_values']):
+            continue
+
+        allowed_values = [el.lower() for el in row['allowed_values'].split(', ')]
+        column_name = row['column']
+
+        if 'list' in row['checks']:
+            extracted_values = set()
+            for el in df[column_name].values:
+                if pd.isna(el):
+                    continue
+
+                extracted_values |= set([ch.lower() for ch in el.strip().split(', ')])
+        else:
+            extracted_values = [el.strip().lower()
+                                for el in df[column_name].unique() 
+                                if not pd.isna(el)]
+        # print(column_name, extracted_values)
+
+        if 'none' in allowed_values:
+            allowed_values.remove('none')
+        if 'unknown' in allowed_values:
+            allowed_values.remove('unknown')
+        unused_values = set(allowed_values) - set(extracted_values)
+        if unused_values:
+            unused_desc = ', '.join(unused_values)
+            logger.info(f'Unused codebook values for {column_name}: {unused_desc}')
+
+    logger.info('Done')
 
 
 ## Original export from Pubmed
@@ -211,7 +262,16 @@ def validate_list(x, allowed, col, lower=True):
         if lower:
             chunks = [chunk.lower() for chunk in chunks]
             allowed = [term.lower() for term in allowed]
-        chunks_allowed = [chunk in allowed for chunk in chunks]
+
+        # NOTE: determine whether a regex should be used for validation, a small
+        # hack fine-tuned to the 'RR at least X ms' case
+        use_regex = any(["\\" in el for el in allowed])
+        if use_regex:
+            chunks_allowed = [any([re.fullmatch(el, chunk) for el in allowed]) 
+                              for chunk in chunks]
+        else:
+            chunks_allowed = [chunk in allowed for chunk in chunks]
+
         valid &= all(chunks_allowed)
 
     logger.debug(f'Result: {valid}')
@@ -228,7 +288,7 @@ def validate_single(x, allowed, col, lower=True):
     # hack fine-tuned to the 'RR at least X ms' case
     use_regex = any(["\\" in el for el in allowed])
     if use_regex:
-        valid = any([re.match(el, x) for el in allowed])
+        valid = any([re.fullmatch(el, x) for el in allowed])
     else:
         valid = x in allowed
 
@@ -895,13 +955,15 @@ def filter_rows(df_full, analyst=None, included=True):
 def validate_own(df, df_all, df_original, codebook, 
                  ignore_rows=[], ignore_cols=[], 
                  only_rows=[], only_cols=[],
-                 n=20, manual=False, debug=False):
+                 n=20, manual=False, coverage=False, debug=False):
     logger.info('Validating the table...')
     errors_df_included = validate(df, df_original, codebook, ignore_cols, manual=manual, included=True)
     errors_df_all = validate(df_all, df_original, codebook, ignore_cols, manual=manual, included=False)
     errors_df = pd.concat([errors_df_all, errors_df_included])
     if not len(errors_df):
         logger.info('Nothing to complain about')
+        if coverage:
+            codebook_coverage(df, codebook)
         return
     
     report = pd.merge(df.reset_index(names='line'), 
@@ -1002,7 +1064,7 @@ def main(args):
 
     validate_own(df, df_all, df_original, codebook, ignore_rows,
                  ignore_cols, only_rows, only_cols,
-                 args.show, args.manual, args.debug)
+                 args.show, args.manual, args.coverage, args.debug)
 
 
 if __name__ == "__main__":

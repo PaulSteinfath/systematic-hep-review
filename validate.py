@@ -12,32 +12,31 @@ How to use:
 2. Create a folder 'data' in the same folder where the script is.
 3. Run the script as shown below.
 
-usage: python ./validate.py [-h] [--analyst {Paul,Maria,Nick}] [--debug]
-                   [--export EXPORT] [--no-cols NO_COLS] [--no-rows NO_ROWS]
-                   [--show SHOW] [--update]
+usage: python ./validate.py [-h] 
+           [--coverage] [--debug] [--no-cols NO_COLS] [--no-rows NO_ROWS]
+           [--only-cols ONLY_COLS] [--only-rows ONLY_ROWS] [--manual] 
+           [--show SHOW] [--update]
 
 Codebook-based validation of the review table
 
 options:
   -h, --help            show this help message and exit
-  --analyst {Paul,Maria,Nick}
-                        Filter table rows by the name of the analyst
+  --coverage            Check coverage of the codebook
   --debug               Enable debug output
-  --export EXPORT       Filename to export the schema to
-  --no-cols NO_COLS     Hide all errors for the specified columns (multiple
-                        values should be listed as a,b,c without spaces)
-  --no-rows NO_ROWS     Hide all errors for the specified rows (multiple
-                        values should be listed as a,b,c without spaces, use
-                        numbers from Excel)
+  --no-cols NO_COLS     Hide all errors for the specified columns (multiple values 
+                        should be listed as a,b,c without spaces)
+  --no-rows NO_ROWS     Hide all errors for the specified rows (multiple values 
+                        should be listed as a,b,c without spaces)
+  --only-cols ONLY_COLS
+                        Show errors only for the specified columns (multiple values 
+                        should be listed as a,b,c without spaces)
+  --only-rows ONLY_ROWS
+                        Show errors only for the specified rows (multiple values 
+                        should be listed as a,b,c without spaces)
+  --manual              Validate the table with manually added papers
   --show SHOW           Maximal number of error report rows to show
-  --update              Download the latest version of codebook and
-                        tablebefore validating
-
-Example - show max. 50 errors for papers that Nick analyzed, while ignoring
-columns 'Topic' and 'ECG Locations' and rows 20 and 30 in Excel, update
-the codebook and the table before validating:
-
-python ./validate.py --update --analyst Nick --no-cols "Topic,ECG Locations" --no-rows "20,30" --show 50
+  --update              Download the latest version of codebook 
+                        and table before validating
 """
 
 import argparse
@@ -82,9 +81,6 @@ EXCEL_OFFSET = 3  # correct line numbers to match Excel rows
 
 parser = argparse.ArgumentParser(description="Codebook-based validation of "\
                                              "the review table")
-parser.add_argument('--analyst', type=str,
-                    choices=['Paul', 'Maria', 'Nick'],
-                    help="Filter table rows by the name of the analyst")
 parser.add_argument('--coverage', action='store_true',
                     help="Check coverage of the codebook")
 parser.add_argument('--debug', action='store_true',
@@ -932,11 +928,10 @@ def load_data(data_path):
     return df
 
 
-def filter_rows(df_full, analyst=None, included=True):
+def filter_rows(df_full, included=True):
     """
     Filter rows to be validated by conditions:
      - paper was included in the further analysis (Include == 1)
-     - if analyst is provided, the paper was analyzed by them
     """
     df = df_full.copy()
 
@@ -944,10 +939,6 @@ def filter_rows(df_full, analyst=None, included=True):
     if included:
         pmids_included = list(df.PMID[df.Include == 1])
         df = df[df.PMID.isin(pmids_included)]
-
-    # Filter rows by the analyst
-    if analyst:
-        df = df[df.Analyst == analyst]
 
     return df
 
@@ -1025,8 +1016,8 @@ def main(args):
             "The number of unique PMIDs in the table and in the original data " \
             "does not match"
 
-    df = filter_rows(df_full, analyst=args.analyst, included=True)
-    df_all = filter_rows(df_full, analyst=args.analyst, included=False)
+    df = filter_rows(df_full, included=True)
+    df_all = filter_rows(df_full, included=False)
 
     ignore_cols = [col.strip() for col in args.no_cols.split(',') if col.strip()]
     ignore_cols_exist = [col in df.columns for col in ignore_cols if col]

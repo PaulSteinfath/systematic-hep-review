@@ -175,14 +175,18 @@ def validate_list(x, allowed, col, lower=True):
     if not x:
         return True
 
-    chunks = [chunk.strip() for chunk in x.strip().split(', ')]
-    if lower:
-        chunks = [chunk.lower() for chunk in chunks]
-        allowed = [term.lower() for term in allowed]
-    chunks_allowed = [chunk in allowed for chunk in chunks]
+    valid = True
+    chunk_lists = [el.strip() for el in x.split(';')]
+    for chunk_list in chunk_lists:
+        chunks = [chunk.strip() for chunk in chunk_list.split(', ')]
+        if lower:
+            chunks = [chunk.lower() for chunk in chunks]
+            allowed = [term.lower() for term in allowed]
+        chunks_allowed = [chunk in allowed for chunk in chunks]
+        valid &= all(chunks_allowed)
 
-    logger.debug(f'Result: {all(chunks_allowed)}')
-    return all(chunks_allowed)
+    logger.debug(f'Result: {valid}')
+    return valid
 
 
 def validate_single(x, allowed, col, lower=True):
@@ -190,9 +194,17 @@ def validate_single(x, allowed, col, lower=True):
     if lower:
         allowed = [el.lower() for el in allowed]
         x = x.lower()
-    
-    logger.debug(f'Result: {x in allowed}')
-    return x in allowed
+
+    # NOTE: determine whether a regex should be used for validation, a small
+    # hack fine-tuned to the 'RR at least X ms' case
+    use_regex = any(["\\" in el for el in allowed])
+    if use_regex:
+        valid = any([re.match(el, x) for el in allowed])
+    else:
+        valid = x in allowed
+
+    logger.debug(f'Result: {valid}')
+    return valid
 
 
 def number_or_range(x):
@@ -338,13 +350,16 @@ assert not is_numeric('2-')
 
 assert validate_single('a', ['a', 'b'], col='test')
 assert validate_single('Aa', ['aA'], col='test')
+assert validate_single('RR at least 500 ms', ['RR at least \\d+ ms'], col='test')
 assert not validate_single('a, b', ['a', 'b'], col='test')
+assert not validate_single('RR at least 500 ms', ['RR at least ms'], col='test')
 
 assert validate_list('', ['a', 'b', 'c'], col='test')
 assert validate_list('a', ['a', 'b', 'c'], col='test')
 assert validate_list('a, c', ['a', 'b', 'c'], col='test')
 assert validate_list('a, b, c', ['a', 'b', 'c'], col='test')
 assert validate_list('A, B, C', ['a', 'B', 'c'], col='test')
+assert validate_list('A, B; C', ['a', 'B', 'c'], col='test')
 assert not validate_list('a, d', ['a', 'b', 'c'], col='test')
 
 assert number_or_range('200')

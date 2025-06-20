@@ -62,6 +62,7 @@ get_control_variable_mappings <- function() {
     "Arousal" = list(category = "Task and Experimental Controls", synonyms = c()),
     "Interoception" = list(category = "Task and Experimental Controls", synonyms = c()),
     "Daydreaming" = list(category = "Task and Experimental Controls", synonyms = c()),
+    "Tapping Accuracy" = list(category = "Task and Experimental Controls", synonyms = c()),
 
     # Other Controls
     "Scanner Type" = list(category = "Other Controls", synonyms = c()),

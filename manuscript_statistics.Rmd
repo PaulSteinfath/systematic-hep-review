@@ -1,0 +1,938 @@
+---
+title: "Manuscript Summary"
+subtitle: "A Systematic Review of Methods Used for Studying Heartbeat Evoked Responses"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+    theme: flatly
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# Create study-level and pipeline-level datasets for efficiency
+df_studies <- df_included %>% distinct(PMID, .keep_all = TRUE)
+df_pipelines <- df_included
+
+# EEG-only datasets
+eeg_studies <- df_studies %>% filter(modality == "EEG")
+eeg_pipelines <- df_pipelines %>% filter(modality == "EEG")
+
+meg_studies <- df_studies %>% filter(modality == "MEG")
+meg_pipelines <- df_pipelines %>% filter(modality == "MEG")
+```
+
+# Overview
+
+This document provides all values mentioned in the manuscript "A Systematic Review of Methods Used for Studying Heartbeat Evoked Responses".
+
+## Important Distinction: Studies vs Pipelines
+
+- **Studies**: Unique publications (identified by PMID). Each study represents one research paper.
+- **Pipelines**: Individual analysis approaches within studies. Some studies report multiple analysis pipelines (e.g. different time windows, or statistical approaches).
+
+# Literature Search & Screening Results
+
+```{r literature-overview}
+# Basic counts
+total_retrieved <- nrow(df_screening)
+total_pipelines <- nrow(df_pipelines)
+total_studies <- nrow(df_studies)
+
+# Year range (based on unique studies)
+year_range <- df_studies %>% 
+  summarise(min_year = min(Year, na.rm = TRUE), max_year = max(Year, na.rm = TRUE))
+
+# Modality breakdown (pipelines)
+modality_counts_pipelines <- df_pipelines %>%
+  count(modality) %>%
+  mutate(percentage = round(n / sum(n) * 100, 1))
+
+# Modality breakdown (unique studies)
+modality_counts_studies <- df_studies %>%
+  count(modality) %>%
+  mutate(percentage = round(n / sum(n) * 100, 1))
+
+# Task vs resting state - using rsHEP column (pipelines level)
+task_counts_pipelines <- df_pipelines %>%
+  filter(!is.na(rsHEP)) %>%
+  mutate(
+    study_type = case_when(
+      rsHEP == 1 ~ "Resting state",
+      rsHEP == 0 ~ "Task-based",
+      TRUE ~ "Unknown"
+    )
+  ) %>%
+  count(study_type) %>%
+  mutate(percentage = round(n / sum(n) * 100, 1))
+
+# Task vs resting state - studies that have both vs only one type
+study_type_analysis <- df_pipelines %>%
+  filter(!is.na(rsHEP)) %>%
+  group_by(PMID) %>%
+  summarise(
+    has_resting = any(rsHEP == 1),
+    has_task = any(rsHEP == 0),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    study_category = case_when(
+      has_resting & has_task ~ "Both resting and task",
+      has_resting & !has_task ~ "Resting-state only", 
+      !has_resting & has_task ~ "Task-based only",
+      TRUE ~ "Other"
+    )
+  ) %>%
+  count(study_category) %>%
+  mutate(percentage = round(n / sum(n) * 100, 1))
+
+cat("## Literature Search Results\n")
+cat("- **Total retrieved records**: ", total_retrieved, "\n")
+cat("- **Total included pipelines**: ", total_pipelines, " from ", total_studies, " unique studies\n")
+cat("- **Publication year range**: ", year_range$min_year, "-", year_range$max_year, "\n\n")
+
+cat("## Modality Distribution (Pipelines)\n")
+for(i in 1:nrow(modality_counts_pipelines)) {
+  cat("- **", modality_counts_pipelines$modality[i], "**: ", modality_counts_pipelines$n[i], " (", modality_counts_pipelines$percentage[i], "%)\n")
+}
+
+cat("\n## Modality Distribution (Unique Studies)\n")
+for(i in 1:nrow(modality_counts_studies)) {
+  cat("- **", modality_counts_studies$modality[i], "**: ", modality_counts_studies$n[i], " (", modality_counts_studies$percentage[i], "%)\n")
+}
+
+cat("\n## Study Type Distribution (Pipeline Level)\n")
+for(i in 1:nrow(task_counts_pipelines)) {
+  cat("- **", task_counts_pipelines$study_type[i], "**: ", task_counts_pipelines$n[i], " (", task_counts_pipelines$percentage[i], "%)\n")
+}
+
+cat("\n## Study Type Distribution (Study Level)\n")
+for(i in 1:nrow(study_type_analysis)) {
+  cat("- **", study_type_analysis$study_category[i], "**: ", study_type_analysis$n[i], " (", study_type_analysis$percentage[i], "%)\n")
+}
+```
+
+# M/EEG Acquisition & Preprocessing
+
+## Channel Information
+
+```{r channels}
+# EEG channel statistics
+channel_data <- eeg_studies %>%
+  filter(!is.na(meeg_num_electrodes) & meeg_num_electrodes != "unknown") %>%
+  distinct(PMID, meeg_num_electrodes) %>%
+  mutate(channels_numeric = as.numeric(meeg_num_electrodes)) %>%
+  filter(!is.na(channels_numeric))
+
+channel_stats <- channel_data %>%
+  summarise(
+    min_channels = min(channels_numeric, na.rm = TRUE),
+    max_channels = max(channels_numeric, na.rm = TRUE),
+    median_channels = median(channels_numeric, na.rm = TRUE),
+    n_studies = n()
+  )
+
+cat("## EEG Channel Statistics\n")
+cat("- **Number of EEG studies**: ", channel_stats$n_studies, "\n")
+cat("- **Channel range**: ", channel_stats$min_channels, "-", channel_stats$max_channels, "\n")
+cat("- **Median channels**: ", channel_stats$median_channels, "\n")
+```
+
+## Reference Schemes
+
+```{r references}
+# Reference processing
+major_categories <- tolower(c(
+  "Cz", "Nose", "Linked earlobes", "Linked mastoids",
+  "FCz", "Common average", "Fpz", "CMS", "CMS and DRL",
+  "unknown", "Laplacian reference", "REST"
+))
+
+# Process reference categories
+eeg_studies_ref <- eeg_studies %>%
+  mutate(across(
+    .cols = c(reference_online, reference_offline),
+    .fns = ~ case_when(
+      tolower(.) %in% major_categories ~ tolower(.),
+      TRUE ~ "Other"
+    )
+  ))
+
+# Common reference category mapping 
+ref_categories <- c(
+  "common average" = "CAR",
+  "linked mastoids" = "LM", 
+  "linked earlobes" = "LE",
+  "cz" = "Cz",
+  "fcz" = "FCz",
+  "fpz" = "Fpz",
+  "cms" = "CMS",
+  "cms and drl" = "CMS",
+  "nose" = "Nose",
+  "laplacian reference" = "LAP",
+  "rest" = "REST",
+  "other" = "Other",
+  "unknown" = "N/M"
+)
+
+# Online reference distribution (studies) 
+online_ref_counts <- eeg_studies_ref %>%
+  filter(!is.na(reference_online)) %>%
+  count(reference_online) %>%
+  filter(reference_online %in% names(ref_categories)) %>%
+  mutate(
+    display_name = ref_categories[reference_online],
+    percentage = round(n / sum(n) * 100, 1)
+  ) %>%
+  arrange(desc(n))
+
+# Offline reference distribution (studies)
+offline_ref_counts <- eeg_studies_ref %>%
+  filter(!is.na(reference_offline)) %>%
+  count(reference_offline) %>%
+  filter(reference_offline %in% names(ref_categories)) %>%
+  mutate(
+    display_name = ref_categories[reference_offline],
+    percentage = round(n / sum(n) * 100, 1)
+  ) %>%
+  arrange(desc(n))
+
+cat("## Online Reference Distribution\n")
+for(i in 1:min(5, nrow(online_ref_counts))) {
+  cat("- **", online_ref_counts$display_name[i], "**: ", online_ref_counts$percentage[i], "%\n")
+}
+
+cat("\n## Offline Reference Distribution\n")
+for(i in 1:min(5, nrow(offline_ref_counts))) {
+  cat("- **", offline_ref_counts$display_name[i], "**: ", offline_ref_counts$percentage[i], "%\n")
+}
+
+```
+
+## Artifact Removal
+
+```{r artifacts}
+# Artifact removal statistics (pipelines)
+artifact_stats <- df_pipelines %>%
+  summarise(
+    # Noisy epochs removal 
+    noisy_epochs_pct = round(mean(grepl("noisy epoch|epoch", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
+    
+    # Bad channels removal 
+    bad_channels_pct = round(mean(grepl("bad channels", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
+    
+    # Blink/EOG correction
+    blink_correction_pct = round(mean(grepl("blink|EOG|eye|gratton", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
+
+    # ICA usage
+    ica_pct = round(mean(ICA == 1, na.rm = TRUE) * 100, 1),
+    
+    # Studies with ICA
+    n_ica_pipelines = sum(ICA == 1, na.rm = TRUE),
+    total_pipelines = n() 
+  )
+
+# Studies using ICA (unique studies)
+ica_studies <- df_pipelines %>%
+  group_by(PMID) %>%
+  summarise(uses_ica = any(ICA == 1, na.rm = TRUE)) %>%
+  summarise(
+    n_ica_studies = sum(uses_ica),
+    total_studies = n(),
+    ica_study_pct = round(mean(uses_ica) * 100, 1)
+  )
+
+# Component rejection types (studies with ICA)
+component_types_df <- df_pipelines %>%
+  filter(ICA == 1) %>%
+  distinct(PMID, rejected_components) %>%
+  filter(rejected_components != "", rejected_components != "unknown") %>%
+  mutate(pipeline_id = row_number())
+
+# Clean rejected_components
+component_types_df$rejected_components <- sapply(component_types_df$rejected_components, function(x) {
+  x <- gsub("[\r\n]+", ",", x)    
+  x <- gsub(",+", ",", x)         
+  x <- gsub("^,|,$", "", x)       
+  comps <- unlist(strsplit(x, ","))
+  comps <- unique(trimws(comps))
+  comps <- comps[comps != ""]
+  paste(comps, collapse = ",")
+})
+
+# Count total studies before splitting
+total_ica_studies <- nrow(component_types_df)
+
+component_types <- component_types_df %>%
+  separate_rows(rejected_components, sep = ",") %>%
+  mutate(
+    rejected_components = trimws(rejected_components),
+    rejected_components = tolower(rejected_components)
+  ) %>%
+  # Apply component mapping
+  mutate(rejected_components = case_when(
+    rejected_components == "eye movements" ~ "Ocular",
+    rejected_components == "blinks" ~ "Ocular", 
+    rejected_components == "muscle" ~ "Muscle",
+    rejected_components == "cfa" ~ "CFA",
+    rejected_components == "channel noise" ~ "Channel noise",
+    rejected_components == "line noise" ~ "Line noise",
+    rejected_components == "other" ~ "Other",
+    TRUE ~ rejected_components
+  )) %>%
+  filter(rejected_components != "") %>%
+  group_by(rejected_components) %>%
+  summarise(count = n_distinct(pipeline_id), .groups = "drop") %>%
+  arrange(desc(count)) %>%
+  mutate(percentage = round(count / total_ica_studies * 100, 1))
+
+cat("## Artifact Removal Statistics\n")
+cat("- **Pipelines removing noisy epochs**: ", artifact_stats$noisy_epochs_pct, "%\n")
+cat("- **Pipelines removing bad channels**: ", artifact_stats$bad_channels_pct, "%\n")
+cat("- **Pipelines using blink correction**: ", artifact_stats$blink_correction_pct, "%\n")
+cat("- **Pipelines using ICA**: ", artifact_stats$ica_pct, "% (", artifact_stats$n_ica_pipelines, "/", artifact_stats$total_pipelines, ")\n")
+cat("- **Studies using ICA**: ", ica_studies$ica_study_pct, "% (", ica_studies$n_ica_studies, "/", ica_studies$total_studies, ")\n")
+
+cat("\n## ICA Component Types Removed\n")
+for(i in 1:min(nrow(component_types))) {
+  cat("- **", component_types$rejected_components[i], "**: ", component_types$percentage[i], "%\n")
+}
+```
+
+## Filter Settings
+
+```{r filters}
+# Filter statistics
+filter_data <- df_pipelines %>%
+  filter(!is.na(high_pass) & !is.na(low_pass)) %>%
+  distinct(PMID, high_pass, low_pass, .keep_all = TRUE)
+
+filter_stats <- filter_data %>%
+  summarise(
+    n_valid = n(),
+    high_pass_range_min = min(high_pass, na.rm = TRUE),
+    high_pass_range_max = max(high_pass, na.rm = TRUE),
+    low_pass_range_min = min(low_pass, na.rm = TRUE), 
+    low_pass_range_max = max(low_pass, na.rm = TRUE)
+  )
+
+# Most common high-pass filter values (studies)
+common_highpass <- filter_data %>%
+  count(high_pass, sort = TRUE) %>%
+  head(3)
+
+cat("## Filter Settings\n")
+cat("- **High-pass filter range**: ", filter_stats$high_pass_range_min, "-", filter_stats$high_pass_range_max, " Hz\n")
+cat("- **Low-pass filter range**: ", filter_stats$low_pass_range_min, "-", filter_stats$low_pass_range_max, " Hz\n")
+cat("- **Most common high-pass cutoffs**: ", paste(common_highpass$high_pass, collapse = ", "), " Hz\n")
+```
+
+# ECG Acquisition
+
+```{r ecg}
+```
+
+# CFA Removal Strategies
+
+```{r cfa}
+# ICA timing (studies using ICA)
+ica_timing <- df_studies %>%
+  filter(ICA == 1 & !is.na(ica_on_epochs)) %>%
+  count(ica_on_epochs) %>%
+  mutate(
+    timing = case_when(
+      ica_on_epochs == 0 ~ "Continuous",
+      ica_on_epochs == 1 ~ "Epoched",
+      TRUE ~ "Unknown"
+    ),
+    percentage = round(n / sum(n) * 100, 1)
+  )
+
+# CFA identification approaches (studies)
+cfa_approach_counts <- df_studies %>%
+  filter(!is.na(cfa_rej_approach) & 
+         cfa_rej_approach != "" & 
+         tolower(str_trim(cfa_rej_approach)) != "unknown") %>%
+  mutate(cfa_rej_approach_clean = str_to_title(tolower(str_trim(cfa_rej_approach)))) %>%
+  count(cfa_rej_approach_clean, sort = TRUE) %>%
+  mutate(percentage = round(n / sum(n) * 100, 1)) %>%
+  rename(cfa_rej_approach = cfa_rej_approach_clean)
+
+# CFA identification criteria (studies)
+cfa_criteria_counts <- df_studies %>%
+  mutate(cfa_rej_criteria = tolower(cfa_rej_criteria)) %>%
+  filter(!is.na(cfa_rej_criteria), cfa_rej_criteria != "", cfa_rej_criteria != "unknown") %>%
+  distinct(PMID, cfa_rej_criteria) %>%
+  mutate(pipeline_id = row_number()) %>%
+  separate_rows(cfa_rej_criteria, sep = ",") %>%
+  mutate(
+    cfa_rej_criteria = str_replace_all(cfa_rej_criteria, "[\r\n]", " "),
+    cfa_rej_criteria = str_trim(cfa_rej_criteria, side = "both"),
+    cfa_rej_criteria = case_when(
+      cfa_rej_criteria == "time course" ~ "Time Course",
+      cfa_rej_criteria == "topography" ~ "Topography", 
+      cfa_rej_criteria == "power spectrum" ~ "Power Spectrum",
+      cfa_rej_criteria == "phase consistency" ~ "Phase Consistency",
+      cfa_rej_criteria == "iclabel" ~ "Algorithm",
+      cfa_rej_criteria == "corrmap" ~ "Algorithm",
+      cfa_rej_criteria == "correlation" ~ "Correlation",
+      cfa_rej_criteria == "sasica" ~ "Algorithm",
+      TRUE ~ str_to_title(cfa_rej_criteria)
+    )
+  ) %>%
+  filter(cfa_rej_criteria != "", cfa_rej_criteria != "unknown") %>%
+  distinct(pipeline_id, cfa_rej_criteria, .keep_all = TRUE) %>%
+  group_by(cfa_rej_criteria) %>%
+  summarise(count = n_distinct(pipeline_id), .groups = "drop") %>%
+  arrange(desc(count)) %>%
+  mutate(
+    total_pipelines = length(unique(df_studies$PMID[!is.na(df_studies$cfa_rej_criteria) & 
+                                                    df_studies$cfa_rej_criteria != "" & 
+                                                    tolower(df_studies$cfa_rej_criteria) != "unknown"])),
+    percentage = round(count / total_pipelines * 100, 1)
+  )
+
+# Number of rejected cardiac ICs (studies)
+cardiac_ic_stats <- df_studies %>%
+  filter(!is.na(rejected_cardiac_ics)) %>%
+  summarise(
+    n_studies = n(),
+    min_ics = min(rejected_cardiac_ics, na.rm = TRUE),
+    max_ics = max(rejected_cardiac_ics, na.rm = TRUE),
+    median_ics = median(rejected_cardiac_ics, na.rm = TRUE)
+  )
+
+# Other CFA removal strategies (studies)
+other_cfa_strategies <- df_studies %>%
+  filter(!is.na(other_cfa_removal_strategy) & 
+         other_cfa_removal_strategy != "" & 
+         tolower(str_trim(other_cfa_removal_strategy)) != "unknown") %>%
+  mutate(
+    # Clean and standardize strategy names
+    strategy_clean = case_when(
+      other_cfa_removal_strategy == "limit analysis to time of minimal artifact" ~ 
+        "Minimal artifact window",
+      str_detect(tolower(other_cfa_removal_strategy), "^rr at least") ~ 
+        "RR interval constraints",
+      tolower(other_cfa_removal_strategy) %in% c(
+        "correct for cfa using the signal from the tip of the nose",
+        "regress ecg out",
+        "subtracting the cardiac signal artifact (skin-conducted ekg signal to the scalp) from the eeg signal",
+        "scaled ecg subtracted from eeg",
+        "subtract average ecg",
+        "ecg subtraction",
+        "weitkunat, r., & schandry, r. (1995)."
+      ) ~ "Subtract/regress ECG from EEG",
+      tolower(other_cfa_removal_strategy) == "subtract subject average resting state heps from task heps" ~ 
+        "Subtract rsHEP from task HEP",
+      str_detect(tolower(other_cfa_removal_strategy), "pca|hep") ~ "PCA on HEP",    
+      tolower(other_cfa_removal_strategy) == "hjorth" ~ "CSD",
+      tolower(other_cfa_removal_strategy) == "csd" ~ "CSD",
+      TRUE ~ str_to_title(str_trim(other_cfa_removal_strategy))
+    )
+  ) %>%
+  count(strategy_clean, sort = TRUE) %>%
+  mutate(percentage = round(n / sum(n) * 100, 1)) %>%
+  rename(strategy = strategy_clean)
+
+cat("## ICA Application Timing\n")
+for(i in 1:nrow(ica_timing)) {
+  cat("- **", ica_timing$timing[i], "**: ", ica_timing$percentage[i], "%\n")
+}
+
+cat("\n## CFA Identification Approaches\n")
+cat("- **Not reported**: ", round((1 - sum(cfa_approach_counts$n) / total_studies) * 100, 1), "% of studies\n")
+for(i in 1:min(3, nrow(cfa_approach_counts))) {
+  cat("- **", cfa_approach_counts$cfa_rej_approach[i], "**: ", cfa_approach_counts$percentage[i], "%\n")
+}
+
+cat("\n## CFA Identification Criteria\n")
+for(i in 1:min(nrow(cfa_criteria_counts))) {
+  cat("- **", cfa_criteria_counts$cfa_rej_criteria[i], "**: ", cfa_criteria_counts$percentage[i], "%\n")
+}
+
+cat("\n## Rejected Cardiac ICs\n")
+cat("- **Studies reporting number**: ", cardiac_ic_stats$n_studies, "\n")
+cat("- **Range**: ", cardiac_ic_stats$min_ics, "-", cardiac_ic_stats$max_ics, "\n")
+cat("- **Median**: ", cardiac_ic_stats$median_ics, "\n")
+
+cat("\n## Other CFA Removal Strategies\n")
+for(i in 1:min(nrow(other_cfa_strategies))) {
+  cat("- **", other_cfa_strategies$strategy[i], "**: ", other_cfa_strategies$n[i], " studies (", other_cfa_strategies$percentage[i], "%)\n")
+}
+```
+
+# Missing Information Analysis
+
+```{r missing}
+```
+
+# Sample Sizes and Statistical Power
+
+```{r power}
+```
+
+# Time Windows and Analysis
+
+```{r timewindows}
+# HEP Time of Interest windows
+hep_window_data <- df_pipelines %>%
+  filter(!hep_start %in% c("none", "unknown"),
+         !hep_end %in% c("none", "unknown")) %>%
+  mutate(
+    start_time = as.numeric(hep_start),
+    end_time = as.numeric(hep_end)
+  ) %>%
+  filter(!is.na(start_time), !is.na(end_time)) %>%
+  distinct(PMID, hep_start, hep_end, hep_relative_to, .keep_all = TRUE)
+
+# Overall HEP window statistics
+hep_window_stats <- hep_window_data %>%
+  summarise(
+    n_pipelines = n(),
+    start_range_min = min(start_time),
+    start_range_max = max(start_time), 
+    end_range_min = min(end_time),
+    end_range_max = max(end_time),
+    duration_min = min(end_time - start_time),
+    duration_max = max(end_time - start_time)
+  )
+
+# HEP reference scheme distribution (studies with valid HEP windows)
+hep_reference_counts <- hep_window_data %>%
+  distinct(PMID, hep_relative_to) %>%
+  filter(!is.na(hep_relative_to) & hep_relative_to != "unknown") %>%
+  count(hep_relative_to, sort = TRUE) %>%
+  mutate(percentage = round(n / sum(n) * 100, 1))
+
+# R-peak specific analysis
+rpeak_window_data <- hep_window_data %>%
+  filter(hep_relative_to == "R-peak")
+
+rpeak_window_stats <- if(nrow(rpeak_window_data) > 0) {
+  rpeak_window_data %>%
+    summarise(
+      n_pipelines = n(),
+      start_range_min = min(start_time),
+      start_range_max = max(start_time),
+      end_range_min = min(end_time),
+      end_range_max = max(end_time),
+      duration_min = min(end_time - start_time),
+      duration_max = max(end_time - start_time)
+    )
+} else {
+  data.frame(n_pipelines = 0, start_range_min = NA, start_range_max = NA,
+             end_range_min = NA, end_range_max = NA, duration_min = NA, duration_max = NA)
+}
+
+# Most common R-peak time windows analysis
+rpeak_common_windows <- if(nrow(rpeak_window_data) > 0) {
+  rpeak_window_data %>%
+    # Create time window strings for grouping
+    mutate(time_window = paste(start_time, "to", end_time, "ms")) %>%
+    count(time_window, start_time, end_time, sort = TRUE) %>%
+    mutate(
+      percentage = round(n / sum(n) * 100, 1),
+      n_studies = n  # Since we used distinct(PMID, ...) in hep_window_data
+    ) %>%
+    head(5)  # Top 5 most common windows
+} else {
+  data.frame(time_window = character(0), start_time = numeric(0), 
+             end_time = numeric(0), n = numeric(0), percentage = numeric(0), n_studies = numeric(0))
+}
+
+# Find the overlap region that most studies include
+rpeak_overlap_analysis <- if(nrow(rpeak_window_data) > 0) {
+  # Find the most common overlapping region
+  all_start_times <- rpeak_window_data$start_time
+  all_end_times <- rpeak_window_data$end_time
+  
+  # Use a more inclusive approach: find the region that most studies overlap with
+  # Use median start time and median end time as core boundaries
+  median_start <- median(all_start_times, na.rm = TRUE)
+  median_end <- median(all_end_times, na.rm = TRUE)
+  
+  # Count how many studies include this core region (overlap with median start to median end)
+  studies_including_core <- rpeak_window_data %>%
+    filter(start_time <= median_start & end_time >= median_end) %>%
+    nrow()
+  
+  core_percentage <- round(studies_including_core / nrow(rpeak_window_data) * 100, 1)
+  
+  
+  list(
+    core_start = round(median_start, 0),
+    core_end = round(median_end, 0),
+    studies_including_core = studies_including_core,
+    total_rpeak_studies = nrow(rpeak_window_data),
+    core_percentage = core_percentage
+  )
+} else {
+  list(core_start = NA, core_end = NA, studies_including_core = 0, 
+       total_rpeak_studies = 0, core_percentage = 0)
+}
+
+# T-peak specific analysis  
+tpeak_window_data <- hep_window_data %>%
+  filter(hep_relative_to == "T-peak")
+
+tpeak_window_stats <- if(nrow(tpeak_window_data) > 0) {
+  tpeak_window_data %>%
+    summarise(
+      n_pipelines = n(),
+      start_range_min = min(start_time),
+      start_range_max = max(start_time),
+      end_range_min = min(end_time),
+      end_range_max = max(end_time),
+      duration_min = min(end_time - start_time),
+      duration_max = max(end_time - start_time)
+    )
+} else {
+  data.frame(n_pipelines = 0, start_range_min = NA, start_range_max = NA,
+             end_range_min = NA, end_range_max = NA, duration_min = NA, duration_max = NA)
+}
+
+# Baseline window analysis 
+baseline_window_data <- df_pipelines %>%
+  filter(!is.na(baseline_start_ms), !is.na(baseline_end_ms)) %>%
+  mutate(
+    baseline_start_numeric = as.numeric(baseline_start_ms),
+    baseline_end_numeric = as.numeric(baseline_end_ms)
+  ) %>%
+  filter(!is.na(baseline_start_numeric), !is.na(baseline_end_numeric))
+
+baseline_stats <- baseline_window_data %>%
+  summarise(
+    n_pipelines = n(),
+    start_range_min = min(baseline_start_numeric),
+    start_range_max = max(baseline_start_numeric),
+    end_range_min = min(baseline_end_numeric),
+    end_range_max = max(baseline_end_numeric),
+    duration_min = min(baseline_end_numeric - baseline_start_numeric),
+    duration_max = max(baseline_end_numeric - baseline_start_numeric)
+  )
+
+baseline_pct <- round(nrow(baseline_window_data) / nrow(df_pipelines) * 100, 1)
+
+# Baseline correction by reference peak (R-peak vs T-peak)
+baseline_by_reference <- df_pipelines %>%
+  filter(!is.na(baseline_start_ms), !is.na(baseline_end_ms),
+         !is.na(hep_relative_to), hep_relative_to != "unknown") %>%
+  mutate(
+    baseline_start_numeric = as.numeric(baseline_start_ms),
+    baseline_end_numeric = as.numeric(baseline_end_ms)
+  ) %>%
+  filter(!is.na(baseline_start_numeric), !is.na(baseline_end_numeric)) %>%
+  group_by(hep_relative_to) %>%
+  summarise(
+    n_pipelines = n(),
+    n_studies = n_distinct(PMID),
+    start_range_min = min(baseline_start_numeric),
+    start_range_max = max(baseline_start_numeric),
+    end_range_min = min(baseline_end_numeric),
+    end_range_max = max(baseline_end_numeric),
+    .groups = "drop"
+  )
+
+# Analysis of baseline windows ending before QRS complex (to avoid CFA contamination)
+baseline_before_qrs <- baseline_window_data %>%
+  filter(!is.na(hep_relative_to), hep_relative_to != "unknown") %>%
+  mutate(
+    # For R-peak reference: baseline ends before 0 ms (QRS complex)
+    # For T-peak reference: need to account for typical T-peak timing (~300ms after R-peak)
+    baseline_ends_before_qrs = case_when(
+      hep_relative_to == "R-peak" ~ baseline_end_numeric < 0,
+      hep_relative_to == "T-peak" ~ baseline_end_numeric < 0, 
+      TRUE ~ FALSE
+    )
+  )
+
+# Calculate percentage of studies with baseline ending before QRS
+baseline_before_qrs_stats <- baseline_before_qrs %>%
+  summarise(
+    total_studies_with_baseline = n_distinct(PMID),
+    studies_ending_before_qrs = n_distinct(PMID[baseline_ends_before_qrs]),
+    percentage_before_qrs = round(studies_ending_before_qrs / total_studies_with_baseline * 100, 1)
+  )
+
+# Breakdown by reference scheme
+baseline_before_qrs_by_ref <- baseline_before_qrs %>%
+  group_by(hep_relative_to) %>%
+  summarise(
+    total_studies = n_distinct(PMID),
+    studies_ending_before_qrs = n_distinct(PMID[baseline_ends_before_qrs]),
+    percentage_before_qrs = round(studies_ending_before_qrs / total_studies * 100, 1),
+    .groups = "drop"
+  )
+
+# Significant effects window analysis (using method_category)
+significant_effects_data <- df_pipelines %>%
+  filter(significant_test == 1) %>%
+  mutate(
+    hep_start_numeric = as.numeric(hep_start),
+    hep_end_numeric = as.numeric(hep_end),
+    significant_start_numeric = as.numeric(significant_start_ms),
+    significant_end_numeric = as.numeric(significant_end_ms),
+    # Use HEP windows for Averaging, significant windows for Clustering
+    start_time = case_when(
+      method_category == "Averaging" ~ hep_start_numeric,
+      method_category == "Clustering" ~ significant_start_numeric,
+      TRUE ~ hep_start_numeric  
+    ),
+    end_time = case_when(
+      method_category == "Averaging" ~ hep_end_numeric,
+      method_category == "Clustering" ~ significant_end_numeric,
+      TRUE ~ hep_end_numeric  
+    ),
+    reference = case_when(
+      method_category == "Averaging" ~ hep_relative_to,
+      method_category == "Clustering" ~ significant_relative_to,
+      TRUE ~ hep_relative_to  
+    )
+  ) %>%
+  filter(!is.na(start_time), !is.na(end_time))
+
+significant_window_stats <- if(nrow(significant_effects_data) > 0) {
+  significant_effects_data %>%
+    summarise(
+      n_pipelines = n(),
+      start_range_min = min(start_time),
+      start_range_max = max(start_time),
+      end_range_min = min(end_time), 
+      end_range_max = max(end_time),
+      duration_min = min(end_time - start_time),
+      duration_max = max(end_time - start_time)
+    )
+} else {
+  data.frame(n_pipelines = 0, start_range_min = NA, start_range_max = NA,
+             end_range_min = NA, end_range_max = NA, duration_min = NA, duration_max = NA)
+}
+
+cat("## HEP Time Windows\n")
+cat("- **Pipelines with valid HEP windows**: ", hep_window_stats$n_pipelines, "\n")
+cat("- **Overall HEP start time range**: ", hep_window_stats$start_range_min, " to ", hep_window_stats$start_range_max, " ms\n")
+cat("- **Overall HEP end time range**: ", hep_window_stats$end_range_min, " to ", hep_window_stats$end_range_max, " ms\n")
+cat("- **Overall HEP window duration range**: ", hep_window_stats$duration_min, " to ", hep_window_stats$duration_max, " ms\n")
+
+cat("\n## HEP Reference Peak Distribution\n")
+for(i in 1:min(nrow(hep_reference_counts), 5)) {
+  cat("- **", as.character(hep_reference_counts$hep_relative_to[i]), "**: ", hep_reference_counts$n[i], " studies (", hep_reference_counts$percentage[i], "%)\n")
+}
+
+cat("\n## R-peak Referenced Analysis\n")
+if(rpeak_window_stats$n_pipelines > 0) {
+  cat("- **Pipelines using R-peak reference**: ", rpeak_window_stats$n_pipelines, "\n")
+  cat("- **R-peak start time range**: ", rpeak_window_stats$start_range_min, " to ", rpeak_window_stats$start_range_max, " ms\n")
+  cat("- **R-peak end time range**: ", rpeak_window_stats$end_range_min, " to ", rpeak_window_stats$end_range_max, " ms\n")
+  cat("- **R-peak window duration range**: ", rpeak_window_stats$duration_min, " to ", rpeak_window_stats$duration_max, " ms\n")
+  
+  # Most common time windows
+  if(nrow(rpeak_common_windows) > 0) {
+    cat("\n### Most Common R-peak Time Windows:\n")
+    for(i in 1:min(3, nrow(rpeak_common_windows))) {
+      cat("- **", rpeak_common_windows$time_window[i], "**: ", rpeak_common_windows$n_studies[i], " studies (", rpeak_common_windows$percentage[i], "%)\n")
+    }
+  }
+  
+  # Core overlap analysis
+  if(!is.na(rpeak_overlap_analysis$core_start)) {
+    cat("\n### Core Time Window (included by most studies):\n")
+    cat("- **Core window**: ", rpeak_overlap_analysis$core_start, " to ", rpeak_overlap_analysis$core_end, " ms\n")
+    cat("- **Studies including this core**: ", rpeak_overlap_analysis$core_percentage, "% (", rpeak_overlap_analysis$studies_including_core, "/", rpeak_overlap_analysis$total_rpeak_studies, ")\n")
+  }
+} else {
+  cat("- **No R-peak referenced analyses found**\n")
+}
+
+cat("\n## T-peak Referenced Analysis\n")
+if(tpeak_window_stats$n_pipelines > 0) {
+  cat("- **Pipelines using T-peak reference**: ", tpeak_window_stats$n_pipelines, "\n")
+  cat("- **T-peak start time range**: ", tpeak_window_stats$start_range_min, " to ", tpeak_window_stats$start_range_max, " ms\n")
+  cat("- **T-peak end time range**: ", tpeak_window_stats$end_range_min, " to ", tpeak_window_stats$end_range_max, " ms\n")
+  cat("- **T-peak window duration range**: ", tpeak_window_stats$duration_min, " to ", tpeak_window_stats$duration_max, " ms\n")
+} else {
+  cat("- **No T-peak referenced analyses found**\n")
+}
+
+cat("\n## Baseline Correction\n")
+cat("- **Pipelines using baseline correction**: ", baseline_pct, "% (", nrow(baseline_window_data), "/", nrow(df_pipelines), ")\n")
+if(nrow(baseline_window_data) > 0) {
+  cat("- **Overall baseline start time range**: ", baseline_stats$start_range_min, " to ", baseline_stats$start_range_max, " ms\n")
+  cat("- **Overall baseline end time range**: ", baseline_stats$end_range_min, " to ", baseline_stats$end_range_max, " ms\n")
+  cat("- **Overall baseline duration range**: ", baseline_stats$duration_min, " to ", baseline_stats$duration_max, " ms\n")
+}
+
+cat("\n## Baseline Correction by Reference Peak\n")
+if(nrow(baseline_by_reference) > 0) {
+  for(i in 1:nrow(baseline_by_reference)) {
+    ref_peak <- as.character(baseline_by_reference$hep_relative_to[i])
+    n_pipes <- baseline_by_reference$n_pipelines[i]
+    n_studies <- baseline_by_reference$n_studies[i]
+    start_min <- baseline_by_reference$start_range_min[i]
+    start_max <- baseline_by_reference$start_range_max[i]
+    end_min <- baseline_by_reference$end_range_min[i]
+    end_max <- baseline_by_reference$end_range_max[i]
+    
+    cat("- **", ref_peak, "**: ", n_pipes, " pipelines from ", n_studies, " studies\n")
+    cat("  - Start range: ", start_min, " to ", start_max, " ms\n")
+    cat("  - End range: ", end_min, " to ", end_max, " ms\n")
+  }
+} else {
+  cat("- **No reference-specific baseline data available**\n")
+}
+
+cat("\n## Baseline Windows Ending Before QRS Complex\n")
+cat("- **Studies with baseline ending before QRS**: ", baseline_before_qrs_stats$percentage_before_qrs, "% (", baseline_before_qrs_stats$studies_ending_before_qrs, "/", baseline_before_qrs_stats$total_studies_with_baseline, ")\n")
+
+cat("\n### By Reference Scheme:\n")
+if(nrow(baseline_before_qrs_by_ref) > 0) {
+  for(i in 1:nrow(baseline_before_qrs_by_ref)) {
+    ref_peak <- as.character(baseline_before_qrs_by_ref$hep_relative_to[i])
+    total <- baseline_before_qrs_by_ref$total_studies[i]
+    before_qrs <- baseline_before_qrs_by_ref$studies_ending_before_qrs[i]
+    pct <- baseline_before_qrs_by_ref$percentage_before_qrs[i]
+    
+    cat("- **", ref_peak, "**: ", pct, "% (", before_qrs, "/", total, " studies)\n")
+  }
+}
+
+cat("\n## Significant Effects Windows\n")
+cat("- **Pipelines with significant effects**: ", significant_window_stats$n_pipelines, "\n")
+if(significant_window_stats$n_pipelines > 0) {
+  cat("- **Effects start time range**: ", significant_window_stats$start_range_min, " to ", significant_window_stats$start_range_max, " ms\n")
+  cat("- **Effects end time range**: ", significant_window_stats$end_range_min, " to ", significant_window_stats$end_range_max, " ms\n")
+  cat("- **Effects duration range**: ", significant_window_stats$duration_min, " to ", significant_window_stats$duration_max, " ms\n")
+}
+
+# Significant effects by reference peak
+significant_by_reference <- if(nrow(significant_effects_data) > 0) {
+  significant_effects_data %>%
+    filter(!is.na(reference), reference != "unknown") %>%
+    group_by(reference) %>%
+    summarise(
+      n_pipelines = n(),
+      start_range_min = min(start_time),
+      start_range_max = max(start_time),
+      end_range_min = min(end_time),
+      end_range_max = max(end_time),
+      duration_min = min(end_time - start_time),
+      duration_max = max(end_time - start_time),
+      .groups = "drop"
+    )
+} else {
+  data.frame()
+}
+
+if(nrow(significant_by_reference) > 0) {
+  cat("\n### Significant Effects by Reference Peak:\n")
+  for(i in 1:nrow(significant_by_reference)) {
+    ref_peak <- as.character(significant_by_reference$reference[i])
+    n_pipes <- significant_by_reference$n_pipelines[i]
+    start_min <- significant_by_reference$start_range_min[i]
+    start_max <- significant_by_reference$start_range_max[i]
+    end_min <- significant_by_reference$end_range_min[i]
+    end_max <- significant_by_reference$end_range_max[i]
+    dur_min <- significant_by_reference$duration_min[i]
+    dur_max <- significant_by_reference$duration_max[i]
+    
+    cat("- **", ref_peak, "**: ", n_pipes, " pipelines\n")
+    cat("  - Start range: ", start_min, " to ", start_max, " ms\n")
+    cat("  - End range: ", end_min, " to ", end_max, " ms\n")
+    cat("  - Duration range: ", dur_min, " to ", dur_max, " ms\n")
+  }
+}
+
+# Peak effect timing analysis by method and reference
+peak_effects_analysis <- if(nrow(significant_effects_data) > 0) {
+  significant_effects_data %>%
+    filter(!is.na(reference), reference != "unknown") %>%
+    # Use the method_category directly
+    filter(method_category %in% c("Averaging", "Clustering")) %>%
+    group_by(method_category, reference) %>%
+    summarise(
+      n_pipelines = n(),
+      # Find core regions using median approach
+      median_start = median(start_time, na.rm = TRUE),
+      median_end = median(end_time, na.rm = TRUE),
+      # Count studies that include the core region
+      studies_in_core = sum(start_time <= median(start_time, na.rm = TRUE) & 
+                           end_time >= median(end_time, na.rm = TRUE), na.rm = TRUE),
+      core_percentage = round(studies_in_core / n() * 100, 1),
+      .groups = "drop"
+    ) %>%
+    # For T-peak, add equivalent R-peak timing (assuming ~300ms T-peak delay)
+    mutate(
+      rpeak_equivalent_start = if_else(reference == "T-peak", median_start + 300, median_start),
+      rpeak_equivalent_end = if_else(reference == "T-peak", median_end + 300, median_end)
+    )
+} else {
+  data.frame()
+}
+
+cat("\n### Peak Effect Timing by Analysis Method:\n")
+if(nrow(peak_effects_analysis) > 0) {
+  # Clustering analysis
+  cluster_data <- peak_effects_analysis %>% filter(method_category == "Clustering")
+  if(nrow(cluster_data) > 0) {
+    cat("**Clustering analysis core effect regions:**\n")
+    for(i in 1:nrow(cluster_data)) {
+      ref_peak <- cluster_data$reference[i]
+      median_start <- round(cluster_data$median_start[i], 1)
+      median_end <- round(cluster_data$median_end[i], 1)
+      core_pct <- cluster_data$core_percentage[i]
+      n_studies <- cluster_data$studies_in_core[i]
+      total_studies <- cluster_data$n_pipelines[i]
+      
+      if(ref_peak == "R-peak") {
+        cat("- **R-peak referenced**: ", median_start, "-", median_end, " ms (", core_pct, "% of studies, ", n_studies, "/", total_studies, ")\n")
+      } else if(ref_peak == "T-peak") {
+        rpeak_start <- round(cluster_data$rpeak_equivalent_start[i], 1)
+        rpeak_end <- round(cluster_data$rpeak_equivalent_end[i], 1)
+        cat("- **T-peak referenced**: ", median_start, "-", median_end, " ms (≈", rpeak_start, "-", rpeak_end, " ms after R-peak; ", core_pct, "% of studies, ", n_studies, "/", total_studies, ")\n")
+      }
+    }
+  }
+  
+  # Averaging analysis
+  avg_data <- peak_effects_analysis %>% filter(method_category == "Averaging")
+  if(nrow(avg_data) > 0) {
+    cat("\n**Averaging analysis core effect regions:**\n")
+    for(i in 1:nrow(avg_data)) {
+      ref_peak <- avg_data$reference[i]
+      median_start <- round(avg_data$median_start[i], 1)
+      median_end <- round(avg_data$median_end[i], 1)
+      core_pct <- avg_data$core_percentage[i]
+      n_studies <- avg_data$studies_in_core[i]
+      total_studies <- avg_data$n_pipelines[i]
+      
+      if(ref_peak == "R-peak") {
+        cat("- **R-peak referenced**: ", median_start, "-", median_end, " ms (", core_pct, "% of studies, ", n_studies, "/", total_studies, ")\n")
+      } else if(ref_peak == "T-peak") {
+        rpeak_start <- round(avg_data$rpeak_equivalent_start[i], 1)
+        rpeak_end <- round(avg_data$rpeak_equivalent_end[i], 1)
+        cat("- **T-peak referenced**: ", median_start, "-", median_end, " ms (≈", rpeak_start, "-", rpeak_end, " ms after R-peak; ", core_pct, "% of studies, ", n_studies, "/", total_studies, ")\n")
+      }
+    }
+  }
+} else {
+  cat("**No peak effect timing data available**\n")
+}
+```
+
+# Literature Search & Screening Results
+
+```{r topography}
+```
+
+
+
+# Multiple Pipelines and Methodological Variations
+
+```{r variations}
+```
+
+---
+*Generated on `r Sys.Date()`*

@@ -47,6 +47,6 @@ generate_prisma(df_screening, prisma_template_path,
 make_figures(df_included, results_path, ext = 'png')
 
 # R Markdown report with data from global environment
-rmarkdown::render('manuscript_statistics.Rmd', 
+rmarkdown::render(file.path(func_path, 'manuscript_statistics.Rmd'), 
                   output_format = 'html_document',
                   output_dir = results_path)

@@ -42,12 +42,11 @@ source("config.R")
 df_full <- load_data(pubmed_path, manual_path)
 c(df_screening, df_included) %<-% preprocess(df_full)
 errors <- validate_preprocessed(df_included)
+generate_prisma(df_screening, prisma_template_path,
+                derivatives_path, results_path, ext = 'png')
+make_figures(df_included, results_path, ext = 'png')
 
 # R Markdown report with data from global environment
 rmarkdown::render('manuscript_statistics.Rmd', 
                   output_format = 'html_document',
                   output_dir = results_path)
-
-generate_prisma(df_screening, prisma_template_path,
-                derivatives_path, results_path, ext = 'png')
-make_figures(df_included, results_path, ext = 'png')

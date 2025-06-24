@@ -34,7 +34,8 @@ This document provides all values mentioned in the manuscript "A Systematic Revi
 - **Studies**: Unique publications (identified by PMID). Each study represents one research paper.
 - **Pipelines**: Individual analysis approaches within studies. Some studies report multiple analysis pipelines (e.g. different time windows, or statistical approaches).
 
-# Literature Search & Screening Results
+# Overview of the included studies
+
 
 ```{r literature-overview}
 # Basic counts
@@ -113,6 +114,11 @@ cat("\n## Study Type Distribution (Study Level)\n")
 for(i in 1:nrow(study_type_analysis)) {
   cat("- **", study_type_analysis$study_category[i], "**: ", study_type_analysis$n[i], " (", study_type_analysis$percentage[i], "%)\n")
 }
+```
+
+# Overview of methodological choices
+
+```{r variations}
 ```
 
 # M/EEG Acquisition & Preprocessing
@@ -335,7 +341,7 @@ cat("- **Most common high-pass cutoffs**: ", paste(common_highpass$high_pass, co
 ```{r ecg}
 ```
 
-# CFA Removal Strategies
+# Dealing with cardiac field artifacts
 
 ```{r cfa}
 # ICA timing (studies using ICA)
@@ -456,16 +462,6 @@ cat("\n## Other CFA Removal Strategies\n")
 for(i in 1:min(nrow(other_cfa_strategies))) {
   cat("- **", other_cfa_strategies$strategy[i], "**: ", other_cfa_strategies$n[i], " studies (", other_cfa_strategies$percentage[i], "%)\n")
 }
-```
-
-# Missing Information Analysis
-
-```{r missing}
-```
-
-# Sample Sizes and Statistical Power
-
-```{r power}
 ```
 
 # HEP Time Windows
@@ -920,12 +916,11 @@ if(nrow(peak_effects_analysis) > 0) {
 ```{r topography}
 ```
 
+# Statistical Analysis
 
-
-# Multiple Pipelines and Methodological Variations
-
-```{r variations}
+```{r statistics}
 ```
+
 
 ---
 *Generated on `r Sys.Date()`*

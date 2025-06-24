@@ -219,13 +219,13 @@ for(i in 1:min(5, nrow(offline_ref_counts))) {
 artifact_stats <- df_pipelines %>%
   summarise(
     # Noisy epochs removal 
-    noisy_epochs_pct = round(mean(grepl("noisy epoch|epoch", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
+    noisy_epochs_pct = round(mean(grepl("noisy epoch", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
     
     # Bad channels removal 
     bad_channels_pct = round(mean(grepl("bad channels", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
     
     # Blink/EOG correction
-    blink_correction_pct = round(mean(grepl("blink|EOG|eye|gratton", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
+    blink_correction_pct = round(mean(grepl("blink|eye|gratton", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
 
     # ICA usage
     ica_pct = round(mean(ICA == 1, na.rm = TRUE) * 100, 1),
@@ -416,21 +416,14 @@ other_cfa_strategies <- df_studies %>%
       other_cfa_removal_strategy == "limit analysis to time of minimal artifact" ~ 
         "Minimal artifact window",
       str_detect(tolower(other_cfa_removal_strategy), "^rr at least") ~ 
-        "RR interval constraints",
+        "RR interval\nconstraints",
       tolower(other_cfa_removal_strategy) %in% c(
-        "correct for cfa using the signal from the tip of the nose",
-        "regress ecg out",
-        "subtracting the cardiac signal artifact (skin-conducted ekg signal to the scalp) from the eeg signal",
-        "scaled ecg subtracted from eeg",
-        "subtract average ecg",
-        "ecg subtraction",
-        "weitkunat, r., & schandry, r. (1995)."
+        "subtract/regress ecg from eeg"
       ) ~ "Subtract/regress ECG from EEG",
-      tolower(other_cfa_removal_strategy) == "subtract subject average resting state heps from task heps" ~ 
-        "Subtract rsHEP from task HEP",
-      str_detect(tolower(other_cfa_removal_strategy), "pca|hep") ~ "PCA on HEP",    
-      tolower(other_cfa_removal_strategy) == "hjorth" ~ "CSD",
-      tolower(other_cfa_removal_strategy) == "csd" ~ "CSD",
+      tolower(other_cfa_removal_strategy) == "subtract rshep from taskhep" ~ 
+        "subtract rsHEP\nfrom task HEP",
+      tolower(other_cfa_removal_strategy) == "pca on heps" ~ "PCA on\nHEP",
+            tolower(other_cfa_removal_strategy) == "csd" ~ "CSD",
       TRUE ~ str_to_title(str_trim(other_cfa_removal_strategy))
     )
   ) %>%
@@ -475,7 +468,7 @@ for(i in 1:min(nrow(other_cfa_strategies))) {
 ```{r power}
 ```
 
-# Time Windows and Analysis
+# HEP Time Windows
 
 ```{r timewindows}
 # HEP Time of Interest windows
@@ -922,7 +915,7 @@ if(nrow(peak_effects_analysis) > 0) {
 }
 ```
 
-# Literature Search & Screening Results
+# HEP Topography
 
 ```{r topography}
 ```

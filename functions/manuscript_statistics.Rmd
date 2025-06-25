@@ -62,6 +62,27 @@ in **bold** are also present in the manuscript.
 
 ## Literature search
 
+```{r data-export}
+exports_path = file.path(data_path, 'exports')
+df_query1 <- read.csv(file.path(exports_path, '20240115_pubmed_query1.csv'))
+df_query2 <- read.csv(file.path(exports_path, '20240724_pubmed_query2.csv'))
+df_query2_rerun <- read.csv(file.path(exports_path, '20240805_pubmed_query2.csv'))
+df_query3 <- read.csv(file.path(exports_path, '20240805_pubmed_query3.csv'))
+
+df_merged <- df_query1 %>%
+  bind_rows(df_query2) %>%
+  bind_rows(df_query2_rerun) %>%
+  bind_rows(df_query3) %>%
+  distinct(PMID)
+```
+
+Table 1 - number of retrieved papers:
+
+* 15.01.2024: **`r nrow(df_query1)`**
+* 07.08.2024: **`r nrow(df_query2)`** (rerun: **`r nrow(df_query2_rerun)`**)
+* 05.08.2024: **`r nrow(df_query3)`**
+* After removing duplicates: **`r nrow(df_merged)`**
+
 ```{r literature-search, results='asis'}
 screening_pubmed <- df_screening[df_screening$source == "pubmed",]
 screening_manual <- df_screening[df_screening$source == "manual",]

@@ -235,36 +235,136 @@ ecg_summary <- function(df) {
   fig
 }
 
-eeg_locations_summary <- function(df) {
-  # Temporary function for testing the display of EEG locations
-  p_separate_primary <- plot_eeg_locations(df[df$hep_window_type == "Primary",], 
-                                           "hep_channels_selected", combined = F) +
-    guides(fill = guide_none())
-  p_separate_secondary <- plot_eeg_locations(df[df$hep_window_type == "Secondary",],
-                                             "hep_channels_selected", combined = F) +
-    guides(fill = guide_none())
-  p_separate_significant <- plot_eeg_locations(df, "significant_channels", 
-                                               lim = NULL, combined = F) +
-    guides(fill = guide_none())
-
-  p_combined_primary <- plot_eeg_locations(df[df$hep_window_type == "Primary",], 
-                                           "hep_channels_selected", combined = T) +
-    labs(title = "Primary")
-  p_combined_secondary <- plot_eeg_locations(df[df$hep_window_type == "Secondary",],
-                                             "hep_channels_selected", combined = T) +
-    labs(title = "Secondary")
-  p_combined_significant <- plot_eeg_locations(df, "significant_channels", 
-                                               lim = NULL, combined = T) +
-    labs(title = "Significant")
-
+eeg_locations_summary <- function(df, reference_var, reference_values) {
+  p_selected <- lapply(reference_values, \(x) plot_eeg_locations(df[df[reference_var] == x,], 
+                                                                "hep_channels_selected", combined = T,
+                                                                main_title = "Selected", show_colorbar = F))
+  names(p_selected) <- reference_values
+  p_significant <- lapply(reference_values, \(x) plot_eeg_locations(df[df[reference_var] == x,], 
+                                                                    "significant_channels", combined = T,
+                                                                    main_title = "Significant", show_colorbar = F))
+  names(p_significant) <- reference_values
+  
+  # XXX: rather hacky approach that works only for two reference values (seems
+  # to be enough for now)
   fig <- plot_grid(
-    p_separate_primary, p_combined_primary,
-    p_separate_secondary, p_combined_secondary,
-    p_separate_significant, p_combined_significant,
-    nrow = 3, ncol = 2, rel_widths = c(4, 1.5)
+    p_selected[[reference_values[[1]]]], p_significant[[reference_values[[1]]]], 
+    NULL,
+    p_selected[[reference_values[[2]]]], p_significant[[reference_values[[2]]]], 
+    nrow = 1, rel_widths = c(1, 1, 0.1, 1, 1)
   )
   
   fig
+}
+
+
+studies_overview <- function(df) {
+  p_year <- hist_panel(df, "Year", force.numeric = T, 
+                       x.label = "Publication year", 
+                       binwidth = 2, use_proportion = F)
+  
+  p_modality <- hist_panel(df, "modality", discrete = T,
+                           x.label = "Imaging modality")
+  
+  p_condition <- hist_panel(df, "rsHEP", discrete = T,
+                            x.label = "Experimental setting",
+                            custom_labels = c("Task", "Resting-state"))
+  
+  fig <- plot_grid(p_year, p_modality, p_condition,
+                   nrow = 1, labels = c("B", "C", "D"))
+  
+  fig
+}
+
+
+create_hep_time_windows_summary_plot <- function(df) {
+
+  #cluster / average histogram
+  df_hep_method_prop <- df %>%
+    filter(method_category %in% c("Averaging", "Clustering"))
+
+  avg_cluster_prop_plot <- hist_panel(
+    df_hep_method_prop,
+    col = "method_numeric",
+    discrete = TRUE, use_proportion = TRUE,
+    x.label = "HER Determination",
+    custom_labels = c("Clustering", "Averaging"), 
+    tilt_labels = FALSE
+  )
+  
+  #R-/T-peak histogram
+  rt_peak_prop_plot <- hist_panel(
+    df,
+    col = "hep_relative_to",
+    discrete = TRUE, use_proportion = TRUE,
+    x.label = "HER Reference",
+    tilt_labels = FALSE
+  )
+ 
+  #baseline correction histogram
+  baseline_def_prop_plot <- hist_panel(
+    df,
+    col = "baseline_defined",
+    discrete = TRUE, use_proportion = TRUE,
+    x.label = "Baseline Correction",
+    custom_labels = c("No", "Yes"),
+    tilt_labels = FALSE
+  )
+
+  #primary / secondary histogram
+  hep_type_prop_plot <- hist_panel(
+    df,
+    col = "hep_window_type",
+    discrete = TRUE, use_proportion = TRUE,
+    x.label = "HER Window Type",
+    tilt_labels = FALSE
+  )
+
+  first_row_histograms <- plot_grid(
+    avg_cluster_prop_plot, rt_peak_prop_plot,
+    baseline_def_prop_plot, hep_type_prop_plot,
+    ncol = 4,
+    labels = c("A", "B", "C", "D"),
+    align = "hv",
+    axis = "tblr"
+  )
+
+  # Main HEP time windows plots
+  hep_average_plot <- create_single_ecg_plot(
+    df,
+    avg_value = "Averaging",
+    shared_limits = c(-300, 1000),
+    plot_title = "E) HER Windows (Averaging)",
+    reference_var = "hep_relative_to",
+    reference_values = c("R-peak", "T-peak")
+  )
+
+  hep_cluster_plot <- create_single_ecg_plot(
+    df,
+    avg_value = "Clustering",
+    shared_limits = c(-300, 1000),
+    plot_title = "F) HER Windows (Clustering)",
+    reference_var = "hep_relative_to",
+    reference_values = c("R-peak", "T-peak")
+  )
+
+  hep_comparison_row <- plot_grid(
+    hep_average_plot, 
+    hep_cluster_plot,
+    ncol = 2,
+    align = "hv",
+    axis = "tblr",
+    label_x = 0.01,
+    hjust = 0
+  )
+
+  hep_time_windows_combined <- plot_grid(
+    first_row_histograms,
+    hep_comparison_row,
+    ncol = 1,
+    rel_heights = c(0.25, 0.75)
+  )
+  return(hep_time_windows_combined)
 }
 
 
@@ -463,7 +563,6 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
   show(control_categories_plot)
 
-
   ecg_summary_plot <- ecg_summary(df)
 
   ggsave(
@@ -477,19 +576,33 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(ecg_summary_plot)
-
-  eeg_summary_plot <- eeg_locations_summary(df)
+  
+  eeg_locations_by_approach <- eeg_locations_summary(df, reference_var = "hep_approach",
+                                                     reference_values = c("Averaging", "Clustering"))
   ggsave(
-    filename = file.path(save_path, paste0("eeg_summary_plot.", ext)),
-    plot = eeg_summary_plot,
+    filename = file.path(save_path, paste0("eeg_locations_by_approach.", ext)),
+    plot = eeg_locations_by_approach,
     width = 10,
-    height = 6,
+    height = 2,
     units = "in",
     dpi = 300,
     device = ext,
     bg = "white"
   )
-  show(eeg_summary_plot)
+  
+  eeg_locations_by_window_type <- eeg_locations_summary(df, reference_var = "hep_window_type",
+                                                        reference_values = c("Primary", "Secondary"))
+  ggsave(
+    filename = file.path(save_path, paste0("eeg_locations_by_window_type.", ext)),
+    plot = eeg_locations_by_window_type,
+    width = 10,
+    height = 2,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
+  
 
  
   hep_time_windows_combined <- create_hep_time_windows_summary_plot(df)

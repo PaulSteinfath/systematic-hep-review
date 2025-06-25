@@ -157,7 +157,9 @@ plot_eeg_locations <- function(df,
                                layouts = names(ch_names), 
                                lim = 1.0,
                                colormap = "magma",
+                               show_colorbar = T,
                                colorbar_title = "Proportion",
+                               main_title = NULL,
                                combined = T,
                                display.layout = "standard61") {
   # Get the number of occurrences for each channel in each layout
@@ -175,6 +177,18 @@ plot_eeg_locations <- function(df,
                                      lim = lim, colormap = colormap)
   }
   
-  p + 
-    guides(fill = guide_colorbar(title = colorbar_title))
+  if (!is.null(main_title)) {
+    p <- p + 
+      labs(title = main_title) + 
+      theme(plot.title = element_text(hjust = 0.5))
+  }
+  
+  if (show_colorbar) {
+    p <- p + 
+      guides(fill = guide_colorbar(title = colorbar_title))
+  } else {
+    p <- p + guides(fill = guide_none())
+  }
+  
+  p
 }

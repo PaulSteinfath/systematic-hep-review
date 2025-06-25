@@ -3,15 +3,36 @@ title: "Manuscript Summary"
 subtitle: "A Systematic Review of Methods Used for Studying Heartbeat Evoked Responses"
 output: 
   html_document:
-    toc: true
-    toc_float: true
-    code_folding: hide
-    theme: flatly
+    theme: null
 date: "`r Sys.Date()`"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(cowplot)
+library(dplyr)
+library(eegUtils)
+library(grid)
+library(gridExtra)
+library(gridGraphics)
+library(ggimage)
+library(ggplot2)
+library(ggtext)
+library(magick)
+library(PRISMA2020)
+library(purrr)
+library(scales)
+library(stringr)
+library(tidyr)
+library(viridis)
+library(zeallot)
+
+data_path <- file.path(getwd(), '../data')
+derivatives_path <- file.path(data_path, 'derivatives')
+df_included <- read.csv(file.path(derivatives_path, 'included.csv'))
+df_screening <- read.csv(file.path(derivatives_path, 'screening.csv'))
+
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+                      results = "asis")
 
 # Create study-level and pipeline-level datasets for efficiency
 df_studies <- df_included %>% distinct(PMID, .keep_all = TRUE)
@@ -27,19 +48,46 @@ meg_pipelines <- df_pipelines %>% filter(modality == "MEG")
 
 # Overview
 
-This document provides all values mentioned in the manuscript "A Systematic Review of Methods Used for Studying Heartbeat Evoked Responses".
+This document provides all values mentioned in the manuscript "A Systematic Review of Methods Used for Studying Heartbeat Evoked Responses". All sections of this document apart from this overview match the corresponding section of the manuscript. Numbers highlighted
+in **bold** are also present in the manuscript.
 
 ## Important Distinction: Studies vs Pipelines
 
 - **Studies**: Unique publications (identified by PMID). Each study represents one research paper.
 - **Pipelines**: Individual analysis approaches within studies. Some studies report multiple analysis pipelines (e.g. different time windows, or statistical approaches).
 
-# Overview of the included studies
+# Methods
 
+## Literature search
+
+```{r literature-search, results='asis'}
+screening_pubmed <- df_screening[df_screening$source == "pubmed",]
+screening_manual <- df_screening[df_screening$source == "manual",]
+
+total_retrieved_pubmed <- nrow(screening_pubmed)
+total_included_pubmed <- nrow(screening_pubmed[screening_pubmed$Include == 1,])
+total_retrieved_manual <- nrow(screening_manual)
+total_included_manual <- nrow(screening_manual[screening_manual$Include == 1,])
+```
+
+Exported from Pubmed:
+
+* Retrieved: **`r total_retrieved_pubmed`** studies
+* Included: **`r total_included_pubmed`** studies
+
+Manually added:
+
+* Retrieved: **`r total_retrieved_manual`** studies
+* Included: **`r total_included_manual`** studies
+
+Final sample: **`r total_included_pubmed + total_included_manual`** studies
+
+# Results
+
+## Overview of the included studies
 
 ```{r literature-overview}
 # Basic counts
-total_retrieved <- nrow(df_screening)
 total_pipelines <- nrow(df_pipelines)
 total_studies <- nrow(df_studies)
 
@@ -47,15 +95,12 @@ total_studies <- nrow(df_studies)
 year_range <- df_studies %>% 
   summarise(min_year = min(Year, na.rm = TRUE), max_year = max(Year, na.rm = TRUE))
 
-# Modality breakdown (pipelines)
-modality_counts_pipelines <- df_pipelines %>%
-  count(modality) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1))
-
 # Modality breakdown (unique studies)
-modality_counts_studies <- df_studies %>%
+modality_counts <- df_studies %>%
   count(modality) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
+modality_eeg <- as.list(modality_counts[modality_counts$modality == "EEG",])
+modality_meg <- as.list(modality_counts[modality_counts$modality == "MEG",])
 
 # Task vs resting state - using rsHEP column (pipelines level)
 task_counts_pipelines <- df_pipelines %>%
@@ -89,41 +134,39 @@ study_type_analysis <- df_pipelines %>%
   ) %>%
   count(study_category) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
+```
 
-cat("## Literature Search Results\n")
-cat("- **Total retrieved records**: ", total_retrieved, "\n")
-cat("- **Total included pipelines**: ", total_pipelines, " from ", total_studies, " unique studies\n")
-cat("- **Publication year range**: ", year_range$min_year, "-", year_range$max_year, "\n\n")
+Literature search results:
 
-cat("## Modality Distribution (Pipelines)\n")
-for(i in 1:nrow(modality_counts_pipelines)) {
-  cat("- **", modality_counts_pipelines$modality[i], "**: ", modality_counts_pipelines$n[i], " (", modality_counts_pipelines$percentage[i], "%)\n")
-}
+* Included: **`r total_studies`** studies, `r total_pipelines` pipelines
+* Earliest publication year: **`r year_range$min_year`**
+* Latest publication year: **`r year_range$max_year`**
 
-cat("\n## Modality Distribution (Unique Studies)\n")
-for(i in 1:nrow(modality_counts_studies)) {
-  cat("- **", modality_counts_studies$modality[i], "**: ", modality_counts_studies$n[i], " (", modality_counts_studies$percentage[i], "%)\n")
-}
+Modality distribution:
 
-cat("\n## Study Type Distribution (Pipeline Level)\n")
+* EEG: `r modality_eeg$n` studies (`r modality_eeg$percentage` %)
+* MEG: **`r modality_meg$n`** studies (`r modality_meg$percentage` %)
+
+```{r literature-overview-print}
+cat("\n### Study Type Distribution (Pipeline Level)\n")
 for(i in 1:nrow(task_counts_pipelines)) {
   cat("- **", task_counts_pipelines$study_type[i], "**: ", task_counts_pipelines$n[i], " (", task_counts_pipelines$percentage[i], "%)\n")
 }
 
-cat("\n## Study Type Distribution (Study Level)\n")
+cat("\n### Study Type Distribution (Study Level)\n")
 for(i in 1:nrow(study_type_analysis)) {
   cat("- **", study_type_analysis$study_category[i], "**: ", study_type_analysis$n[i], " (", study_type_analysis$percentage[i], "%)\n")
 }
 ```
 
-# Overview of methodological choices
+## Overview of methodological choices
 
 ```{r variations}
 ```
 
-# M/EEG Acquisition & Preprocessing
+## M/EEG Acquisition & Preprocessing
 
-## Channel Information
+### Channel Information
 
 ```{r channels}
 # EEG channel statistics
@@ -141,13 +184,13 @@ channel_stats <- channel_data %>%
     n_studies = n()
   )
 
-cat("## EEG Channel Statistics\n")
+cat("EEG Channel Statistics:\n")
 cat("- **Number of EEG studies**: ", channel_stats$n_studies, "\n")
 cat("- **Channel range**: ", channel_stats$min_channels, "-", channel_stats$max_channels, "\n")
 cat("- **Median channels**: ", channel_stats$median_channels, "\n")
 ```
 
-## Reference Schemes
+### Reference Schemes
 
 ```{r references}
 # Reference processing
@@ -206,19 +249,19 @@ offline_ref_counts <- eeg_studies_ref %>%
   ) %>%
   arrange(desc(n))
 
-cat("## Online Reference Distribution\n")
+cat("Online Reference Distribution:\n")
 for(i in 1:min(5, nrow(online_ref_counts))) {
   cat("- **", online_ref_counts$display_name[i], "**: ", online_ref_counts$percentage[i], "%\n")
 }
 
-cat("\n## Offline Reference Distribution\n")
+cat("\nOffline Reference Distribution:\n")
 for(i in 1:min(5, nrow(offline_ref_counts))) {
   cat("- **", offline_ref_counts$display_name[i], "**: ", offline_ref_counts$percentage[i], "%\n")
 }
 
 ```
 
-## Artifact Removal
+### Artifact Removal
 
 ```{r artifacts}
 # Artifact removal statistics (pipelines)

@@ -46,6 +46,10 @@ generate_prisma(df_screening, prisma_template_path,
                 derivatives_path, results_path, ext = 'png')
 make_figures(df_included, results_path, ext = 'png')
 
+# Save the results
+write.csv(df_included, file.path(derivatives_path, 'included.csv'), row.names = F)
+write.csv(df_screening, file.path(derivatives_path, 'screening.csv'), row.names = F)
+
 # R Markdown report with data from global environment
 rmarkdown::render(file.path(func_path, 'manuscript_statistics.Rmd'), 
                   output_format = 'html_document',

@@ -23,6 +23,7 @@ library(PRISMA2020)
 library(purrr)
 library(scales)
 library(stringr)
+library(testit)
 library(tidyr)
 library(viridis)
 library(zeallot)
@@ -103,21 +104,8 @@ modality_counts <- df_studies %>%
 modality_eeg <- as.list(modality_counts[modality_counts$modality == "EEG",])
 modality_meg <- as.list(modality_counts[modality_counts$modality == "MEG",])
 
-# Task vs resting state - using rsHEP column (pipelines level)
-task_counts_pipelines <- df_pipelines %>%
-  filter(!is.na(rsHEP)) %>%
-  mutate(
-    study_type = case_when(
-      rsHEP == 1 ~ "Resting state",
-      rsHEP == 0 ~ "Task-based",
-      TRUE ~ "Unknown"
-    )
-  ) %>%
-  count(study_type) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1))
-
 # Task vs resting state - studies that have both vs only one type
-study_type_analysis <- df_pipelines %>%
+study_types <- df_pipelines %>%
   filter(!is.na(rsHEP)) %>%
   group_by(PMID) %>%
   summarise(
@@ -126,15 +114,21 @@ study_type_analysis <- df_pipelines %>%
     .groups = "drop"
   ) %>%
   mutate(
-    study_category = case_when(
-      has_resting & has_task ~ "Both resting and task",
-      has_resting & !has_task ~ "Resting-state only", 
-      !has_resting & has_task ~ "Task-based only",
+    category = case_when(
+      has_resting & has_task ~ "Both",
+      has_resting & !has_task ~ "Rest", 
+      !has_resting & has_task ~ "Task",
       TRUE ~ "Other"
     )
   ) %>%
-  count(study_category) %>%
+  count(category) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
+assert("All studies perform either task-based or resting-state analysis",
+       nrow(study_types[study_types$category == "Other",]) == 0)
+
+study_type_task <- as.list(study_types[study_types$category == "Task",])
+study_type_rest <- as.list(study_types[study_types$category == "Rest",])
+study_type_both <- as.list(study_types[study_types$category == "Both",])
 ```
 
 Literature search results:
@@ -145,20 +139,14 @@ Literature search results:
 
 Modality distribution:
 
-* EEG: `r modality_eeg$n` studies (`r modality_eeg$percentage` %)
-* MEG: **`r modality_meg$n`** studies (`r modality_meg$percentage` %)
+* EEG: **`r modality_eeg$n`** studies (**`r modality_eeg$percentage`**%)
+* MEG: **`r modality_meg$n`** studies (**`r modality_meg$percentage`**%)
 
-```{r literature-overview-print}
-cat("\n### Study Type Distribution (Pipeline Level)\n")
-for(i in 1:nrow(task_counts_pipelines)) {
-  cat("- **", task_counts_pipelines$study_type[i], "**: ", task_counts_pipelines$n[i], " (", task_counts_pipelines$percentage[i], "%)\n")
-}
+Study type distribution:
 
-cat("\n### Study Type Distribution (Study Level)\n")
-for(i in 1:nrow(study_type_analysis)) {
-  cat("- **", study_type_analysis$study_category[i], "**: ", study_type_analysis$n[i], " (", study_type_analysis$percentage[i], "%)\n")
-}
-```
+* Task-based: **`r study_type_task$n`** studies (**`r study_type_task$percentage`**%)
+* Resting-state: **`r study_type_rest$n`** studies (**`r study_type_rest$percentage`**%)
+* Both: **`r study_type_both$n`** studies (**`r study_type_both$percentage`**%)
 
 ## Overview of methodological choices
 

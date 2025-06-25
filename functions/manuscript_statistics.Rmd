@@ -458,9 +458,79 @@ cat("- **Studies reporting number**: ", cardiac_ic_stats$n_studies, "\n")
 cat("- **Range**: ", cardiac_ic_stats$min_ics, "-", cardiac_ic_stats$max_ics, "\n")
 cat("- **Median**: ", cardiac_ic_stats$median_ics, "\n")
 
-cat("\n## Other CFA Removal Strategies\n")
+# Papers with no CFA approach (studies level)
+no_cfa_analysis <- df_studies %>%
+  mutate(
+    # Check if study uses ICA AND mentions CFA in rejected components
+    uses_ica_for_cfa = (ICA == 1 & 
+                        rejected_components != "" &
+                        rejected_components != "unknown" &
+                        grepl("CFA", rejected_components, ignore.case = TRUE)),
+    # Check if study has other CFA removal strategies
+    has_other_cfa = (!is.na(other_cfa_removal_strategy) & 
+                     other_cfa_removal_strategy != "" & 
+                     tolower(str_trim(other_cfa_removal_strategy)) != "unknown"),
+    # Study has some CFA approach if it uses ICA for CFA OR has other CFA strategies
+    has_any_cfa_approach = (uses_ica_for_cfa | has_other_cfa),
+    # Study has no CFA approach if it doesn't use ICA for CFA AND has no other CFA strategies
+    no_cfa_approach = !has_any_cfa_approach
+  )
+
+# Calculate summary statistics
+no_cfa_stats <- no_cfa_analysis %>%
+  summarise(
+    total_studies = n(),
+    studies_with_ica_for_cfa = sum(uses_ica_for_cfa, na.rm = TRUE),
+    studies_with_other_cfa = sum(has_other_cfa, na.rm = TRUE),
+    studies_with_any_cfa = sum(has_any_cfa_approach, na.rm = TRUE),
+    studies_with_no_cfa = sum(no_cfa_approach, na.rm = TRUE),
+    pct_with_ica_for_cfa = round(studies_with_ica_for_cfa / total_studies * 100, 1),
+    pct_with_other_cfa = round(studies_with_other_cfa / total_studies * 100, 1),
+    pct_with_any_cfa = round(studies_with_any_cfa / total_studies * 100, 1),
+    pct_with_no_cfa = round(studies_with_no_cfa / total_studies * 100, 1)
+  )
+
+# Breakdown by modality
+no_cfa_by_modality <- df_studies %>%
+  mutate(
+    uses_ica_for_cfa = (ICA == 1 & 
+                        !is.na(rejected_components) & 
+                        rejected_components != "" &
+                        rejected_components != "unknown" &
+                        grepl("cfa|cardiac", rejected_components, ignore.case = TRUE)),
+    has_other_cfa = (!is.na(other_cfa_removal_strategy) & 
+                     other_cfa_removal_strategy != "" & 
+                     tolower(str_trim(other_cfa_removal_strategy)) != "unknown"),
+    has_any_cfa_approach = (uses_ica_for_cfa | has_other_cfa),
+    no_cfa_approach = !has_any_cfa_approach
+  ) %>%
+  group_by(modality) %>%
+  summarise(
+    total_studies = n(),
+    studies_with_no_cfa = sum(no_cfa_approach, na.rm = TRUE),
+    pct_with_no_cfa = round(studies_with_no_cfa / total_studies * 100, 1),
+    .groups = "drop"
+  )
+
+cat("## Other CFA Removal Strategies\n")
 for(i in 1:min(nrow(other_cfa_strategies))) {
   cat("- **", other_cfa_strategies$strategy[i], "**: ", other_cfa_strategies$n[i], " studies (", other_cfa_strategies$percentage[i], "%)\n")
+}
+
+cat("\n## Studies Without Any CFA Approach\n")
+cat("- **Studies with no CFA approach**: ", no_cfa_stats$pct_with_no_cfa, "% (", no_cfa_stats$studies_with_no_cfa, "/", no_cfa_stats$total_studies, ")\n")
+cat("- **Studies with ICA for CFA**: ", no_cfa_stats$pct_with_ica_for_cfa, "% (", no_cfa_stats$studies_with_ica_for_cfa, "/", no_cfa_stats$total_studies, ")\n")
+cat("- **Studies with other CFA strategies**: ", no_cfa_stats$pct_with_other_cfa, "% (", no_cfa_stats$studies_with_other_cfa, "/", no_cfa_stats$total_studies, ")\n")
+cat("- **Studies with any CFA approach**: ", no_cfa_stats$pct_with_any_cfa, "% (", no_cfa_stats$studies_with_any_cfa, "/", no_cfa_stats$total_studies, ")\n")
+
+cat("\n### By Modality:\n")
+for(i in 1:nrow(no_cfa_by_modality)) {
+  modality <- no_cfa_by_modality$modality[i]
+  pct <- no_cfa_by_modality$pct_with_no_cfa[i]
+  n_no_cfa <- no_cfa_by_modality$studies_with_no_cfa[i]
+  total <- no_cfa_by_modality$total_studies[i]
+  
+  cat("- **", modality, "**: ", pct, "% (", n_no_cfa, "/", total, " studies) with no CFA approach\n")
 }
 ```
 

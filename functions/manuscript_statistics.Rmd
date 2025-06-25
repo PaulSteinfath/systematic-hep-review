@@ -3,6 +3,7 @@ title: "Manuscript Summary"
 subtitle: "A Systematic Review of Methods Used for Studying Heartbeat Evoked Responses"
 output: 
   html_document:
+    self_contained: false
     theme: null
 date: "`r Sys.Date()`"
 ---

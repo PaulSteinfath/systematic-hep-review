@@ -56,103 +56,61 @@ function(input, output) {
     create_hep_time_windows_summary_plot(df_selected())
   }, res = 96)
   
-  # Dynamic UI for approach reference values
-  output$approach_reference_values_ui <- renderUI({
-    req(input$approach_reference_var)
-    
-    # Get unique values for the selected reference variable from the full dataset
-    unique_vals <- unique(df_included[[input$approach_reference_var]])
-    unique_vals <- unique_vals[!is.na(unique_vals) & unique_vals != "" & unique_vals != "unknown"]
-    
-    # Debug: print available values
-    cat("Available values for", input$approach_reference_var, ":", paste(unique_vals, collapse = ", "), "\n")
-    
-    # Set default selection based on the reference variable
-    default_selection <- switch(input$approach_reference_var,
-      "hep_approach" = c("Averaging", "Clustering"),
-      "hep_window_type" = c("Primary", "Secondary"),
-      "hep_relative_to" = c("R-peak", "T-peak"),
-      "modality" = c("EEG", "MEG"),
-      if(length(unique_vals) >= 2) unique_vals[1:2] else unique_vals
-    )
-    
-    # Only include defaults that actually exist in the data
-    default_selection <- intersect(default_selection, unique_vals)
-    if(length(default_selection) == 0 && length(unique_vals) >= 2) {
-      default_selection <- unique_vals[1:2]
-    }
-    
-    cat("Default selection:", paste(default_selection, collapse = ", "), "\n")
-    
-    checkboxGroupInput("approach_reference_values",
-                      "Select Values to Compare:",
-                      choices = unique_vals,
-                      selected = default_selection)
-  })
-  
-  # Dynamic UI for window type reference values  
-  output$window_reference_values_ui <- renderUI({
-    req(input$window_reference_var)
-    
-    # Get unique values for the selected reference variable from the full dataset
-    unique_vals <- unique(df_included[[input$window_reference_var]])
-    unique_vals <- unique_vals[!is.na(unique_vals) & unique_vals != "" & unique_vals != "unknown"]
-    
-    # Set default selection based on the reference variable
-    default_selection <- switch(input$window_reference_var,
-      "hep_window_type" = c("Primary", "Secondary"),
-      "hep_approach" = c("Averaging", "Clustering"),
-      "hep_relative_to" = c("R-peak", "T-peak"),
-      "modality" = c("EEG", "MEG"),
-      if(length(unique_vals) >= 2) unique_vals[1:2] else unique_vals
-    )
-    
-    # Only include defaults that actually exist in the data
-    default_selection <- intersect(default_selection, unique_vals)
-    if(length(default_selection) == 0 && length(unique_vals) >= 2) {
-      default_selection <- unique_vals[1:2]
-    }
-    
-    checkboxGroupInput("window_reference_values",
-                      "Select Values to Compare:",
-                      choices = unique_vals,
-                      selected = default_selection)
-  })
-  
   # EEG Locations by Approach Plot
   output$eegLocationsByApproachPlot <- renderPlot({
-    req(input$approach_reference_var, input$approach_reference_values)
+    req(input$approach_reference_var)
     
     tryCatch({
-      if(length(input$approach_reference_values) != 2) {
+      # Check if we have enough data for each reference value
+      filtered_data <- df_selected()
+      
+      # Filter to only EEG data (since EEG locations only work for EEG)
+      eeg_data <- filtered_data %>% filter(modality == "EEG")
+      
+      if(nrow(eeg_data) == 0) {
         ggplot() + 
-          geom_text(aes(x = 0, y = 0, label = "Please select exactly 2 values to compare"), size = 4) +
+          geom_text(aes(x = 0, y = 0, label = "No EEG data available in current selection"), size = 4) +
           theme_void()
       } else {
-        eeg_locations_summary(df_included, 
-                            reference_var = input$approach_reference_var,
-                            reference_values = input$approach_reference_values)
-      }
-    }, error = function(e) {
-      ggplot() + 
-        geom_text(aes(x = 0, y = 0, label = paste("Error creating plot:", e$message)), size = 4) +
-        theme_void()
-    })
-  }, res = 96)
-  
-  # EEG Locations by Window Type Plot
-  output$eegLocationsByWindowTypePlot <- renderPlot({
-    req(input$window_reference_var, input$window_reference_values)
-    
-    tryCatch({
-      if(length(input$window_reference_values) != 2) {
-        ggplot() + 
-          geom_text(aes(x = 0, y = 0, label = "Please select exactly 2 values to compare"), size = 4) +
-          theme_void()
-      } else {
-        eeg_locations_summary(df_included,
-                            reference_var = input$window_reference_var, 
-                            reference_values = input$window_reference_values)
+        # Get all available values for the reference variable
+        available_values <- unique(eeg_data[[input$approach_reference_var]])
+        available_values <- available_values[!is.na(available_values) & available_values != "" & available_values != "unknown"]
+        
+        if(length(available_values) < 2) {
+          ggplot() + 
+            geom_text(aes(x = 0, y = 0, 
+                         label = paste("Need at least 2 different values for", input$approach_reference_var, "to compare")), 
+                     size = 4) +
+            theme_void()
+        } else {
+          data_counts <- table(eeg_data[[input$approach_reference_var]])
+          sufficient_values <- names(data_counts)[data_counts >= 3]
+          
+          if(length(sufficient_values) < 2) {
+            ggplot() + 
+              geom_text(aes(x = 0, y = 0, 
+                           label = "Insufficient EEG data: Need at least 3 studies per group"), 
+                       size = 4) +
+              theme_void()
+          } else {
+            # Additional check: ensure we have valid EEG location data
+            eeg_data_with_locations <- eeg_data %>%
+              filter(!is.na(eeg_locations), eeg_locations != "", eeg_locations != "unknown")
+            
+            if(nrow(eeg_data_with_locations) < 5) {
+              ggplot() + 
+                geom_text(aes(x = 0, y = 0, 
+                             label = "Insufficient EEG location data for plotting\n(Need at least 5 studies with location info)"), 
+                         size = 4) +
+                theme_void()
+            } else {
+              # Use all sufficient values for comparison
+              eeg_locations_summary(eeg_data, 
+                                  reference_var = input$approach_reference_var,
+                                  reference_values = sufficient_values)
+            }
+          }
+        }
       }
     }, error = function(e) {
       ggplot() + 

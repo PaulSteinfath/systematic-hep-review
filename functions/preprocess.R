@@ -55,18 +55,6 @@ preprocess_channels <- function(df) {
 }
 
 
-preprocess_screening <- function(df_screening) {
-  df_screening %>%
-    mutate(Comment = recode(Comment,
-                            "Consider (v2)" = "Consider",
-                            "Different Species" = "Not related to HEP",
-                            "Not Related" = "Not related to HEP",
-                            "Intracranial Recordings" = "Intracranial recordings",
-                            "Conference Abstract" = "Conference abstract"
-    ))
-}
-
-
 preprocess_ecg <- function(df) {
   df %>%
     mutate(ecg_lead = recode(ecg_lead,
@@ -149,8 +137,7 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
     # Screening - all information about screening (include/comment) that is
     # required to generate the PRISMA diagram, keep only one row per paper
     df_screening <- df_full[, screening_columns] %>%
-      filter(!is.na(Include)) %>%
-      preprocess_screening()
+      filter(!is.na(Include))
   }
 
   # The main dataframe that contains only the rows for included papers

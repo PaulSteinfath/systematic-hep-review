@@ -20,8 +20,8 @@ library(zeallot)
 # Paths
 data_path <- file.path(getwd(), 'data')
 func_path <- file.path(getwd(), 'functions')
-manual_path <- file.path(data_path, 'HEP - Manual.csv')
-pubmed_path <- file.path(data_path, 'HEP - Pubmed Results.csv')
+manual_path <- file.path(data_path, 'HER_methods_review_manual.csv')
+pubmed_path <- file.path(data_path, 'HER_methods_review_pubmed.csv')
 prisma_template_path <- file.path(data_path, 'PRISMA_template.csv')
 derivatives_path <- file.path(data_path, 'derivatives')
 prisma_path <- file.path(derivatives_path, 'PRISMA.csv')
@@ -38,7 +38,6 @@ source(file.path(func_path, 'validate.R'))
 source("config.R")
 
 # Main analysis
-# TODO: download the data from OSF / wherever we put it?
 df_full <- load_data(pubmed_path, manual_path)
 c(df_screening, df_included) %<-% preprocess(df_full)
 errors <- validate_preprocessed(df_included)

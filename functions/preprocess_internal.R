@@ -15,7 +15,16 @@ pubmed_save_path <- file.path(data_path, 'HER_methods_review_pubmed.csv')
 # Mapping for renaming: "new column name" = "old column name"
 # The order of old column names corresponds to the order of columns in the table
 column_mapping <- c(
-  # Pubmed columns are not changed
+  "pmid" = "PMID",
+  "doi" = "DOI",
+  "link" = "Link",
+  "analyst" = "Analyst",
+  "include" = "Include",
+  "comment" = "Comment",
+  "title" = "Title",
+  "authors" = "Authors",
+  "citation" = "Citation",
+  "year" = "Year",
   "preregistration" = "Preregistration",
   "topic" = "Topic",
   "sample_size" = "Sample.size",
@@ -58,7 +67,7 @@ column_mapping <- c(
   "averaging_time" = "Averaging..time.",
   "statistics" = "Statistical.test",
   "clustering" = "Cluster.based.Permutation",
-  "permutations" = "X.Permutations",
+  "num_permutations" = "X.Permutations",
   "multiple_comparisons" = "Multiple.Comparisons",
   "significant_test" = "Significant.test",
   "significant_channels" = "Significant...Channels",
@@ -73,13 +82,13 @@ column_mapping <- c(
 inverse_mapping <- setNames(names(column_mapping), column_mapping)
 
 columns_to_drop <- c(
+  "link",
   "topic",
+  "analyst",
   "ecg_description", 
   "multiple_comparisons",
   "other_notes", 
-  "motivation", 
-  "Analyst",
-  "Link"
+  "motivation"
 )
 
 screening_columns <- c(

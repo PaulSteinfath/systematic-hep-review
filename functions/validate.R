@@ -19,15 +19,15 @@ validate_row <- function(row, col_names) {
   
   # Channels selected for HEP analysis should also be present in EEG locations
   used_locations <- unlist(strsplit(row$eeg_locations, ", "))
-  selected_channels <- unlist(strsplit(row$hep_channels_selected, ", "))
+  selected_channels <- unlist(strsplit(row$her_channels_selected, ", "))
   significant_unknown <- row$significant_channels == "unknown"
   significant_channels <- unlist(strsplit(row$significant_channels, ", "))
   
   if (!all(selected_channels %in% used_locations)) {
     missing <- setdiff(selected_channels, used_locations)
     errors <- append(errors, list(list(
-      "PMID" = row$PMID,
-      "column" = "hep_channels_selected",
+      "pmid" = row$pmid,
+      "column" = "her_channels_selected",
       "error" = "Not mentioned in the EEG locations",
       "failure_case" = paste(missing, collapse = ", ")
     )))
@@ -38,7 +38,7 @@ validate_row <- function(row, col_names) {
   if (!significant_unknown & !all_mentioned) {
     missing <- setdiff(significant_channels, used_locations)
     errors <- append(errors, list(list(
-      "PMID" = row$PMID,
+      "pmid" = row$pmid,
       "column" = "significant_channels",
       "error" = "Not mentioned in the EEG locations",
       "failure_case" = paste(missing, collapse = ", ")
@@ -85,7 +85,7 @@ validate_control_mapping <- function(df, control_synonyms_map) {
   
   for (i in 1:nrow(df)) {
     current_row <- df[i, ]
-    pmid <- current_row$PMID
+    pmid <- current_row$pmid
     controls_string <- current_row$controls
 
     # Skip if controls is NA or empty
@@ -107,7 +107,7 @@ validate_control_mapping <- function(df, control_synonyms_map) {
 
     for (term in unmapped_in_row) {
       errors <- append(errors, list(list(
-        "PMID" = pmid,
+        "pmid" = pmid,
         "column" = "controls",
         "error" = "Unmapped control term",
         "failure_case" = term 

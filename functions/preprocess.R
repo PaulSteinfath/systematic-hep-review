@@ -1,12 +1,17 @@
 # Columns that describe the screening
 screening_columns <- c(
-  "source", "PMID", "DOI", "Include",
-  "Comment", "Title", "Authors", "Citation", "Year"
+  "source", "pmid", "doi", "include",
+  "comment", "title", "authors", "citation", "year"
 )
 
-convert_to_numeric <- c("Year", "sample_size", "meeg_num_electrodes", "length_min", "high_pass", "low_pass", "groups", "conditions", "hep_start", "hep_end", 
-                        "baseline_start_ms", "baseline_end_ms", "permutations", "significant_start_ms", "significant_end_ms")
-convert_to_factors <- c("rsHEP", "Modality", "ICA", "ica_on_epochs", "hep_relative_to", "averaging_channels", "averaging_time", "clustering", "significant_test", 
+columns_to_drop <- c()
+convert_to_numeric <- c("year", "sample_size", "meeg_num_electrodes", 
+                        "length_min", "high_pass", "low_pass", "num_groups", 
+                        "num_conditions", "hep_start_ms", "hep_end_ms", 
+                        "baseline_start_ms", "baseline_end_ms", "num_permutations", "significant_start_ms", "significant_end_ms")
+convert_to_factors <- c("rsHER", "modality", "ica", "ica_on_epochs", 
+                        "her_relative_to", "averaging_channels", 
+                        "averaging_time", "clustering", "significant_test", 
                         "significant_relative_to")
 
 load_data <- function(pubmed.path, manual.path) {
@@ -42,13 +47,13 @@ preprocess_channels <- function(df) {
                                          \(x) paste(ch_names[[x]], collapse = ", "))
   
   # If all channels were selected, copy from EEG Locations
-  all_selected <- df$hep_channels_selected == "All"
-  df$hep_channels_selected[all_selected] <- df$eeg_locations[all_selected]
+  all_selected <- df$her_channels_selected == "All"
+  df$her_channels_selected[all_selected] <- df$eeg_locations[all_selected]
   
   # Resolve All except XX, XX
-  all_except <- grepl("All except", df$hep_channels_selected)
-  df$hep_channels_selected[all_except] <- 
-    apply(X = df[all_except, c("eeg_locations", "hep_channels_selected")], 
+  all_except <- grepl("All except", df$her_channels_selected)
+  df$her_channels_selected[all_except] <- 
+    apply(X = df[all_except, c("eeg_locations", "her_channels_selected")], 
           MARGIN = 1, FUN = resolve_all_except)
   
   df
@@ -94,20 +99,20 @@ clean_cardiac_ics <- function(x) {
 create_author_column <- function(data) {
   paper_vector <- data %>%
     mutate(
-      First_Author_Surname = word(Authors, 1, sep = " "),
-      Paper = case_when(
-        str_detect(Authors, ",") ~ paste0(First_Author_Surname, " et al. (", Year),
-        TRUE ~ paste0(First_Author_Surname, " (", Year)
+      first_author_surname = word(authors, 1, sep = " "),
+      paper = case_when(
+        str_detect(authors, ",") ~ paste0(first_author_surname, " et al. (", year),
+        TRUE ~ paste0(first_author_surname, " (", year)
       )
     ) %>%
-    group_by(Paper) %>%
+    group_by(paper) %>%
     mutate(
-      Paper = if (n_distinct(PMID) > 1) {
-        paste0(Paper, letters[match(PMID, unique(PMID))], ")")
-      } else paste0(Paper, ")")
+      paper = if (n_distinct(pmid) > 1) {
+        paste0(paper, letters[match(pmid, unique(pmid))], ")")
+      } else paste0(paper, ")")
     ) %>%
     ungroup() %>%
-    pull(Paper) # Extract the column as a vector
+    pull(paper) # Extract the column as a vector
   
   return(paper_vector)
 }
@@ -137,16 +142,16 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
     # Screening - all information about screening (include/comment) that is
     # required to generate the PRISMA diagram, keep only one row per paper
     df_screening <- df_full[, screening_columns] %>%
-      filter(!is.na(Include))
+      filter(!is.na(include))
   }
 
   # The main dataframe that contains only the rows for included papers
   included_pmids <- df_full %>%
-    filter(Include == 1) %>%
-    pull(PMID)
+    filter(include == 1) %>%
+    pull(pmid)
   
   df_included <- df_full %>%
-    filter(PMID %in% included_pmids)
+    filter(pmid %in% included_pmids)
   
   if (drop_cols){
     df_included <- df_included %>%
@@ -162,7 +167,7 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
     preprocess_channels()
   
   # Transform included IC data
-  df_included$rejected_cardiac_ics <- sapply(df_included$rejected_cardiac_ics, clean_cardiac_ics)
+  df_included$num_rejected_cardiac_ics <- sapply(df_included$num_rejected_cardiac_ics, clean_cardiac_ics)
   
   # Add paper column (readable unique identifier)
   df_included$paper <- create_author_column(df_included)

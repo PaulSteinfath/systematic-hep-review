@@ -29,6 +29,7 @@ library(viridis)
 library(zeallot)
 
 data_path <- file.path(getwd(), '../data')
+func_path <- file.path(getwd(), '.')
 derivatives_path <- file.path(data_path, 'derivatives')
 df_included <- read.csv(file.path(derivatives_path, 'included.csv'))
 df_screening <- read.csv(file.path(derivatives_path, 'screening.csv'))
@@ -50,8 +51,7 @@ meg_pipelines <- df_pipelines %>% filter(modality == "MEG")
 
 # Overview
 
-This document provides all values mentioned in the manuscript "A Systematic Review of Methods Used for Studying Heartbeat Evoked Responses". All sections of this document apart from this overview match the corresponding section of the manuscript. Numbers highlighted
-in **bold** are also present in the manuscript.
+This document provides all values mentioned in the manuscript "Heartbeat-evoked responses in MEG/EEG: A systematic review of methods and suggestions for analysis and reporting". All sections of this document apart from this overview match the corresponding section of the manuscript. Numbers highlighted in **bold** are also present in the manuscript.
 
 ## Important Distinction: Studies vs Pipelines
 
@@ -63,7 +63,9 @@ in **bold** are also present in the manuscript.
 ## Literature search
 
 ```{r data-export}
-exports_path = file.path(data_path, 'exports')
+# Load the search data files
+exports_path <- file.path(data_path, 'exports')
+
 df_query1 <- read.csv(file.path(exports_path, '20240115_pubmed_query1.csv'))
 df_query2 <- read.csv(file.path(exports_path, '20240724_pubmed_query2.csv'))
 df_query2_rerun <- read.csv(file.path(exports_path, '20240805_pubmed_query2.csv'))
@@ -79,7 +81,7 @@ df_merged <- df_query1 %>%
 Table 1 - number of retrieved papers:
 
 * 15.01.2024: **`r nrow(df_query1)`**
-* 07.08.2024: **`r nrow(df_query2)`** (rerun: **`r nrow(df_query2_rerun)`**)
+* 24.07.2024: **`r nrow(df_query2)`** (rerun: **`r nrow(df_query2_rerun)`**)
 * 05.08.2024: **`r nrow(df_query3)`**
 * After removing duplicates: **`r nrow(df_merged)`**
 
@@ -152,22 +154,31 @@ study_type_rest <- as.list(study_types[study_types$category == "Rest",])
 study_type_both <- as.list(study_types[study_types$category == "Both",])
 ```
 
-Literature search results:
+```{r overview-stats}
+# Calculate final sample stats
+final_sample_stats <- df_studies %>%
+  summarise(
+    total_studies = n(),
+    year_min = min(Year, na.rm = TRUE),
+    year_max = max(Year, na.rm = TRUE)
+  )
 
-* Included: **`r total_studies`** studies, `r total_pipelines` pipelines
-* Earliest publication year: **`r year_range$min_year`**
-* Latest publication year: **`r year_range$max_year`**
+# Modality breakdown
+modality_breakdown <- df_studies %>%
+  count(modality) %>%
+  mutate(percentage = round(n / sum(n) * 100, 1))
 
-Modality distribution:
+eeg_stats <- modality_breakdown %>% filter(modality == "EEG")
+meg_stats <- modality_breakdown %>% filter(modality == "MEG")
+```
 
-* EEG: **`r modality_eeg$n`** studies (**`r modality_eeg$percentage`**%)
-* MEG: **`r modality_meg$n`** studies (**`r modality_meg$percentage`**%)
+In total, **`r final_sample_stats$total_studies`** studies published between **`r final_sample_stats$year_min`** and **`r final_sample_stats$year_max`** were included in the review. The vast majority of studies used EEG recordings (**`r eeg_stats$n`** studies, **`r eeg_stats$percentage`%**), while only **`r meg_stats$n`** studies (**`r meg_stats$percentage`%**) employed MEG to measure HERs.
 
 Study type distribution:
 
-* Task-based: **`r study_type_task$n`** studies (**`r study_type_task$percentage`**%)
-* Resting-state: **`r study_type_rest$n`** studies (**`r study_type_rest$percentage`**%)
-* Both: **`r study_type_both$n`** studies (**`r study_type_both$percentage`**%)
+* Task-based: **`r study_type_task$n`** studies (**`r study_type_task$percentage`%**)
+* Resting-state: **`r study_type_rest$n`** studies (**`r study_type_rest$percentage`%**)
+* Both: **`r study_type_both$n`** studies (**`r study_type_both$percentage`%**)
 
 ## Overview of methodological choices
 
@@ -193,11 +204,6 @@ channel_stats <- channel_data %>%
     median_channels = median(channels_numeric, na.rm = TRUE),
     n_studies = n()
   )
-
-cat("EEG Channel Statistics:\n")
-cat("- **Number of EEG studies**: ", channel_stats$n_studies, "\n")
-cat("- **Channel range**: ", channel_stats$min_channels, "-", channel_stats$max_channels, "\n")
-cat("- **Median channels**: ", channel_stats$median_channels, "\n")
 ```
 
 ### Reference Schemes
@@ -258,18 +264,9 @@ offline_ref_counts <- eeg_studies_ref %>%
     percentage = round(n / sum(n) * 100, 1)
   ) %>%
   arrange(desc(n))
-
-cat("Online Reference Distribution:\n")
-for(i in 1:min(5, nrow(online_ref_counts))) {
-  cat("- **", online_ref_counts$display_name[i], "**: ", online_ref_counts$percentage[i], "%\n")
-}
-
-cat("\nOffline Reference Distribution:\n")
-for(i in 1:min(5, nrow(offline_ref_counts))) {
-  cat("- **", offline_ref_counts$display_name[i], "**: ", offline_ref_counts$percentage[i], "%\n")
-}
-
 ```
+
+For the data acquisition, we can observe some variability with respect to the used online reference. This variability is reduced during data processing, where the dominant choice is Common Average Reference (CAR, used in **`r offline_ref_counts$percentage[offline_ref_counts$display_name == "CAR"]`%** of the studies).
 
 ### Artifact Removal
 
@@ -347,20 +344,22 @@ component_types <- component_types_df %>%
   summarise(count = n_distinct(pipeline_id), .groups = "drop") %>%
   arrange(desc(count)) %>%
   mutate(percentage = round(count / total_ica_studies * 100, 1))
-
-cat("## Artifact Removal Statistics\n")
-cat("- **Pipelines removing noisy epochs**: ", artifact_stats$noisy_epochs_pct, "%\n")
-cat("- **Pipelines removing bad channels**: ", artifact_stats$bad_channels_pct, "%\n")
-cat("- **Pipelines using blink correction**: ", artifact_stats$blink_correction_pct, "%\n")
-cat("- **Pipelines using ICA**: ", artifact_stats$ica_pct, "% (", artifact_stats$n_ica_pipelines, "/", artifact_stats$total_pipelines, ")\n")
-cat("- **Studies using ICA**: ", ica_studies$ica_study_pct, "% (", ica_studies$n_ica_studies, "/", ica_studies$total_studies, ")\n")
-
-cat("\n## ICA Component Types Removed\n")
-for(i in 1:min(nrow(component_types))) {
-  cat("- **", component_types$rejected_components[i], "**: ", component_types$percentage[i], "%\n")
-}
 ```
 
+## Artifact Removal Statistics
+
+In terms of artifact reduction, many studies reported the removal of noisy epochs (**`r artifact_stats$noisy_epochs_pct`%**) and bad channels (**`r artifact_stats$bad_channels_pct`%**). Independent Component Analysis (ICA) is by far the most commonly used technique used by **`r ica_studies$ica_study_pct`%** of all studies to remove artifacts related to cardiac, eye movement, muscle or other nuisance sources.
+
+### ICA Usage Statistics
+
+* Studies using ICA: **`r ica_studies$ica_study_pct`%** (**`r ica_studies$n_ica_studies`**/**`r ica_studies$total_studies`**)
+
+### ICA Component Types Removed
+
+* `r component_types$rejected_components[1]`: **`r component_types$percentage[1]`%**
+* `r component_types$rejected_components[2]`: **`r component_types$percentage[2]`%**
+* `r component_types$rejected_components[3]`: **`r component_types$percentage[3]`%**
+* remaining noise components: **`r component_types$percentage[4] + component_types$percentage[5] + component_types$percentage[6]`%**
 ## Filter Settings
 
 ```{r filters}
@@ -383,11 +382,16 @@ common_highpass <- filter_data %>%
   count(high_pass, sort = TRUE) %>%
   head(3)
 
-cat("## Filter Settings\n")
-cat("- **High-pass filter range**: ", filter_stats$high_pass_range_min, "-", filter_stats$high_pass_range_max, " Hz\n")
-cat("- **Low-pass filter range**: ", filter_stats$low_pass_range_min, "-", filter_stats$low_pass_range_max, " Hz\n")
-cat("- **Most common high-pass cutoffs**: ", paste(common_highpass$high_pass, collapse = ", "), " Hz\n")
+# Most common low-pass filter values (studies)
+common_lowpass <- filter_data %>%
+  count(low_pass, sort = TRUE) %>%
+  head(3)
+
 ```
+
+## Filter Settings
+
+When analysing relatively slow evoked responses, like the HER, optimal filter settings are an important consideration to not remove or induce effects. We observe that across studies, filtering is most frequently done between **`r common_highpass$high_pass[1]` Hz** and **`r common_lowpass$low_pass[1]` Hz**, with the most dominant high-pass filter cutoffs at **`r paste(common_highpass$high_pass, collapse = ", ")` Hz** (Fig. 3E).
 
 # ECG Acquisition
 
@@ -489,28 +493,39 @@ other_cfa_strategies <- df_studies %>%
   count(strategy_clean, sort = TRUE) %>%
   mutate(percentage = round(n / sum(n) * 100, 1)) %>%
   rename(strategy = strategy_clean)
+```
 
-cat("## ICA Application Timing\n")
-for(i in 1:nrow(ica_timing)) {
-  cat("- **", ica_timing$timing[i], "**: ", ica_timing$percentage[i], "%\n")
-}
+## ICA Application Timing
 
-cat("\n## CFA Identification Approaches\n")
-cat("- **Not reported**: ", round((1 - sum(cfa_approach_counts$n) / total_studies) * 100, 1), "% of studies\n")
-for(i in 1:min(3, nrow(cfa_approach_counts))) {
-  cat("- **", cfa_approach_counts$cfa_rej_approach[i], "**: ", cfa_approach_counts$percentage[i], "%\n")
-}
+Independent component analysis (ICA) is by far the most commonly used technique used by **`r ica_studies$ica_study_pct`%** of all studies
 
-cat("\n## CFA Identification Criteria\n")
-for(i in 1:min(nrow(cfa_criteria_counts))) {
-  cat("- **", cfa_criteria_counts$cfa_rej_criteria[i], "**: ", cfa_criteria_counts$percentage[i], "%\n")
-}
+* Continuous: **`r if(nrow(ica_timing[ica_timing$timing == "Continuous",]) > 0) ica_timing$percentage[ica_timing$timing == "Continuous"] else 0`%**
+* Epoched: **`r if(nrow(ica_timing[ica_timing$timing == "Epoched",]) > 0) ica_timing$percentage[ica_timing$timing == "Epoched"] else 0`%**
 
-cat("\n## Rejected Cardiac ICs\n")
-cat("- **Studies reporting number**: ", cardiac_ic_stats$n_studies, "\n")
-cat("- **Range**: ", cardiac_ic_stats$min_ics, "-", cardiac_ic_stats$max_ics, "\n")
-cat("- **Median**: ", cardiac_ic_stats$median_ics, "\n")
+## CFA Identification Approaches
 
+* Not reported: **`r round((1 - sum(cfa_approach_counts$n) / ica_studies$n_ica_studies) * 100, 1)`%** of studies using ICA
+* `r cfa_approach_counts$cfa_rej_approach[1]`: **`r cfa_approach_counts$percentage[1]`%**
+* `r cfa_approach_counts$cfa_rej_approach[2]`: **`r cfa_approach_counts$percentage[2]`%**
+* `r cfa_approach_counts$cfa_rej_approach[3]`: **`r cfa_approach_counts$percentage[3]`%**
+
+## CFA Identification Criteria
+
+* `r cfa_criteria_counts$cfa_rej_criteria[1]`: **`r cfa_criteria_counts$percentage[1]`%**
+* `r cfa_criteria_counts$cfa_rej_criteria[2]`: **`r cfa_criteria_counts$percentage[2]`%**
+* `r cfa_criteria_counts$cfa_rej_criteria[3]`: **`r cfa_criteria_counts$percentage[3]`%**
+* `r cfa_criteria_counts$cfa_rej_criteria[6]`: **`r cfa_criteria_counts$percentage[6]`%**
+* `r cfa_criteria_counts$cfa_rej_criteria[4]`: **`r cfa_criteria_counts$percentage[4]`%**
+* `r cfa_criteria_counts$cfa_rej_criteria[5]`: **`r cfa_criteria_counts$percentage[5]`%**
+
+
+## Rejected Cardiac ICs
+
+* Studies reporting number: **`r cardiac_ic_stats$n_studies`**
+* Range: **`r cardiac_ic_stats$min_ics`** - **`r cardiac_ic_stats$max_ics`**
+* Median: **`r cardiac_ic_stats$median_ics`**
+
+```{r no-cfa-analysis}
 # Papers with no CFA approach (studies level)
 no_cfa_analysis <- df_studies %>%
   mutate(
@@ -564,27 +579,25 @@ no_cfa_by_modality <- df_studies %>%
     pct_with_no_cfa = round(studies_with_no_cfa / total_studies * 100, 1),
     .groups = "drop"
   )
+```
 
-cat("## Other CFA Removal Strategies\n")
-for(i in 1:min(nrow(other_cfa_strategies))) {
-  cat("- **", other_cfa_strategies$strategy[i], "**: ", other_cfa_strategies$n[i], " studies (", other_cfa_strategies$percentage[i], "%)\n")
-}
+## Other CFA Removal Strategies
 
-cat("\n## Studies Without Any CFA Approach\n")
-cat("- **Studies with no CFA approach**: ", no_cfa_stats$pct_with_no_cfa, "% (", no_cfa_stats$studies_with_no_cfa, "/", no_cfa_stats$total_studies, ")\n")
-cat("- **Studies with ICA for CFA**: ", no_cfa_stats$pct_with_ica_for_cfa, "% (", no_cfa_stats$studies_with_ica_for_cfa, "/", no_cfa_stats$total_studies, ")\n")
-cat("- **Studies with other CFA strategies**: ", no_cfa_stats$pct_with_other_cfa, "% (", no_cfa_stats$studies_with_other_cfa, "/", no_cfa_stats$total_studies, ")\n")
-cat("- **Studies with any CFA approach**: ", no_cfa_stats$pct_with_any_cfa, "% (", no_cfa_stats$studies_with_any_cfa, "/", no_cfa_stats$total_studies, ")\n")
+* `r other_cfa_strategies$strategy[1]`: **`r other_cfa_strategies$n[1]`** studies (**`r other_cfa_strategies$percentage[1]`%**)
+* `r other_cfa_strategies$strategy[2]`: **`r other_cfa_strategies$n[2]`** studies (**`r other_cfa_strategies$percentage[2]`%**)
+* `r other_cfa_strategies$strategy[3]`: **`r other_cfa_strategies$n[3]`** studies (**`r other_cfa_strategies$percentage[3]`%**)
 
-cat("\n### By Modality:\n")
-for(i in 1:nrow(no_cfa_by_modality)) {
-  modality <- no_cfa_by_modality$modality[i]
-  pct <- no_cfa_by_modality$pct_with_no_cfa[i]
-  n_no_cfa <- no_cfa_by_modality$studies_with_no_cfa[i]
-  total <- no_cfa_by_modality$total_studies[i]
-  
-  cat("- **", modality, "**: ", pct, "% (", n_no_cfa, "/", total, " studies) with no CFA approach\n")
-}
+## Studies Without Any CFA Approach
+
+* Studies with no CFA approach: **`r no_cfa_stats$pct_with_no_cfa`%** (**`r no_cfa_stats$studies_with_no_cfa`**/**`r no_cfa_stats$total_studies`**)
+* Studies with ICA for CFA: **`r no_cfa_stats$pct_with_ica_for_cfa`%** (**`r no_cfa_stats$studies_with_ica_for_cfa`**/**`r no_cfa_stats$total_studies`**)
+* Studies with other CFA strategies: **`r no_cfa_stats$pct_with_other_cfa`%** (**`r no_cfa_stats$studies_with_other_cfa`**/**`r no_cfa_stats$total_studies`**)
+* Studies with any CFA approach: **`r no_cfa_stats$pct_with_any_cfa`%** (**`r no_cfa_stats$studies_with_any_cfa`**/**`r no_cfa_stats$total_studies`**)
+
+### By Modality:
+
+* EEG: **`r no_cfa_by_modality$pct_with_no_cfa[no_cfa_by_modality$modality == "EEG"]`%** (**`r no_cfa_by_modality$studies_with_no_cfa[no_cfa_by_modality$modality == "EEG"]`**/**`r no_cfa_by_modality$total_studies[no_cfa_by_modality$modality == "EEG"]`** studies) with no CFA approach
+* MEG: **`r no_cfa_by_modality$pct_with_no_cfa[no_cfa_by_modality$modality == "MEG"]`%** (**`r no_cfa_by_modality$studies_with_no_cfa[no_cfa_by_modality$modality == "MEG"]`**/**`r no_cfa_by_modality$total_studies[no_cfa_by_modality$modality == "MEG"]`** studies) with no CFA approach
 ```
 
 # HEP Time Windows
@@ -822,102 +835,62 @@ significant_window_stats <- if(nrow(significant_effects_data) > 0) {
   data.frame(n_pipelines = 0, start_range_min = NA, start_range_max = NA,
              end_range_min = NA, end_range_max = NA, duration_min = NA, duration_max = NA)
 }
+```
 
-cat("## HEP Time Windows\n")
-cat("- **Pipelines with valid HEP windows**: ", hep_window_stats$n_pipelines, "\n")
-cat("- **Overall HEP start time range**: ", hep_window_stats$start_range_min, " to ", hep_window_stats$start_range_max, " ms\n")
-cat("- **Overall HEP end time range**: ", hep_window_stats$end_range_min, " to ", hep_window_stats$end_range_max, " ms\n")
-cat("- **Overall HEP window duration range**: ", hep_window_stats$duration_min, " to ", hep_window_stats$duration_max, " ms\n")
+## HEP Time Windows
 
-cat("\n## HEP Reference Peak Distribution\n")
-for(i in 1:min(nrow(hep_reference_counts), 5)) {
-  cat("- **", as.character(hep_reference_counts$hep_relative_to[i]), "**: ", hep_reference_counts$n[i], " studies (", hep_reference_counts$percentage[i], "%)\n")
-}
+* Pipelines with valid HEP windows: **`r hep_window_stats$n_pipelines`**
+* Overall HEP start time range: **`r hep_window_stats$start_range_min`** to **`r hep_window_stats$start_range_max`** ms
+* Overall HEP end time range: **`r hep_window_stats$end_range_min`** to **`r hep_window_stats$end_range_max`** ms
+* Overall HEP window duration range: **`r hep_window_stats$duration_min`** to **`r hep_window_stats$duration_max`** ms
 
-cat("\n## R-peak Referenced Analysis\n")
-if(rpeak_window_stats$n_pipelines > 0) {
-  cat("- **Pipelines using R-peak reference**: ", rpeak_window_stats$n_pipelines, "\n")
-  cat("- **R-peak start time range**: ", rpeak_window_stats$start_range_min, " to ", rpeak_window_stats$start_range_max, " ms\n")
-  cat("- **R-peak end time range**: ", rpeak_window_stats$end_range_min, " to ", rpeak_window_stats$end_range_max, " ms\n")
-  cat("- **R-peak window duration range**: ", rpeak_window_stats$duration_min, " to ", rpeak_window_stats$duration_max, " ms\n")
-  
-  # Most common time windows
-  if(nrow(rpeak_common_windows) > 0) {
-    cat("\n### Most Common R-peak Time Windows:\n")
-    for(i in 1:min(3, nrow(rpeak_common_windows))) {
-      cat("- **", rpeak_common_windows$time_window[i], "**: ", rpeak_common_windows$n_studies[i], " studies (", rpeak_common_windows$percentage[i], "%)\n")
+## HEP Reference Peak Distribution
+
+* `r as.character(hep_reference_counts$hep_relative_to[1])`: **`r hep_reference_counts$n[1]`** studies (**`r hep_reference_counts$percentage[1]`%**)
+* `r as.character(hep_reference_counts$hep_relative_to[2])`: **`r hep_reference_counts$n[2]`** studies (**`r hep_reference_counts$percentage[2]`%**)
+* `r as.character(hep_reference_counts$hep_relative_to[3])`: **`r hep_reference_counts$n[3]`** studies (**`r hep_reference_counts$percentage[3]`%**)
+
+## R-peak Referenced Analysis
+
+`r if(rpeak_window_stats$n_pipelines > 0) paste0("* Pipelines using R-peak reference: **", rpeak_window_stats$n_pipelines, "**\n* R-peak start time range: **", rpeak_window_stats$start_range_min, "** to **", rpeak_window_stats$start_range_max, "** ms\n* R-peak end time range: **", rpeak_window_stats$end_range_min, "** to **", rpeak_window_stats$end_range_max, "** ms\n* R-peak window duration range: **", rpeak_window_stats$duration_min, "** to **", rpeak_window_stats$duration_max, "** ms") else "No R-peak referenced analyses found"`
+
+### Most Common R-peak Time Windows
+
+`r if(nrow(rpeak_common_windows) > 0) { paste(sapply(1:min(3, nrow(rpeak_common_windows)), function(i) paste0("* ", rpeak_common_windows$time_window[i], ": **", rpeak_common_windows$n_studies[i], "** studies (**", rpeak_common_windows$percentage[i], "%**)")), collapse = "\n") } else "No common time windows found"`
     }
   }
   
-  # Core overlap analysis
-  if(!is.na(rpeak_overlap_analysis$core_start)) {
-    cat("\n### Core Time Window (included by most studies):\n")
-    cat("- **Core window**: ", rpeak_overlap_analysis$core_start, " to ", rpeak_overlap_analysis$core_end, " ms\n")
-    cat("- **Studies including this core**: ", rpeak_overlap_analysis$core_percentage, "% (", rpeak_overlap_analysis$studies_including_core, "/", rpeak_overlap_analysis$total_rpeak_studies, ")\n")
-  }
-} else {
-  cat("- **No R-peak referenced analyses found**\n")
-}
+### Core Time Window (included by most studies)
 
-cat("\n## T-peak Referenced Analysis\n")
-if(tpeak_window_stats$n_pipelines > 0) {
-  cat("- **Pipelines using T-peak reference**: ", tpeak_window_stats$n_pipelines, "\n")
-  cat("- **T-peak start time range**: ", tpeak_window_stats$start_range_min, " to ", tpeak_window_stats$start_range_max, " ms\n")
-  cat("- **T-peak end time range**: ", tpeak_window_stats$end_range_min, " to ", tpeak_window_stats$end_range_max, " ms\n")
-  cat("- **T-peak window duration range**: ", tpeak_window_stats$duration_min, " to ", tpeak_window_stats$duration_max, " ms\n")
-} else {
-  cat("- **No T-peak referenced analyses found**\n")
-}
+`r if(!is.na(rpeak_overlap_analysis$core_start)) paste0("* Core window: **", rpeak_overlap_analysis$core_start, "** to **", rpeak_overlap_analysis$core_end, "** ms\n* Studies including this core: **", rpeak_overlap_analysis$core_percentage, "%** (**", rpeak_overlap_analysis$studies_including_core, "**/**", rpeak_overlap_analysis$total_rpeak_studies, "**)") else "No core window analysis available"`
 
-cat("\n## Baseline Correction\n")
-cat("- **Pipelines using baseline correction**: ", baseline_pct, "% (", nrow(baseline_window_data), "/", nrow(df_pipelines), ")\n")
-if(nrow(baseline_window_data) > 0) {
-  cat("- **Overall baseline start time range**: ", baseline_stats$start_range_min, " to ", baseline_stats$start_range_max, " ms\n")
-  cat("- **Overall baseline end time range**: ", baseline_stats$end_range_min, " to ", baseline_stats$end_range_max, " ms\n")
-  cat("- **Overall baseline duration range**: ", baseline_stats$duration_min, " to ", baseline_stats$duration_max, " ms\n")
-}
+## T-peak Referenced Analysis
 
-cat("\n## Baseline Correction by Reference Peak\n")
-if(nrow(baseline_by_reference) > 0) {
-  for(i in 1:nrow(baseline_by_reference)) {
-    ref_peak <- as.character(baseline_by_reference$hep_relative_to[i])
-    n_pipes <- baseline_by_reference$n_pipelines[i]
-    n_studies <- baseline_by_reference$n_studies[i]
-    start_min <- baseline_by_reference$start_range_min[i]
-    start_max <- baseline_by_reference$start_range_max[i]
-    end_min <- baseline_by_reference$end_range_min[i]
-    end_max <- baseline_by_reference$end_range_max[i]
-    
-    cat("- **", ref_peak, "**: ", n_pipes, " pipelines from ", n_studies, " studies\n")
-    cat("  - Start range: ", start_min, " to ", start_max, " ms\n")
-    cat("  - End range: ", end_min, " to ", end_max, " ms\n")
-  }
-} else {
-  cat("- **No reference-specific baseline data available**\n")
-}
+`r if(tpeak_window_stats$n_pipelines > 0) paste0("* Pipelines using T-peak reference: **", tpeak_window_stats$n_pipelines, "**\n* T-peak start time range: **", tpeak_window_stats$start_range_min, "** to **", tpeak_window_stats$start_range_max, "** ms\n* T-peak end time range: **", tpeak_window_stats$end_range_min, "** to **", tpeak_window_stats$end_range_max, "** ms\n* T-peak window duration range: **", tpeak_window_stats$duration_min, "** to **", tpeak_window_stats$duration_max, "** ms") else "* No T-peak referenced analyses found"`
 
-cat("\n## Baseline Windows Ending Before QRS Complex\n")
-cat("- **Studies with baseline ending before QRS**: ", baseline_before_qrs_stats$percentage_before_qrs, "% (", baseline_before_qrs_stats$studies_ending_before_qrs, "/", baseline_before_qrs_stats$total_studies_with_baseline, ")\n")
+## Baseline Correction
 
-cat("\n### By Reference Scheme:\n")
-if(nrow(baseline_before_qrs_by_ref) > 0) {
-  for(i in 1:nrow(baseline_before_qrs_by_ref)) {
-    ref_peak <- as.character(baseline_before_qrs_by_ref$hep_relative_to[i])
-    total <- baseline_before_qrs_by_ref$total_studies[i]
-    before_qrs <- baseline_before_qrs_by_ref$studies_ending_before_qrs[i]
-    pct <- baseline_before_qrs_by_ref$percentage_before_qrs[i]
-    
-    cat("- **", ref_peak, "**: ", pct, "% (", before_qrs, "/", total, " studies)\n")
-  }
-}
+* Pipelines using baseline correction: **`r baseline_pct`%** (**`r nrow(baseline_window_data)`**/**`r nrow(df_pipelines)`**)
 
-cat("\n## Significant Effects Windows\n")
-cat("- **Pipelines with significant effects**: ", significant_window_stats$n_pipelines, "\n")
-if(significant_window_stats$n_pipelines > 0) {
-  cat("- **Effects start time range**: ", significant_window_stats$start_range_min, " to ", significant_window_stats$start_range_max, " ms\n")
-  cat("- **Effects end time range**: ", significant_window_stats$end_range_min, " to ", significant_window_stats$end_range_max, " ms\n")
-  cat("- **Effects duration range**: ", significant_window_stats$duration_min, " to ", significant_window_stats$duration_max, " ms\n")
-}
+`r if(nrow(baseline_window_data) > 0) paste0("* Overall baseline start time range: **", baseline_stats$start_range_min, "** to **", baseline_stats$start_range_max, "** ms\n* Overall baseline end time range: **", baseline_stats$end_range_min, "** to **", baseline_stats$end_range_max, "** ms\n* Overall baseline duration range: **", baseline_stats$duration_min, "** to **", baseline_stats$duration_max, "** ms") else "No baseline correction data available"`
+
+## Baseline Correction by Reference Peak
+
+`r if(nrow(baseline_by_reference) > 0) { paste(sapply(1:nrow(baseline_by_reference), function(i) { ref_peak <- as.character(baseline_by_reference$hep_relative_to[i]); n_pipes <- baseline_by_reference$n_pipelines[i]; n_studies <- baseline_by_reference$n_studies[i]; start_min <- baseline_by_reference$start_range_min[i]; start_max <- baseline_by_reference$start_range_max[i]; end_min <- baseline_by_reference$end_range_min[i]; end_max <- baseline_by_reference$end_range_max[i]; paste0("* ", ref_peak, ": **", n_pipes, "** pipelines from **", n_studies, "** studies\n  - Start range: **", start_min, "** to **", start_max, "** ms\n  - End range: **", end_min, "** to **", end_max, "** ms") }), collapse = "\n") } else "* No reference-specific baseline data available"`
+
+## Baseline Windows Ending Before QRS Complex
+
+* Studies with baseline ending before QRS: **`r baseline_before_qrs_stats$percentage_before_qrs`%** (**`r baseline_before_qrs_stats$studies_ending_before_qrs`**/**`r baseline_before_qrs_stats$total_studies_with_baseline`**)
+
+### By Reference Scheme
+
+`r if(nrow(baseline_before_qrs_by_ref) > 0) { paste(sapply(1:nrow(baseline_before_qrs_by_ref), function(i) { ref_peak <- as.character(baseline_before_qrs_by_ref$hep_relative_to[i]); total <- baseline_before_qrs_by_ref$total_studies[i]; before_qrs <- baseline_before_qrs_by_ref$studies_ending_before_qrs[i]; pct <- baseline_before_qrs_by_ref$percentage_before_qrs[i]; paste0("* ", ref_peak, ": **", pct, "%** (**", before_qrs, "**/**", total, "** studies)") }), collapse = "\n") } else "* No reference scheme data available"`
+
+## Significant Effects Windows
+
+* Pipelines with significant effects: **`r significant_window_stats$n_pipelines`**
+
+`r if(significant_window_stats$n_pipelines > 0) paste0("* Effects start time range: **", significant_window_stats$start_range_min, "** to **", significant_window_stats$start_range_max, "** ms\n* Effects end time range: **", significant_window_stats$end_range_min, "** to **", significant_window_stats$end_range_max, "** ms\n* Effects duration range: **", significant_window_stats$duration_min, "** to **", significant_window_stats$duration_max, "** ms") else "No significant effects data available"`
 
 # Significant effects by reference peak
 significant_by_reference <- if(nrow(significant_effects_data) > 0) {
@@ -929,7 +902,7 @@ significant_by_reference <- if(nrow(significant_effects_data) > 0) {
       start_range_min = min(start_time),
       start_range_max = max(start_time),
       end_range_min = min(end_time),
-      end_range_max = max(end_time),
+      end_range_max = max(end_range),
       duration_min = min(end_time - start_time),
       duration_max = max(end_time - start_time),
       .groups = "drop"

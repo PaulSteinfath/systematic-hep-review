@@ -28,8 +28,10 @@ library(tidyr)
 library(viridis)
 library(zeallot)
 
-data_path <- file.path(getwd(), '../data')
-func_path <- file.path(getwd(), '.')
+# Use absolute paths to avoid path resolution issues
+project_root <- "/data/hu_steinfath/Desktop/Code/systematic-hep-review"
+data_path <- file.path(project_root, 'data')
+func_path <- file.path(project_root, 'functions')
 derivatives_path <- file.path(data_path, 'derivatives')
 df_included <- read.csv(file.path(derivatives_path, 'included.csv'))
 df_screening <- read.csv(file.path(derivatives_path, 'screening.csv'))
@@ -301,6 +303,22 @@ ica_studies <- df_pipelines %>%
     ica_study_pct = round(mean(uses_ica) * 100, 1)
   )
 
+# Studies using ICA specifically for cardiac field artifacts (CFA) removal
+ica_for_cfa_studies <- df_pipelines %>%
+  group_by(PMID) %>%
+  summarise(
+    uses_ica_for_cfa = any(ICA == 1 & 
+                           !is.na(rejected_components) & 
+                           rejected_components != "" &
+                           grepl("cfa", rejected_components, ignore.case = TRUE)),
+    .groups = "drop"
+  ) %>%
+  summarise(
+    n_ica_cfa_studies = sum(uses_ica_for_cfa),
+    total_studies = n(),
+    ica_cfa_study_pct = round(mean(uses_ica_for_cfa) * 100, 1)
+  )
+
 # Component rejection types (studies with ICA)
 component_types_df <- df_pipelines %>%
   filter(ICA == 1) %>%
@@ -353,6 +371,7 @@ In terms of artifact reduction, many studies reported the removal of noisy epoch
 ### ICA Usage Statistics
 
 * Studies using ICA: **`r ica_studies$ica_study_pct`%** (**`r ica_studies$n_ica_studies`**/**`r ica_studies$total_studies`**)
+* Studies using ICA for cardiac field artifacts: **`r ica_for_cfa_studies$ica_cfa_study_pct`%** (**`r ica_for_cfa_studies$n_ica_cfa_studies`**/**`r ica_for_cfa_studies$total_studies`**)
 
 ### ICA Component Types Removed
 
@@ -469,16 +488,19 @@ cardiac_ic_stats <- df_studies %>%
   )
 
 # Other CFA removal strategies (studies)
-other_cfa_strategies <- df_studies %>%
+# Use exact same logic as the rr_intervals_plot: start from df_pipelines and use distinct(PMID, other_cfa_removal_strategy)
+other_cfa_strategies <- df_pipelines %>%
   filter(!is.na(other_cfa_removal_strategy) & 
          other_cfa_removal_strategy != "" & 
          tolower(str_trim(other_cfa_removal_strategy)) != "unknown") %>%
+  distinct(PMID, other_cfa_removal_strategy) %>%  
   mutate(
     # Clean and standardize strategy names
     strategy_clean = case_when(
       other_cfa_removal_strategy == "limit analysis to time of minimal artifact" ~ 
         "Minimal artifact window",
-      str_detect(tolower(other_cfa_removal_strategy), "^rr at least") ~ 
+      # Use same logic as figure: match "rr at least" followed by number and "ms"
+      !is.na(str_match(tolower(other_cfa_removal_strategy), "rr at least\\s*(\\d+)\\s*ms")[,1]) ~ 
         "RR interval\nconstraints",
       tolower(other_cfa_removal_strategy) %in% c(
         "subtract/regress ecg from eeg"
@@ -493,39 +515,8 @@ other_cfa_strategies <- df_studies %>%
   count(strategy_clean, sort = TRUE) %>%
   mutate(percentage = round(n / sum(n) * 100, 1)) %>%
   rename(strategy = strategy_clean)
-```
-
-## ICA Application Timing
-
-Independent component analysis (ICA) is by far the most commonly used technique used by **`r ica_studies$ica_study_pct`%** of all studies
-
-* Continuous: **`r if(nrow(ica_timing[ica_timing$timing == "Continuous",]) > 0) ica_timing$percentage[ica_timing$timing == "Continuous"] else 0`%**
-* Epoched: **`r if(nrow(ica_timing[ica_timing$timing == "Epoched",]) > 0) ica_timing$percentage[ica_timing$timing == "Epoched"] else 0`%**
-
-## CFA Identification Approaches
-
-* Not reported: **`r round((1 - sum(cfa_approach_counts$n) / ica_studies$n_ica_studies) * 100, 1)`%** of studies using ICA
-* `r cfa_approach_counts$cfa_rej_approach[1]`: **`r cfa_approach_counts$percentage[1]`%**
-* `r cfa_approach_counts$cfa_rej_approach[2]`: **`r cfa_approach_counts$percentage[2]`%**
-* `r cfa_approach_counts$cfa_rej_approach[3]`: **`r cfa_approach_counts$percentage[3]`%**
-
-## CFA Identification Criteria
-
-* `r cfa_criteria_counts$cfa_rej_criteria[1]`: **`r cfa_criteria_counts$percentage[1]`%**
-* `r cfa_criteria_counts$cfa_rej_criteria[2]`: **`r cfa_criteria_counts$percentage[2]`%**
-* `r cfa_criteria_counts$cfa_rej_criteria[3]`: **`r cfa_criteria_counts$percentage[3]`%**
-* `r cfa_criteria_counts$cfa_rej_criteria[6]`: **`r cfa_criteria_counts$percentage[6]`%**
-* `r cfa_criteria_counts$cfa_rej_criteria[4]`: **`r cfa_criteria_counts$percentage[4]`%**
-* `r cfa_criteria_counts$cfa_rej_criteria[5]`: **`r cfa_criteria_counts$percentage[5]`%**
 
 
-## Rejected Cardiac ICs
-
-* Studies reporting number: **`r cardiac_ic_stats$n_studies`**
-* Range: **`r cardiac_ic_stats$min_ics`** - **`r cardiac_ic_stats$max_ics`**
-* Median: **`r cardiac_ic_stats$median_ics`**
-
-```{r no-cfa-analysis}
 # Papers with no CFA approach (studies level)
 no_cfa_analysis <- df_studies %>%
   mutate(
@@ -581,16 +572,52 @@ no_cfa_by_modality <- df_studies %>%
   )
 ```
 
+## ICA Application Timing
+
+In terms of artifact removal, ICA is used by (**`r no_cfa_stats$studies_with_ica_for_cfa`**/**`r no_cfa_stats$total_studies`**) of all studies to remove cardiac artefacts  
+
+* Continuous: **`r if(nrow(ica_timing[ica_timing$timing == "Continuous",]) > 0) ica_timing$percentage[ica_timing$timing == "Continuous"] else 0`%**
+* Epoched: **`r if(nrow(ica_timing[ica_timing$timing == "Epoched",]) > 0) ica_timing$percentage[ica_timing$timing == "Epoched"] else 0`%**
+
+## CFA Identification Approaches
+
+* Not reported: **`r round((1 - sum(cfa_approach_counts$n) / ica_studies$n_ica_studies) * 100, 1)`%** of studies using ICA
+* `r cfa_approach_counts$cfa_rej_approach[1]`: **`r cfa_approach_counts$percentage[1]`%**
+* `r cfa_approach_counts$cfa_rej_approach[2]`: **`r cfa_approach_counts$percentage[2]`%**
+* `r cfa_approach_counts$cfa_rej_approach[3]`: **`r cfa_approach_counts$percentage[3]`%**
+
+## CFA Identification Criteria
+
+* `r cfa_criteria_counts$cfa_rej_criteria[1]`: **`r cfa_criteria_counts$percentage[1]`%**
+* `r cfa_criteria_counts$cfa_rej_criteria[2]`: **`r cfa_criteria_counts$percentage[2]`%**
+* `r cfa_criteria_counts$cfa_rej_criteria[3]`: **`r cfa_criteria_counts$percentage[3]`%**
+* `r cfa_criteria_counts$cfa_rej_criteria[6]`: **`r cfa_criteria_counts$percentage[6]`%**
+* `r cfa_criteria_counts$cfa_rej_criteria[4]`: **`r cfa_criteria_counts$percentage[4]`%**
+* `r cfa_criteria_counts$cfa_rej_criteria[5]`: **`r cfa_criteria_counts$percentage[5]`%**
+
+
+## Rejected Cardiac ICs
+
+* Studies reporting number: **`r cardiac_ic_stats$n_studies`**
+* Range: **`r cardiac_ic_stats$min_ics`** - **`r cardiac_ic_stats$max_ics`**
+* Median: **`r cardiac_ic_stats$median_ics`**
+
+
 ## Other CFA Removal Strategies
 
-* `r other_cfa_strategies$strategy[1]`: **`r other_cfa_strategies$n[1]`** studies (**`r other_cfa_strategies$percentage[1]`%**)
-* `r other_cfa_strategies$strategy[2]`: **`r other_cfa_strategies$n[2]`** studies (**`r other_cfa_strategies$percentage[2]`%**)
 * `r other_cfa_strategies$strategy[3]`: **`r other_cfa_strategies$n[3]`** studies (**`r other_cfa_strategies$percentage[3]`%**)
+* `r other_cfa_strategies$strategy[4]`: **`r other_cfa_strategies$n[4]`** studies (**`r other_cfa_strategies$percentage[4]`%**)
+* `r other_cfa_strategies$strategy[5]`: **`r other_cfa_strategies$n[5]`** studies (**`r other_cfa_strategies$percentage[5]`%**)
+* `r other_cfa_strategies$strategy[6]`: **`r other_cfa_strategies$n[6]`** studies (**`r other_cfa_strategies$percentage[6]`%**)
+
+## Limit time range / analysis window
+
+* `r other_cfa_strategies$strategy[1]`: `r other_cfa_strategies$n[1]` studies (`r other_cfa_strategies$percentage[1]`%)
+* `r other_cfa_strategies$strategy[2]`: **`r other_cfa_strategies$n[2]`** studies (`r other_cfa_strategies$percentage[2]`%)
 
 ## Studies Without Any CFA Approach
 
 * Studies with no CFA approach: **`r no_cfa_stats$pct_with_no_cfa`%** (**`r no_cfa_stats$studies_with_no_cfa`**/**`r no_cfa_stats$total_studies`**)
-* Studies with ICA for CFA: **`r no_cfa_stats$pct_with_ica_for_cfa`%** (**`r no_cfa_stats$studies_with_ica_for_cfa`**/**`r no_cfa_stats$total_studies`**)
 * Studies with other CFA strategies: **`r no_cfa_stats$pct_with_other_cfa`%** (**`r no_cfa_stats$studies_with_other_cfa`**/**`r no_cfa_stats$total_studies`**)
 * Studies with any CFA approach: **`r no_cfa_stats$pct_with_any_cfa`%** (**`r no_cfa_stats$studies_with_any_cfa`**/**`r no_cfa_stats$total_studies`**)
 
@@ -598,12 +625,17 @@ no_cfa_by_modality <- df_studies %>%
 
 * EEG: **`r no_cfa_by_modality$pct_with_no_cfa[no_cfa_by_modality$modality == "EEG"]`%** (**`r no_cfa_by_modality$studies_with_no_cfa[no_cfa_by_modality$modality == "EEG"]`**/**`r no_cfa_by_modality$total_studies[no_cfa_by_modality$modality == "EEG"]`** studies) with no CFA approach
 * MEG: **`r no_cfa_by_modality$pct_with_no_cfa[no_cfa_by_modality$modality == "MEG"]`%** (**`r no_cfa_by_modality$studies_with_no_cfa[no_cfa_by_modality$modality == "MEG"]`**/**`r no_cfa_by_modality$total_studies[no_cfa_by_modality$modality == "MEG"]`** studies) with no CFA approach
-```
 
-# HEP Time Windows
+## HEP Time Windows
 
 ```{r timewindows}
-# HEP Time of Interest windows
+# HEP reference scheme distribution (ALL pipelines, regardless of time window data)
+hep_reference_all_pipelines <- df_pipelines %>%
+  filter(!is.na(hep_relative_to) & hep_relative_to != "unknown") %>%
+  count(hep_relative_to, sort = TRUE) %>%
+  mutate(percentage = round(n / sum(n) * 100, 1))
+
+# HEP Time of Interest windows (for window range analysis)
 hep_window_data <- df_pipelines %>%
   filter(!hep_start %in% c("none", "unknown"),
          !hep_end %in% c("none", "unknown")) %>%
@@ -614,111 +646,51 @@ hep_window_data <- df_pipelines %>%
   filter(!is.na(start_time), !is.na(end_time)) %>%
   distinct(PMID, hep_start, hep_end, hep_relative_to, .keep_all = TRUE)
 
-# Overall HEP window statistics
-hep_window_stats <- hep_window_data %>%
+# T-peak and R-peak window ranges
+tpeak_window_stats <- hep_window_data %>%
+  filter(hep_relative_to == "T-peak") %>%
   summarise(
-    n_pipelines = n(),
-    start_range_min = min(start_time),
-    start_range_max = max(start_time), 
-    end_range_min = min(end_time),
-    end_range_max = max(end_time),
-    duration_min = min(end_time - start_time),
-    duration_max = max(end_time - start_time)
+    start_min = min(start_time),
+    start_max = max(start_time),
+    end_min = min(end_time),
+    end_max = max(end_time),
+    # Convert to R-peak equivalent timing (T-peak ~300ms after R-peak)
+    rpeak_equiv_start_min = start_min + 300,
+    rpeak_equiv_start_max = start_max + 300,
+    rpeak_equiv_end_min = end_min + 300,
+    rpeak_equiv_end_max = end_max + 300
   )
 
-# HEP reference scheme distribution (studies with valid HEP windows)
-hep_reference_counts <- hep_window_data %>%
-  distinct(PMID, hep_relative_to) %>%
-  filter(!is.na(hep_relative_to) & hep_relative_to != "unknown") %>%
-  count(hep_relative_to, sort = TRUE) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1))
-
-# R-peak specific analysis
-rpeak_window_data <- hep_window_data %>%
-  filter(hep_relative_to == "R-peak")
-
-rpeak_window_stats <- if(nrow(rpeak_window_data) > 0) {
-  rpeak_window_data %>%
-    summarise(
-      n_pipelines = n(),
-      start_range_min = min(start_time),
-      start_range_max = max(start_time),
-      end_range_min = min(end_time),
-      end_range_max = max(end_time),
-      duration_min = min(end_time - start_time),
-      duration_max = max(end_time - start_time)
-    )
-} else {
-  data.frame(n_pipelines = 0, start_range_min = NA, start_range_max = NA,
-             end_range_min = NA, end_range_max = NA, duration_min = NA, duration_max = NA)
-}
-
-# Most common R-peak time windows analysis
-rpeak_common_windows <- if(nrow(rpeak_window_data) > 0) {
-  rpeak_window_data %>%
-    # Create time window strings for grouping
-    mutate(time_window = paste(start_time, "to", end_time, "ms")) %>%
-    count(time_window, start_time, end_time, sort = TRUE) %>%
-    mutate(
-      percentage = round(n / sum(n) * 100, 1),
-      n_studies = n  # Since we used distinct(PMID, ...) in hep_window_data
-    ) %>%
-    head(5)  # Top 5 most common windows
-} else {
-  data.frame(time_window = character(0), start_time = numeric(0), 
-             end_time = numeric(0), n = numeric(0), percentage = numeric(0), n_studies = numeric(0))
-}
-
-# Find the overlap region that most studies include
-rpeak_overlap_analysis <- if(nrow(rpeak_window_data) > 0) {
-  # Find the most common overlapping region
-  all_start_times <- rpeak_window_data$start_time
-  all_end_times <- rpeak_window_data$end_time
-  
-  # Use a more inclusive approach: find the region that most studies overlap with
-  # Use median start time and median end time as core boundaries
-  median_start <- median(all_start_times, na.rm = TRUE)
-  median_end <- median(all_end_times, na.rm = TRUE)
-  
-  # Count how many studies include this core region (overlap with median start to median end)
-  studies_including_core <- rpeak_window_data %>%
-    filter(start_time <= median_start & end_time >= median_end) %>%
-    nrow()
-  
-  core_percentage <- round(studies_including_core / nrow(rpeak_window_data) * 100, 1)
-  
-  
-  list(
-    core_start = round(median_start, 0),
-    core_end = round(median_end, 0),
-    studies_including_core = studies_including_core,
-    total_rpeak_studies = nrow(rpeak_window_data),
-    core_percentage = core_percentage
+rpeak_window_stats <- hep_window_data %>%
+  filter(hep_relative_to == "R-peak") %>%
+  summarise(
+    start_min = min(start_time),
+    start_max = max(start_time),
+    end_min = min(end_time),
+    end_max = max(end_time)
   )
-} else {
-  list(core_start = NA, core_end = NA, studies_including_core = 0, 
-       total_rpeak_studies = 0, core_percentage = 0)
-}
 
-# T-peak specific analysis  
-tpeak_window_data <- hep_window_data %>%
-  filter(hep_relative_to == "T-peak")
-
-tpeak_window_stats <- if(nrow(tpeak_window_data) > 0) {
-  tpeak_window_data %>%
-    summarise(
-      n_pipelines = n(),
-      start_range_min = min(start_time),
-      start_range_max = max(start_time),
-      end_range_min = min(end_time),
-      end_range_max = max(end_time),
-      duration_min = min(end_time - start_time),
-      duration_max = max(end_time - start_time)
-    )
-} else {
-  data.frame(n_pipelines = 0, start_range_min = NA, start_range_max = NA,
-             end_range_min = NA, end_range_max = NA, duration_min = NA, duration_max = NA)
-}
+# Find the overlap region for R-peak studies
+rpeak_overlap_analysis <- hep_window_data %>%
+  filter(hep_relative_to == "R-peak") %>%
+  {
+    if(nrow(.) > 0) {
+      rpeak_data <- .
+      median_start <- median(rpeak_data$start_time, na.rm = TRUE)
+      median_end <- median(rpeak_data$end_time, na.rm = TRUE)
+      studies_including_core <- rpeak_data %>%
+        filter(start_time <= median_start & end_time >= median_end) %>%
+        nrow()
+      core_percentage <- round(studies_including_core / nrow(rpeak_data) * 100, 1)
+      list(
+        core_start = round(median_start, 0),
+        core_end = round(median_end, 0),
+        core_percentage = core_percentage
+      )
+    } else {
+      list(core_start = NA, core_end = NA, core_percentage = 0)
+    }
+  }
 
 # Baseline window analysis 
 baseline_window_data <- df_pipelines %>%
@@ -729,294 +701,286 @@ baseline_window_data <- df_pipelines %>%
   ) %>%
   filter(!is.na(baseline_start_numeric), !is.na(baseline_end_numeric))
 
-baseline_stats <- baseline_window_data %>%
-  summarise(
-    n_pipelines = n(),
-    start_range_min = min(baseline_start_numeric),
-    start_range_max = max(baseline_start_numeric),
-    end_range_min = min(baseline_end_numeric),
-    end_range_max = max(baseline_end_numeric),
-    duration_min = min(baseline_end_numeric - baseline_start_numeric),
-    duration_max = max(baseline_end_numeric - baseline_start_numeric)
-  )
-
 baseline_pct <- round(nrow(baseline_window_data) / nrow(df_pipelines) * 100, 1)
 
-# Baseline correction by reference peak (R-peak vs T-peak)
-baseline_by_reference <- df_pipelines %>%
-  filter(!is.na(baseline_start_ms), !is.na(baseline_end_ms),
-         !is.na(hep_relative_to), hep_relative_to != "unknown") %>%
-  mutate(
-    baseline_start_numeric = as.numeric(baseline_start_ms),
-    baseline_end_numeric = as.numeric(baseline_end_ms)
-  ) %>%
-  filter(!is.na(baseline_start_numeric), !is.na(baseline_end_numeric)) %>%
-  group_by(hep_relative_to) %>%
+# T-peak baseline analysis
+tpeak_baseline_data <- baseline_window_data %>%
+  filter(hep_relative_to == "T-peak") %>%
   summarise(
-    n_pipelines = n(),
     n_studies = n_distinct(PMID),
-    start_range_min = min(baseline_start_numeric),
-    start_range_max = max(baseline_start_numeric),
-    end_range_min = min(baseline_end_numeric),
-    end_range_max = max(baseline_end_numeric),
-    .groups = "drop"
+    start_min = min(baseline_start_numeric),
+    end_max = max(baseline_end_numeric)
   )
 
-# Analysis of baseline windows ending before QRS complex (to avoid CFA contamination)
-baseline_before_qrs <- baseline_window_data %>%
-  filter(!is.na(hep_relative_to), hep_relative_to != "unknown") %>%
-  mutate(
-    # For R-peak reference: baseline ends before 0 ms (QRS complex)
-    # For T-peak reference: need to account for typical T-peak timing (~300ms after R-peak)
-    baseline_ends_before_qrs = case_when(
-      hep_relative_to == "R-peak" ~ baseline_end_numeric < 0,
-      hep_relative_to == "T-peak" ~ baseline_end_numeric < 0, 
-      TRUE ~ FALSE
-    )
-  )
-
-# Calculate percentage of studies with baseline ending before QRS
-baseline_before_qrs_stats <- baseline_before_qrs %>%
+# R-peak baseline analysis
+rpeak_baseline_data <- baseline_window_data %>%
+  filter(hep_relative_to == "R-peak") %>%
   summarise(
-    total_studies_with_baseline = n_distinct(PMID),
-    studies_ending_before_qrs = n_distinct(PMID[baseline_ends_before_qrs]),
-    percentage_before_qrs = round(studies_ending_before_qrs / total_studies_with_baseline * 100, 1)
+    n_studies = n_distinct(PMID),
+    start_min = min(baseline_start_numeric),
+    end_max = max(baseline_end_numeric)
   )
 
-# Breakdown by reference scheme
-baseline_before_qrs_by_ref <- baseline_before_qrs %>%
-  group_by(hep_relative_to) %>%
+# Baseline ending before QRS analysis
+baseline_before_qrs_stats <- baseline_window_data %>%
+  filter(hep_relative_to == "R-peak") %>%
+  mutate(baseline_ends_before_qrs = baseline_end_numeric < 0) %>%
   summarise(
     total_studies = n_distinct(PMID),
-    studies_ending_before_qrs = n_distinct(PMID[baseline_ends_before_qrs]),
-    percentage_before_qrs = round(studies_ending_before_qrs / total_studies * 100, 1),
-    .groups = "drop"
+    studies_before_qrs = n_distinct(PMID[baseline_ends_before_qrs]),
+    percentage_before_qrs = round(studies_before_qrs / total_studies * 100, 1)
   )
 
-# Significant effects window analysis (using method_category)
-significant_effects_data <- df_pipelines %>%
-  filter(significant_test == 1) %>%
-  mutate(
-    hep_start_numeric = as.numeric(hep_start),
-    hep_end_numeric = as.numeric(hep_end),
-    significant_start_numeric = as.numeric(significant_start_ms),
-    significant_end_numeric = as.numeric(significant_end_ms),
-    # Use HEP windows for Averaging, significant windows for Clustering
-    start_time = case_when(
-      method_category == "Averaging" ~ hep_start_numeric,
-      method_category == "Clustering" ~ significant_start_numeric,
-      TRUE ~ hep_start_numeric  
-    ),
-    end_time = case_when(
-      method_category == "Averaging" ~ hep_end_numeric,
-      method_category == "Clustering" ~ significant_end_numeric,
-      TRUE ~ hep_end_numeric  
-    ),
-    reference = case_when(
-      method_category == "Averaging" ~ hep_relative_to,
-      method_category == "Clustering" ~ significant_relative_to,
-      TRUE ~ hep_relative_to  
-    )
-  ) %>%
-  filter(!is.na(start_time), !is.na(end_time))
+# Significant effects analysis by method and reference
+# Exact copy of plotting code logic from create_single_ecg_plot.R
+df_signif <- df_pipelines %>% filter(significant_test == 1)
 
-significant_window_stats <- if(nrow(significant_effects_data) > 0) {
-  significant_effects_data %>%
-    summarise(
-      n_pipelines = n(),
-      start_range_min = min(start_time),
-      start_range_max = max(start_time),
-      end_range_min = min(end_time), 
-      end_range_max = max(end_time),
-      duration_min = min(end_time - start_time),
-      duration_max = max(end_time - start_time)
+if (nrow(df_signif) > 0) {
+  # Create merged start/end/ref columns exactly like plotting code
+  df_signif <- df_signif %>%
+    mutate(
+      merged_start = if_else(averaging_time == "1", as.character(hep_start), as.character(significant_start_ms)),
+      merged_end   = if_else(averaging_time == "1", as.character(hep_end), as.character(significant_end_ms)),
+      merged_ref   = if_else(averaging_time == "1", hep_relative_to, significant_relative_to)
     )
+  
+  # Process exactly like create_time_windows_plot.R does for significant effects
+  significant_effects_data <- df_signif %>%
+    filter(merged_ref %in% c("R-peak", "T-peak"), significant_test == 1) %>%
+    mutate(
+      hep_start = as.numeric(hep_start),
+      hep_end   = as.numeric(hep_end),
+      significant_start_ms = as.numeric(significant_start_ms),
+      significant_end_ms   = as.numeric(significant_end_ms),
+      start_time = if_else(averaging_time == "1", hep_start, significant_start_ms),
+      end_time   = if_else(averaging_time == "1", hep_end, significant_end_ms),
+      reference = merged_ref,
+      # Add method_category for statistical comparison
+      method_category = case_when(
+        averaging_time == "1" & clustering == "0" ~ "Averaging",
+        clustering == "1" & averaging_time == "0" ~ "Clustering",
+        TRUE ~ "Other"
+      )
+    ) %>%
+    filter(!is.na(start_time), !is.na(end_time))
 } else {
-  data.frame(n_pipelines = 0, start_range_min = NA, start_range_max = NA,
-             end_range_min = NA, end_range_max = NA, duration_min = NA, duration_max = NA)
+  significant_effects_data <- data.frame()
+}
+
+# Overall significant effects ranges
+sig_rpeak_range <- significant_effects_data %>%
+  filter(reference == "R-peak") %>%
+  summarise(
+    start_min = min(start_time),
+    start_max = max(start_time),
+    end_min = min(end_time),
+    end_max = max(end_time)
+  )
+
+sig_tpeak_range <- significant_effects_data %>%
+  filter(reference == "T-peak") %>%
+  summarise(
+    start_min = min(start_time),
+    start_max = max(start_time),
+    end_min = min(end_time),
+    end_max = max(end_time)
+  )
+
+# Method-specific analysis (clustering vs averaging) is now handled in the main statistical comparison chunk
+# The chunks 'clustering_effects', 'averaging_effects', and the peak calculation chunks are removed as they are redundant.
+
+# Statistical comparison for clustering vs averaging methods
+# Function to find peak distribution values (like in cumulative plots) and compare them
+calculate_peak_distribution <- function(method_data) {
+  if(nrow(method_data) == 0) {
+    return(list(peak_time = NA_real_, median_midpoint = NA_real_))
+  }
+  
+  # Calculate cumulative distribution like in the plots
+  all_times <- c(method_data$start_time, method_data$end_time)
+  time_range <- seq(floor(min(all_times)), ceiling(max(all_times)), by = 1)
+  counts <- calculate_cumulative_counts(method_data, time_range)
+  
+  # Find peak (mode) of distribution - where most effects occur
+  peak_time <- time_range[which.max(counts)]
+  
+  # Also calculate median of midpoints for comparison
+  midpoints <- (method_data$start_time + method_data$end_time) / 2
+  median_midpoint <- median(midpoints, na.rm = TRUE)
+  
+  return(list(
+    peak_time = peak_time,
+    median_midpoint = median_midpoint,
+    max_count = max(counts)
+  ))
+}
+
+perform_statistical_comparison <- function(method1_data, method2_data) {
+  if(nrow(method1_data) == 0 || nrow(method2_data) == 0) {
+    return(list(test_performed = FALSE))
+  }
+  
+  # Calculate distributions for both methods
+  dist1 <- calculate_peak_distribution(method1_data)
+  dist2 <- calculate_peak_distribution(method2_data)
+  
+  # If peaks are identical or one has no data, we can't do statistical comparison
+  if(is.na(dist1$peak_time) || is.na(dist2$peak_time) || 
+     dist1$max_count == 0 || dist2$max_count == 0) {
+    
+    return(list(
+      test_performed = FALSE,
+      peak1 = dist1$peak_time,
+      peak2 = dist2$peak_time,
+      reason = "Insufficient data for comparison"
+    ))
+  }
+  
+  # Perform permutation test for peak difference
+  observed_peak_diff <- abs(dist1$peak_time - dist2$peak_time)
+  
+  # Combine all data for permutation
+  combined_data <- rbind(method1_data, method2_data)
+  n1 <- nrow(method1_data)
+  n2 <- nrow(method2_data)
+  n_total <- n1 + n2
+  
+  # Perform permutation test (1000 permutations)
+  n_permutations <- 1000
+  set.seed(42) # For reproducibility
+  permuted_diffs <- numeric(n_permutations)
+  
+  for(i in 1:n_permutations) {
+    # Randomly permute the combined data
+    shuffled_indices <- sample(n_total)
+    perm_group1 <- combined_data[shuffled_indices[1:n1], ]
+    perm_group2 <- combined_data[shuffled_indices[(n1+1):n_total], ]
+    
+    # Calculate peak difference for this permutation
+    perm_dist1 <- calculate_peak_distribution(perm_group1)
+    perm_dist2 <- calculate_peak_distribution(perm_group2)
+    
+    if(!is.na(perm_dist1$peak_time) && !is.na(perm_dist2$peak_time)) {
+      permuted_diffs[i] <- abs(perm_dist1$peak_time - perm_dist2$peak_time)
+    } else {
+      permuted_diffs[i] <- 0  # If no valid peaks, difference is 0
+    }
+  }
+  
+  # Calculate p-value: proportion of permuted differences >= observed difference
+  p_value_perm <- mean(permuted_diffs >= observed_peak_diff)
+  
+  return(list(
+    test_performed = TRUE,
+    # Peak times from cumulative distribution (what you see in plots)
+    peak1 = dist1$peak_time,
+    peak2 = dist2$peak_time,
+    peak_difference = observed_peak_diff,
+    max_count1 = dist1$max_count,
+    max_count2 = dist2$max_count,
+    # Permutation test results
+    permutation_test_performed = TRUE,
+    permutation_p_value = p_value_perm,
+    n_permutations = n_permutations,
+    n1 = n1,
+    n2 = n2
+  ))
+}
+
+stat_comparison_results <- list()
+
+if (nrow(significant_effects_data) > 0) {
+  # R-peak analysis
+  clustering_rpeak <- significant_effects_data %>%
+    filter(method_category == "Clustering", reference == "R-peak") %>%
+    filter(!is.na(start_time), !is.na(end_time))
+  
+  averaging_rpeak <- significant_effects_data %>%
+    filter(method_category == "Averaging", reference == "R-peak") %>%
+    filter(!is.na(start_time), !is.na(end_time))
+  
+  stat_comparison_results$rpeak <- perform_statistical_comparison(clustering_rpeak, averaging_rpeak)
+  
+  # T-peak analysis
+  clustering_tpeak <- significant_effects_data %>%
+    filter(method_category == "Clustering", reference == "T-peak") %>%
+    filter(!is.na(start_time), !is.na(end_time))
+  
+  averaging_tpeak <- significant_effects_data %>%
+    filter(method_category == "Averaging", reference == "T-peak") %>%
+    filter(!is.na(start_time), !is.na(end_time))
+  
+  stat_comparison_results$tpeak <- perform_statistical_comparison(clustering_tpeak, averaging_tpeak)
+} else {
+  stat_comparison_results$rpeak <- list(test_performed = FALSE)
+  stat_comparison_results$tpeak <- list(test_performed = FALSE)
 }
 ```
 
-## HEP Time Windows
+# Cardiac Reference Event Selection
 
-* Pipelines with valid HEP windows: **`r hep_window_stats$n_pipelines`**
-* Overall HEP start time range: **`r hep_window_stats$start_range_min`** to **`r hep_window_stats$start_range_max`** ms
-* Overall HEP end time range: **`r hep_window_stats$end_range_min`** to **`r hep_window_stats$end_range_max`** ms
-* Overall HEP window duration range: **`r hep_window_stats$duration_min`** to **`r hep_window_stats$duration_max`** ms
+* R-peak reference: **`r hep_reference_all_pipelines$percentage[hep_reference_all_pipelines$hep_relative_to == "R-peak"]`%** of pipelines
+* T-wave reference: **`r hep_reference_all_pipelines$percentage[hep_reference_all_pipelines$hep_relative_to == "T-peak"]`%** of pipelines
 
-## HEP Reference Peak Distribution
+# HEP Analysis Time Windows
 
-* `r as.character(hep_reference_counts$hep_relative_to[1])`: **`r hep_reference_counts$n[1]`** studies (**`r hep_reference_counts$percentage[1]`%**)
-* `r as.character(hep_reference_counts$hep_relative_to[2])`: **`r hep_reference_counts$n[2]`** studies (**`r hep_reference_counts$percentage[2]`%**)
-* `r as.character(hep_reference_counts$hep_relative_to[3])`: **`r hep_reference_counts$n[3]`** studies (**`r hep_reference_counts$percentage[3]`%**)
+## T-wave Referenced Analysis
+
+* Time range: **`r tpeak_window_stats$start_min`** to **`r tpeak_window_stats$end_max`** ms after T-wave
+* R-peak equivalent: approx. **`r tpeak_window_stats$rpeak_equiv_start_min`** to **`r tpeak_window_stats$rpeak_equiv_end_max`** ms after R-peak
 
 ## R-peak Referenced Analysis
 
-`r if(rpeak_window_stats$n_pipelines > 0) paste0("* Pipelines using R-peak reference: **", rpeak_window_stats$n_pipelines, "**\n* R-peak start time range: **", rpeak_window_stats$start_range_min, "** to **", rpeak_window_stats$start_range_max, "** ms\n* R-peak end time range: **", rpeak_window_stats$end_range_min, "** to **", rpeak_window_stats$end_range_max, "** ms\n* R-peak window duration range: **", rpeak_window_stats$duration_min, "** to **", rpeak_window_stats$duration_max, "** ms") else "No R-peak referenced analyses found"`
+* Time range: **`r rpeak_window_stats$start_min`** to **`r rpeak_window_stats$end_max`** ms relative to R-peak
+* Core overlap window: **`r rpeak_overlap_analysis$core_start`** to **`r rpeak_overlap_analysis$core_end`** ms
+* Pipelines including core: **`r rpeak_overlap_analysis$core_percentage`%**
 
-### Most Common R-peak Time Windows
+# Baseline Correction
 
-`r if(nrow(rpeak_common_windows) > 0) { paste(sapply(1:min(3, nrow(rpeak_common_windows)), function(i) paste0("* ", rpeak_common_windows$time_window[i], ": **", rpeak_common_windows$n_studies[i], "** studies (**", rpeak_common_windows$percentage[i], "%**)")), collapse = "\n") } else "No common time windows found"`
-    }
-  }
-  
-### Core Time Window (included by most studies)
+## General Statistics
 
-`r if(!is.na(rpeak_overlap_analysis$core_start)) paste0("* Core window: **", rpeak_overlap_analysis$core_start, "** to **", rpeak_overlap_analysis$core_end, "** ms\n* Studies including this core: **", rpeak_overlap_analysis$core_percentage, "%** (**", rpeak_overlap_analysis$studies_including_core, "**/**", rpeak_overlap_analysis$total_rpeak_studies, "**)") else "No core window analysis available"`
+* Pipelines using baseline correction: **`r baseline_pct`%**
 
-## T-peak Referenced Analysis
+## T-wave Baseline Correction
 
-`r if(tpeak_window_stats$n_pipelines > 0) paste0("* Pipelines using T-peak reference: **", tpeak_window_stats$n_pipelines, "**\n* T-peak start time range: **", tpeak_window_stats$start_range_min, "** to **", tpeak_window_stats$start_range_max, "** ms\n* T-peak end time range: **", tpeak_window_stats$end_range_min, "** to **", tpeak_window_stats$end_range_max, "** ms\n* T-peak window duration range: **", tpeak_window_stats$duration_min, "** to **", tpeak_window_stats$duration_max, "** ms") else "* No T-peak referenced analyses found"`
+* Studies using baseline: **`r tpeak_baseline_data$n_studies`** studies
+* Baseline window: **`r tpeak_baseline_data$start_min`** to **`r tpeak_baseline_data$end_max`** ms before T-wave
 
-## Baseline Correction
+## R-peak Baseline Correction
 
-* Pipelines using baseline correction: **`r baseline_pct`%** (**`r nrow(baseline_window_data)`**/**`r nrow(df_pipelines)`**)
+* Baseline window range: **`r rpeak_baseline_data$start_min`** to **`r rpeak_baseline_data$end_max`** ms around R-peak
+* Studies ending baseline before QRS: **`r baseline_before_qrs_stats$percentage_before_qrs`%**
 
-`r if(nrow(baseline_window_data) > 0) paste0("* Overall baseline start time range: **", baseline_stats$start_range_min, "** to **", baseline_stats$start_range_max, "** ms\n* Overall baseline end time range: **", baseline_stats$end_range_min, "** to **", baseline_stats$end_range_max, "** ms\n* Overall baseline duration range: **", baseline_stats$duration_min, "** to **", baseline_stats$duration_max, "** ms") else "No baseline correction data available"`
+# Significant HER Effects Time Ranges
 
-## Baseline Correction by Reference Peak
+## R-peak Referenced Effects
 
-`r if(nrow(baseline_by_reference) > 0) { paste(sapply(1:nrow(baseline_by_reference), function(i) { ref_peak <- as.character(baseline_by_reference$hep_relative_to[i]); n_pipes <- baseline_by_reference$n_pipelines[i]; n_studies <- baseline_by_reference$n_studies[i]; start_min <- baseline_by_reference$start_range_min[i]; start_max <- baseline_by_reference$start_range_max[i]; end_min <- baseline_by_reference$end_range_min[i]; end_max <- baseline_by_reference$end_range_max[i]; paste0("* ", ref_peak, ": **", n_pipes, "** pipelines from **", n_studies, "** studies\n  - Start range: **", start_min, "** to **", start_max, "** ms\n  - End range: **", end_min, "** to **", end_max, "** ms") }), collapse = "\n") } else "* No reference-specific baseline data available"`
+* Significant effects range: **`r sig_rpeak_range$start_min`** to **`r sig_rpeak_range$end_max`** ms
 
-## Baseline Windows Ending Before QRS Complex
+## T-wave Referenced Effects
 
-* Studies with baseline ending before QRS: **`r baseline_before_qrs_stats$percentage_before_qrs`%** (**`r baseline_before_qrs_stats$studies_ending_before_qrs`**/**`r baseline_before_qrs_stats$total_studies_with_baseline`**)
+* Significant effects range: **`r sig_tpeak_range$start_min`** to **`r sig_tpeak_range$end_max`** ms
 
-### By Reference Scheme
+# Statistical Analysis Methods Comparison
 
-`r if(nrow(baseline_before_qrs_by_ref) > 0) { paste(sapply(1:nrow(baseline_before_qrs_by_ref), function(i) { ref_peak <- as.character(baseline_before_qrs_by_ref$hep_relative_to[i]); total <- baseline_before_qrs_by_ref$total_studies[i]; before_qrs <- baseline_before_qrs_by_ref$studies_ending_before_qrs[i]; pct <- baseline_before_qrs_by_ref$percentage_before_qrs[i]; paste0("* ", ref_peak, ": **", pct, "%** (**", before_qrs, "**/**", total, "** studies)") }), collapse = "\n") } else "* No reference scheme data available"`
+## R-peak Analysis
 
-## Significant Effects Windows
+* **Peak Distribution Analysis** (from cumulative plots):
+  - Clustering peak: **`r if(length(stat_comparison_results) > 0 && stat_comparison_results$rpeak$test_performed) sprintf("%.0f", stat_comparison_results$rpeak$peak1) else "N/A"`** ms
+  - Averaging peak: **`r if(length(stat_comparison_results) > 0 && stat_comparison_results$rpeak$test_performed) sprintf("%.0f", stat_comparison_results$rpeak$peak2) else "N/A"`** ms
+  - Peak difference: **`r if(length(stat_comparison_results) > 0 && stat_comparison_results$rpeak$test_performed) sprintf("%.0f", abs(stat_comparison_results$rpeak$peak1 - stat_comparison_results$rpeak$peak2)) else "N/A"`** ms
 
-* Pipelines with significant effects: **`r significant_window_stats$n_pipelines`**
+* **Statistical Test** (Permutation test on peak positions):
+  - Sample sizes: n₁ = **`r if(length(stat_comparison_results) > 0 && stat_comparison_results$rpeak$permutation_test_performed) stat_comparison_results$rpeak$n1 else "N/A"`**, n₂ = **`r if(length(stat_comparison_results) > 0 && stat_comparison_results$rpeak$permutation_test_performed) stat_comparison_results$rpeak$n2 else "N/A"`**
+  - Permutation test: p **`r if(length(stat_comparison_results) > 0 && stat_comparison_results$rpeak$permutation_test_performed) ifelse(stat_comparison_results$rpeak$permutation_p_value < 0.001, "< 0.001", paste("=", sprintf("%.3f", stat_comparison_results$rpeak$permutation_p_value))) else "N/A"`** (**`r if(length(stat_comparison_results) > 0 && stat_comparison_results$rpeak$permutation_test_performed) stat_comparison_results$rpeak$n_permutations else "N/A"`** permutations)
 
-`r if(significant_window_stats$n_pipelines > 0) paste0("* Effects start time range: **", significant_window_stats$start_range_min, "** to **", significant_window_stats$start_range_max, "** ms\n* Effects end time range: **", significant_window_stats$end_range_min, "** to **", significant_window_stats$end_range_max, "** ms\n* Effects duration range: **", significant_window_stats$duration_min, "** to **", significant_window_stats$duration_max, "** ms") else "No significant effects data available"`
+## T-wave Analysis
 
-# Significant effects by reference peak
-significant_by_reference <- if(nrow(significant_effects_data) > 0) {
-  significant_effects_data %>%
-    filter(!is.na(reference), reference != "unknown") %>%
-    group_by(reference) %>%
-    summarise(
-      n_pipelines = n(),
-      start_range_min = min(start_time),
-      start_range_max = max(start_time),
-      end_range_min = min(end_time),
-      end_range_max = max(end_range),
-      duration_min = min(end_time - start_time),
-      duration_max = max(end_time - start_time),
-      .groups = "drop"
-    )
-} else {
-  data.frame()
-}
+* **Peak Distribution Analysis** (from cumulative plots):
+  - Clustering peak: **`r if(length(stat_comparison_results) > 0 && stat_comparison_results$tpeak$test_performed) sprintf("%.0f", stat_comparison_results$tpeak$peak1) else "N/A"`** ms
+  - Averaging peak: **`r if(length(stat_comparison_results) > 0 && stat_comparison_results$tpeak$test_performed) sprintf("%.0f", stat_comparison_results$tpeak$peak2) else "N/A"`** ms
+  - Peak difference: **`r if(length(stat_comparison_results) > 0 && stat_comparison_results$tpeak$test_performed) sprintf("%.0f", abs(stat_comparison_results$tpeak$peak1 - stat_comparison_results$tpeak$peak2)) else "N/A"`** ms
 
-if(nrow(significant_by_reference) > 0) {
-  cat("\n### Significant Effects by Reference Peak:\n")
-  for(i in 1:nrow(significant_by_reference)) {
-    ref_peak <- as.character(significant_by_reference$reference[i])
-    n_pipes <- significant_by_reference$n_pipelines[i]
-    start_min <- significant_by_reference$start_range_min[i]
-    start_max <- significant_by_reference$start_range_max[i]
-    end_min <- significant_by_reference$end_range_min[i]
-    end_max <- significant_by_reference$end_range_max[i]
-    dur_min <- significant_by_reference$duration_min[i]
-    dur_max <- significant_by_reference$duration_max[i]
-    
-    cat("- **", ref_peak, "**: ", n_pipes, " pipelines\n")
-    cat("  - Start range: ", start_min, " to ", start_max, " ms\n")
-    cat("  - End range: ", end_min, " to ", end_max, " ms\n")
-    cat("  - Duration range: ", dur_min, " to ", dur_max, " ms\n")
-  }
-}
-
-# Peak effect timing analysis by method and reference
-peak_effects_analysis <- if(nrow(significant_effects_data) > 0) {
-  significant_effects_data %>%
-    filter(!is.na(reference), reference != "unknown") %>%
-    # Use the method_category directly
-    filter(method_category %in% c("Averaging", "Clustering")) %>%
-    group_by(method_category, reference) %>%
-    summarise(
-      n_pipelines = n(),
-      # Find core regions using median approach
-      median_start = median(start_time, na.rm = TRUE),
-      median_end = median(end_time, na.rm = TRUE),
-      # Count studies that include the core region
-      studies_in_core = sum(start_time <= median(start_time, na.rm = TRUE) & 
-                           end_time >= median(end_time, na.rm = TRUE), na.rm = TRUE),
-      core_percentage = round(studies_in_core / n() * 100, 1),
-      .groups = "drop"
-    ) %>%
-    # For T-peak, add equivalent R-peak timing (assuming ~300ms T-peak delay)
-    mutate(
-      rpeak_equivalent_start = if_else(reference == "T-peak", median_start + 300, median_start),
-      rpeak_equivalent_end = if_else(reference == "T-peak", median_end + 300, median_end)
-    )
-} else {
-  data.frame()
-}
-
-cat("\n### Peak Effect Timing by Analysis Method:\n")
-if(nrow(peak_effects_analysis) > 0) {
-  # Clustering analysis
-  cluster_data <- peak_effects_analysis %>% filter(method_category == "Clustering")
-  if(nrow(cluster_data) > 0) {
-    cat("**Clustering analysis core effect regions:**\n")
-    for(i in 1:nrow(cluster_data)) {
-      ref_peak <- cluster_data$reference[i]
-      median_start <- round(cluster_data$median_start[i], 1)
-      median_end <- round(cluster_data$median_end[i], 1)
-      core_pct <- cluster_data$core_percentage[i]
-      n_studies <- cluster_data$studies_in_core[i]
-      total_studies <- cluster_data$n_pipelines[i]
-      
-      if(ref_peak == "R-peak") {
-        cat("- **R-peak referenced**: ", median_start, "-", median_end, " ms (", core_pct, "% of studies, ", n_studies, "/", total_studies, ")\n")
-      } else if(ref_peak == "T-peak") {
-        rpeak_start <- round(cluster_data$rpeak_equivalent_start[i], 1)
-        rpeak_end <- round(cluster_data$rpeak_equivalent_end[i], 1)
-        cat("- **T-peak referenced**: ", median_start, "-", median_end, " ms (≈", rpeak_start, "-", rpeak_end, " ms after R-peak; ", core_pct, "% of studies, ", n_studies, "/", total_studies, ")\n")
-      }
-    }
-  }
-  
-  # Averaging analysis
-  avg_data <- peak_effects_analysis %>% filter(method_category == "Averaging")
-  if(nrow(avg_data) > 0) {
-    cat("\n**Averaging analysis core effect regions:**\n")
-    for(i in 1:nrow(avg_data)) {
-      ref_peak <- avg_data$reference[i]
-      median_start <- round(avg_data$median_start[i], 1)
-      median_end <- round(avg_data$median_end[i], 1)
-      core_pct <- avg_data$core_percentage[i]
-      n_studies <- avg_data$studies_in_core[i]
-      total_studies <- avg_data$n_pipelines[i]
-      
-      if(ref_peak == "R-peak") {
-        cat("- **R-peak referenced**: ", median_start, "-", median_end, " ms (", core_pct, "% of studies, ", n_studies, "/", total_studies, ")\n")
-      } else if(ref_peak == "T-peak") {
-        rpeak_start <- round(avg_data$rpeak_equivalent_start[i], 1)
-        rpeak_end <- round(avg_data$rpeak_equivalent_end[i], 1)
-        cat("- **T-peak referenced**: ", median_start, "-", median_end, " ms (≈", rpeak_start, "-", rpeak_end, " ms after R-peak; ", core_pct, "% of studies, ", n_studies, "/", total_studies, ")\n")
-      }
-    }
-  }
-} else {
-  cat("**No peak effect timing data available**\n")
-}
-```
-
-# HEP Topography
-
-```{r topography}
-```
-
-# Statistical Analysis
-
-```{r statistics}
-```
-
-
----
-*Generated on `r Sys.Date()`*
+* **Statistical Test** (Permutation test on peak positions):
+  - Sample sizes: n₁ = **`r if(length(stat_comparison_results) > 0 && stat_comparison_results$tpeak$permutation_test_performed) stat_comparison_results$tpeak$n1 else "N/A"`**, n₂ = **`r if(length(stat_comparison_results) > 0 && stat_comparison_results$tpeak$permutation_test_performed) stat_comparison_results$tpeak$n2 else "N/A"`**
+  - Permutation test: p **`r if(length(stat_comparison_results) > 0 && stat_comparison_results$tpeak$permutation_test_performed) ifelse(stat_comparison_results$tpeak$permutation_p_value < 0.001, "< 0.001", paste("=", sprintf("%.3f", stat_comparison_results$tpeak$permutation_p_value))) else "N/A"`** (**`r if(length(stat_comparison_results) > 0 && stat_comparison_results$tpeak$permutation_test_performed) stat_comparison_results$tpeak$n_permutations else "N/A"`** permutations)

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+<meta name="date" content="2025-07-07" />
+
+<title>Manuscript Summary</title>
+
+<script src="manuscript_statistics_files/header-attrs-2.29/header-attrs.js"></script>
+<link href="manuscript_statistics_files/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="manuscript_statistics_files/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Manuscript Summary</h1>
+<h3 class="subtitle">A Systematic Review of Methods Used for Studying
+Heartbeat Evoked Responses</h3>
+<h4 class="date">2025-07-07</h4>
+
+
+
+<div id="overview" class="section level1">
+<h1>Overview</h1>
+<p>This document provides all values mentioned in the manuscript
+“Heartbeat-evoked responses in MEG/EEG: A systematic review of methods
+and suggestions for analysis and reporting”. All sections of this
+document apart from this overview match the corresponding section of the
+manuscript. Numbers highlighted in <strong>bold</strong> are also
+present in the manuscript.</p>
+<div id="important-distinction-studies-vs-pipelines"
+class="section level2">
+<h2>Important Distinction: Studies vs Pipelines</h2>
+<ul>
+<li><strong>Studies</strong>: Unique publications (identified by PMID).
+Each study represents one research paper.</li>
+<li><strong>Pipelines</strong>: Individual analysis approaches within
+studies. Some studies report multiple analysis pipelines (e.g. different
+time windows, or statistical approaches).</li>
+</ul>
+</div>
+</div>
+<div id="methods" class="section level1">
+<h1>Methods</h1>
+<div id="literature-search" class="section level2">
+<h2>Literature search</h2>
+<p>Table 1 - number of retrieved papers:</p>
+<ul>
+<li>15.01.2024: <strong>647</strong></li>
+<li>24.07.2024: <strong>682</strong> (rerun: <strong>683</strong>)</li>
+<li>05.08.2024: <strong>166</strong></li>
+<li>After removing duplicates: <strong>749</strong></li>
+</ul>
+<p>Exported from Pubmed:</p>
+<ul>
+<li>Retrieved: <strong>749</strong> studies</li>
+<li>Included: <strong>127</strong> studies</li>
+</ul>
+<p>Manually added:</p>
+<ul>
+<li>Retrieved: <strong>7</strong> studies</li>
+<li>Included: <strong>5</strong> studies</li>
+</ul>
+<p>Final sample: <strong>132</strong> studies</p>
+</div>
+</div>
+<div id="results" class="section level1">
+<h1>Results</h1>
+<div id="overview-of-the-included-studies" class="section level2">
+<h2>Overview of the included studies</h2>
+<p>In total, <strong>132</strong> studies published between
+<strong>1986</strong> and <strong>2024</strong> were included in the
+review. The vast majority of studies used EEG recordings
+(<strong>123</strong> studies, <strong>93.2%</strong>), while only
+<strong>9</strong> studies (<strong>6.8%</strong>) employed MEG to
+measure HERs.</p>
+<p>Study type distribution:</p>
+<ul>
+<li>Task-based: <strong>92</strong> studies
+(<strong>69.7%</strong>)</li>
+<li>Resting-state: <strong>33</strong> studies
+(<strong>25%</strong>)</li>
+<li>Both: <strong>7</strong> studies (<strong>5.3%</strong>)</li>
+</ul>
+</div>
+<div id="overview-of-methodological-choices" class="section level2">
+<h2>Overview of methodological choices</h2>
+</div>
+<div id="meeg-acquisition-preprocessing" class="section level2">
+<h2>M/EEG Acquisition &amp; Preprocessing</h2>
+<div id="channel-information" class="section level3">
+<h3>Channel Information</h3>
+</div>
+<div id="reference-schemes" class="section level3">
+<h3>Reference Schemes</h3>
+<p>For the data acquisition, we can observe some variability with
+respect to the used online reference. This variability is reduced during
+data processing, where the dominant choice is Common Average Reference
+(CAR, used in <strong>46.3%</strong> of the studies).</p>
+</div>
+<div id="artifact-removal" class="section level3">
+<h3>Artifact Removal</h3>
+</div>
+</div>
+<div id="artifact-removal-statistics" class="section level2">
+<h2>Artifact Removal Statistics</h2>
+<p>In terms of artifact reduction, many studies reported the removal of
+noisy epochs (<strong>55%</strong>) and bad channels
+(<strong>16%</strong>). Independent Component Analysis (ICA) is by far
+the most commonly used technique used by <strong>73.5%</strong> of all
+studies to remove artifacts related to cardiac, eye movement, muscle or
+other nuisance sources.</p>
+<div id="ica-usage-statistics" class="section level3">
+<h3>ICA Usage Statistics</h3>
+<ul>
+<li>Studies using ICA: <strong>73.5%</strong>
+(<strong>97</strong>/<strong>132</strong>)</li>
+<li>Studies using ICA for cardiac field artifacts:
+<strong>52.3%</strong> (<strong>69</strong>/<strong>132</strong>)</li>
+</ul>
+</div>
+<div id="ica-component-types-removed" class="section level3">
+<h3>ICA Component Types Removed</h3>
+<ul>
+<li>Ocular: <strong>88.7%</strong></li>
+<li>CFA: <strong>72.2%</strong></li>
+<li>Muscle: <strong>23.7%</strong></li>
+<li>remaining noise components: <strong>24.8%</strong> ## Filter
+Settings</li>
+</ul>
+</div>
+</div>
+<div id="filter-settings" class="section level2">
+<h2>Filter Settings</h2>
+<p>When analysing relatively slow evoked responses, like the HER,
+optimal filter settings are an important consideration to not remove or
+induce effects. We observe that across studies, filtering is most
+frequently done between <strong>0.5 Hz</strong> and <strong>30
+Hz</strong>, with the most dominant high-pass filter cutoffs at
+<strong>0.5, 0.1, 1 Hz</strong> (Fig. 3E).</p>
+</div>
+</div>
+<div id="ecg-acquisition" class="section level1">
+<h1>ECG Acquisition</h1>
+</div>
+<div id="dealing-with-cardiac-field-artifacts" class="section level1">
+<h1>Dealing with cardiac field artifacts</h1>
+<div id="ica-application-timing" class="section level2">
+<h2>ICA Application Timing</h2>
+<p>In terms of artifact removal, ICA is used by
+(<strong>69</strong>/<strong>132</strong>) of all studies to remove
+cardiac artefacts</p>
+<ul>
+<li>Continuous: <strong>75.3%</strong></li>
+<li>Epoched: <strong>23.7%</strong></li>
+</ul>
+</div>
+<div id="cfa-identification-approaches" class="section level2">
+<h2>CFA Identification Approaches</h2>
+<ul>
+<li>Not reported: <strong>40.2%</strong> of studies using ICA</li>
+<li>Manual: <strong>63.8%</strong></li>
+<li>Automatic: <strong>20.7%</strong></li>
+<li>Semi-Automatic: <strong>15.5%</strong></li>
+</ul>
+</div>
+<div id="cfa-identification-criteria" class="section level2">
+<h2>CFA Identification Criteria</h2>
+<ul>
+<li>Time Course: <strong>65.3%</strong></li>
+<li>Topography: <strong>61.2%</strong></li>
+<li>Power Spectrum: <strong>26.5%</strong></li>
+<li>Correlation: <strong>4.1%</strong></li>
+<li>Algorithm: <strong>18.4%</strong></li>
+<li>Phase Consistency: <strong>14.3%</strong></li>
+</ul>
+</div>
+<div id="rejected-cardiac-ics" class="section level2">
+<h2>Rejected Cardiac ICs</h2>
+<ul>
+<li>Studies reporting number: <strong>21</strong></li>
+<li>Range: <strong>1</strong> - <strong>4.78</strong></li>
+<li>Median: <strong>1.75</strong></li>
+</ul>
+</div>
+<div id="other-cfa-removal-strategies" class="section level2">
+<h2>Other CFA Removal Strategies</h2>
+<ul>
+<li>CSD: <strong>11</strong> studies (<strong>16.9%</strong>)</li>
+<li>Subtract/regress ECG from EEG: <strong>8</strong> studies
+(<strong>12.3%</strong>)</li>
+<li>Pca On Hep: <strong>1</strong> studies (<strong>1.5%</strong>)</li>
+<li>Subtract/Regress Ecg From Eeg, Limit Analysis To Time Of Minimal
+Artifact: <strong>1</strong> studies (<strong>1.5%</strong>)</li>
+</ul>
+</div>
+<div id="limit-time-range-analysis-window" class="section level2">
+<h2>Limit time range / analysis window</h2>
+<ul>
+<li>Minimal artifact window: 25 studies (38.5%)</li>
+<li>RR interval constraints: <strong>18</strong> studies (27.7%)</li>
+</ul>
+</div>
+<div id="studies-without-any-cfa-approach" class="section level2">
+<h2>Studies Without Any CFA Approach</h2>
+<ul>
+<li>Studies with no CFA approach: <strong>21.2%</strong>
+(<strong>28</strong>/<strong>132</strong>)</li>
+<li>Studies with other CFA strategies: <strong>47.7%</strong>
+(<strong>63</strong>/<strong>132</strong>)</li>
+<li>Studies with any CFA approach: <strong>78.8%</strong>
+(<strong>104</strong>/<strong>132</strong>)</li>
+</ul>
+<div id="by-modality" class="section level3">
+<h3>By Modality:</h3>
+<ul>
+<li>EEG: <strong>22%</strong> (<strong>27</strong>/<strong>123</strong>
+studies) with no CFA approach</li>
+<li>MEG: <strong>11.1%</strong> (<strong>1</strong>/<strong>9</strong>
+studies) with no CFA approach</li>
+</ul>
+</div>
+</div>
+<div id="hep-time-windows" class="section level2">
+<h2>HEP Time Windows</h2>
+<div id="hep-reference-event-choice" class="section level3">
+<h3>HEP Reference Event Choice</h3>
+<ul>
+<li>R-peak reference: <strong>92.1%</strong></li>
+<li>T-wave reference: <strong>7.9%</strong></li>
+</ul>
+</div>
+<div id="time-window-ranges" class="section level3">
+<h3>Time Window Ranges</h3>
+<p><strong>T-wave locked analysis:</strong> * Range:
+<strong>-10</strong> to <strong>400</strong> ms after T-wave * R-peak
+equivalent: <strong>290</strong> – <strong>700</strong> ms after
+R-peak</p>
+<p><strong>R-peak locked analysis:</strong> * Range:
+<strong>-250</strong> to <strong>1000</strong> ms relative to R-peak</p>
+</div>
+<div id="baseline-correction" class="section level3">
+<h3>Baseline Correction</h3>
+<ul>
+<li>Pipelines using baseline correction: <strong>55.2%</strong></li>
+<li>T-wave baseline studies: <strong>2</strong> (range:
+<strong>-100</strong> to <strong>0</strong> ms)</li>
+<li>R-peak baseline range: <strong>-300</strong> to <strong>50</strong>
+ms</li>
+<li>Studies ending baseline before QRS: <strong>23.3%</strong></li>
+</ul>
+</div>
+<div id="core-overlap-window-r-peak-averaging" class="section level3">
+<h3>Core Overlap Window (R-peak averaging)</h3>
+<ul>
+<li>Core window: <strong>200</strong>-<strong>514</strong> ms</li>
+<li>Pipelines including core: <strong>23.8%</strong></li>
+</ul>
+</div>
+<div id="significant-effects-ranges" class="section level3">
+<h3>Significant Effects Ranges</h3>
+<p><strong>R-peak locked effects:</strong> * Range: <strong>-10</strong>
+to <strong>1000</strong> ms</p>
+<p><strong>T-wave locked effects:</strong> * Range: <strong>50</strong>
+to <strong>389</strong> ms</p>
+<p><strong>Cluster-based analysis:</strong> * R-peak:
+<strong>27</strong> – <strong>750</strong> ms * T-peak:
+<strong>50</strong> – <strong>389</strong> ms (≈<strong>350</strong> –
+<strong>689</strong> ms after R-peak)</p>
+<p><strong>Averaging analysis:</strong> * R-peak: <strong>-10</strong> –
+<strong>1000</strong> ms * T-peak: <strong>50</strong> –
+<strong>387</strong> ms (≈<strong>350</strong> – <strong>687</strong> ms
+after R-peak)</p>
+</div>
+<div id="peak-effect-distribution" class="section level3">
+<h3>Peak Effect Distribution</h3>
+<p>For cluster-based analysis, the peak in the distribution where most
+effects are found occurs at <strong>250</strong> ms (R-peak) and
+<strong>307</strong> ms (T-wave, corresponding to approximately
+<strong>607</strong> ms after the R-peak). For averaging, the peak
+occurs at <strong>490</strong> ms (R-peak) and <strong>234</strong> ms
+(T-wave, corresponding to approximately <strong>534</strong> ms after
+the R-peak).</p>
+</div>
+<div id="statistical-comparison-of-peak-effect-timings"
+class="section level3">
+<h3>Statistical Comparison of Peak Effect Timings</h3>
+<p>** Clustering vs Averaging - R-peak :<strong> - Sample sizes: n₁ =
+106 , n₂ = 114 - Median timings: 323.0 ms vs 441.5 ms - Median
+difference: -118.5 ms - Mann-Whitney U test: W = 4180 , p &lt; 0.001 -
+Effect size: r = 0.951 ( large ) - </strong>Conclusion<strong>: Peak
+effect timings are </strong>significantly different** between
+methods</p>
+<p>** Clustering vs Averaging - T-peak :<strong> - Sample sizes: n₁ = 11
+, n₂ = 12 - Median timings: 270.5 ms vs 270.5 ms - Median difference:
+0.0 ms - Mann-Whitney U test: W = 66 , p = 1.000 - Effect size: r =
+0.000 ( negligible ) - </strong>Conclusion**: Peak effect timings are
+not significantly different between methods</p>
+<p>** Clustering vs Averaging - Combined (R-peak equivalent) :<strong> -
+Sample sizes: n₁ = 117 , n₂ = 126 - Median timings: 348.0 ms vs 451.5 ms
+- Median difference: -103.5 ms - Mann-Whitney U test: W = 5431 , p &lt;
+0.001 - Effect size: r = 0.796 ( large ) - </strong>Conclusion<strong>:
+Peak effect timings are </strong>significantly different** between
+methods</p>
+</div>
+<div id="interpretation" class="section level3">
+<h3>Interpretation</h3>
+<p>The statistical analysis reveals <strong>significant
+differences</strong> in peak effect timings between clustering and
+averaging methods, with clustering effects occurring on average 103.5 ms
+earlier than averaging effects.</p>
+<p>This suggests that the choice of analysis method (clustering vs
+averaging) systematically affects the temporal localization of
+significant HEP effects, which has important implications for
+interpreting and comparing results across studies.</p>
+</div>
+</div>
+</div>
+<div id="significant-effects-by-reference-peak" class="section level1">
+<h1>Significant effects by reference peak</h1>
+<p>significant_by_reference &lt;- if(nrow(significant_effects_data) &gt;
+0) { significant_effects_data %&gt;% filter(!is.na(reference), reference
+!= “unknown”) %&gt;% group_by(reference) %&gt;% summarise( n_pipelines =
+n(), start_range_min = min(start_time), start_range_max =
+max(start_time), end_range_min = min(end_time), end_range_max =
+max(end_time), duration_min = min(end_time - start_time), duration_max =
+max(end_time - start_time), .groups = “drop” ) } else { data.frame()
+}</p>
+<p>if(nrow(significant_by_reference) &gt; 0) { cat(“### Significant
+Effects by Reference Peak:”) for(i in 1:nrow(significant_by_reference))
+{ ref_peak &lt;- as.character(significant_by_reference<span
+class="math inline">\(reference[i])  n_pipes &lt;-
+significant_by_reference\)</span>n_pipelines[i] start_min &lt;-
+significant_by_reference<span
+class="math inline">\(start_range_min[i]  start_max &lt;-
+significant_by_reference\)</span>start_range_max[i] end_min &lt;-
+significant_by_reference<span
+class="math inline">\(end_range_min[i]  end_max &lt;-
+significant_by_reference\)</span>end_range_max[i] dur_min &lt;-
+significant_by_reference<span
+class="math inline">\(duration_min[i]  dur_max &lt;-
+significant_by_reference\)</span>duration_max[i]</p>
+<pre><code>cat(&quot;- **&quot;, ref_peak, &quot;**: &quot;, n_pipes, &quot; pipelines\n&quot;)
+cat(&quot;  - Start range: &quot;, start_min, &quot; to &quot;, start_max, &quot; ms\n&quot;)
+cat(&quot;  - End range: &quot;, end_min, &quot; to &quot;, end_max, &quot; ms\n&quot;)
+cat(&quot;  - Duration range: &quot;, dur_min, &quot; to &quot;, dur_max, &quot; ms\n&quot;)</code></pre>
+<p>} }</p>
+</div>
+<div id="peak-effect-timing-analysis-by-method-and-reference"
+class="section level1">
+<h1>Peak effect timing analysis by method and reference</h1>
+<p>peak_effects_analysis &lt;- if(nrow(significant_effects_data) &gt; 0)
+{ significant_effects_data %&gt;% filter(!is.na(reference), reference !=
+“unknown”) %&gt;% # Use the method_category directly
+filter(method_category %in% c(“Averaging”, “Clustering”)) %&gt;%
+group_by(method_category, reference) %&gt;% summarise( n_pipelines =
+n(), # Find core regions using median approach median_start =
+median(start_time, na.rm = TRUE), median_end = median(end_time, na.rm =
+TRUE), # Count studies that include the core region studies_in_core =
+sum(start_time &lt;= median(start_time, na.rm = TRUE) &amp; end_time
+&gt;= median(end_time, na.rm = TRUE), na.rm = TRUE), core_percentage =
+round(studies_in_core / n() * 100, 1), .groups = “drop” ) %&gt;% # For
+T-peak, add equivalent R-peak timing (assuming ~300ms T-peak delay)
+mutate( rpeak_equivalent_start = if_else(reference == “T-peak”,
+median_start + 300, median_start), rpeak_equivalent_end =
+if_else(reference == “T-peak”, median_end + 300, median_end) ) } else {
+data.frame() }</p>
+<p>cat(“### Peak Effect Timing by Analysis Method:”)
+if(nrow(peak_effects_analysis) &gt; 0) { # Clustering analysis
+cluster_data &lt;- peak_effects_analysis %&gt;% filter(method_category
+== “Clustering”) if(nrow(cluster_data) &gt; 0) { cat(“<strong>Clustering
+analysis core effect regions:</strong>”) for(i in 1:nrow(cluster_data))
+{ ref_peak &lt;- cluster_data<span
+class="math inline">\(reference[i]  median_start &lt;-
+round(cluster_data\)</span>median_start[i], 1) median_end &lt;-
+round(cluster_data<span class="math inline">\(median_end[i],
+1)  core_pct &lt;- cluster_data\)</span>core_percentage[i] n_studies
+&lt;- cluster_data<span
+class="math inline">\(studies_in_core[i]  total_studies &lt;-
+cluster_data\)</span>n_pipelines[i]</p>
+<pre><code>  if(ref_peak == &quot;R-peak&quot;) {
+    cat(&quot;- **R-peak referenced**: &quot;, median_start, &quot;-&quot;, median_end, &quot; ms (&quot;, core_pct, &quot;% of studies, &quot;, n_studies, &quot;/&quot;, total_studies, &quot;)\n&quot;)
+  } else if(ref_peak == &quot;T-peak&quot;) {
+    rpeak_start &lt;- round(cluster_data$rpeak_equivalent_start[i], 1)
+    rpeak_end &lt;- round(cluster_data$rpeak_equivalent_end[i], 1)
+    cat(&quot;- **T-peak referenced**: &quot;, median_start, &quot;-&quot;, median_end, &quot; ms (≈&quot;, rpeak_start, &quot;-&quot;, rpeak_end, &quot; ms after R-peak; &quot;, core_pct, &quot;% of studies, &quot;, n_studies, &quot;/&quot;, total_studies, &quot;)\n&quot;)
+  }
+}</code></pre>
+<p>}</p>
+<p># Averaging analysis avg_data &lt;- peak_effects_analysis %&gt;%
+filter(method_category == “Averaging”) if(nrow(avg_data) &gt; 0) {
+cat(“*Averaging analysis core effect regions:**“) for(i in
+1:nrow(avg_data)) { ref_peak &lt;- avg_data<span
+class="math inline">\(reference[i]  median_start &lt;-
+round(avg_data\)</span>median_start[i], 1) median_end &lt;-
+round(avg_data<span class="math inline">\(median_end[i], 1)  core_pct
+&lt;- avg_data\)</span>core_percentage[i] n_studies &lt;- avg_data<span
+class="math inline">\(studies_in_core[i]  total_studies &lt;-
+avg_data\)</span>n_pipelines[i]</p>
+<pre><code>  if(ref_peak == &quot;R-peak&quot;) {
+    cat(&quot;- **R-peak referenced**: &quot;, median_start, &quot;-&quot;, median_end, &quot; ms (&quot;, core_pct, &quot;% of studies, &quot;, n_studies, &quot;/&quot;, total_studies, &quot;)\n&quot;)
+  } else if(ref_peak == &quot;T-peak&quot;) {
+    rpeak_start &lt;- round(avg_data$rpeak_equivalent_start[i], 1)
+    rpeak_end &lt;- round(avg_data$rpeak_equivalent_end[i], 1)
+    cat(&quot;- **T-peak referenced**: &quot;, median_start, &quot;-&quot;, median_end, &quot; ms (≈&quot;, rpeak_start, &quot;-&quot;, rpeak_end, &quot; ms after R-peak; &quot;, core_pct, &quot;% of studies, &quot;, n_studies, &quot;/&quot;, total_studies, &quot;)\n&quot;)
+  }
+}</code></pre>
+<p>} } else { cat(“<strong>No peak effect timing data
+available</strong>”) } ```</p>
+</div>
+<div id="hep-topography" class="section level1">
+<h1>HEP Topography</h1>
+</div>
+<div id="statistical-analysis" class="section level1">
+<h1>Statistical Analysis</h1>
+<hr />
+<p><em>Generated on 2025-07-07</em></p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

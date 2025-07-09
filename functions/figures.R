@@ -197,7 +197,7 @@ cfa_removal <- function(df) {
 }
 
 
-ecg_summary <- function(df) {
+figure_ecg_summary <- function(df, save_path, ext = 'png') {
   # Map "unknown" to 9 so that it isn't lost during conversion to numeric and
   # is positioned nicely
   df <- df %>%
@@ -205,11 +205,12 @@ ecg_summary <- function(df) {
                                         ecg_num_electrodes == "unknown", 9))
   p_ecg_num_electrodes <- hist_panel(df, "ecg_num_electrodes", 
                                      force.numeric = T, binwidth = 1,
-                                     x.label = "Number of ECG electrodes") +
+                                     x.label = "Number of ECG electrodes",
+                                     title = "Number of ECG electrodes") +
     scale_x_continuous(breaks = seq(0, 9),
                        labels = c(seq(0, 8), "N/M"))
   p_ecg_leads <- hist_panel(df, "ecg_lead", fill_as_aesthetic = T,
-                            discrete = T, x.label = "ECG lead") +
+                            discrete = T, title = "ECG lead") +
     scale_fill_manual(values = leads_palette,
                       na.value = plot_fill_default_single,
                       guide = "none") 
@@ -218,9 +219,7 @@ ecg_summary <- function(df) {
     p_ecg_num_electrodes,
     p_ecg_leads,
     ncol = 1,
-    labels = c("A", "B"),
-    align = "v",
-    axis = "lr"
+    labels = c("A", "B")
   )
 
   fig <- plot_grid(
@@ -228,11 +227,19 @@ ecg_summary <- function(df) {
     p_ecg_locations,
     nrow = 1,
     rel_widths = c(1, 1.5),
-    labels = c("", "C"),
-    align = "h",
-    axis = "tb"
+    labels = c("", "C")
   )
-  fig
+  
+  ggsave(
+    filename = file.path(save_path, paste0("ecg_summary_plot.", ext)),
+    plot = fig,
+    width = 10,
+    height = 4,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
 }
 
 eeg_locations_summary <- function(df) {
@@ -478,21 +485,6 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(control_categories_plot)
-
-
-  ecg_summary_plot <- ecg_summary(df)
-
-  ggsave(
-    filename = file.path(save_path, paste0("ecg_summary_plot.", ext)),
-    plot = ecg_summary_plot,
-    width = 10,
-    height = 4,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  show(ecg_summary_plot)
 
   eeg_summary_plot <- eeg_locations_summary(df)
   ggsave(

@@ -124,11 +124,9 @@ preprocess_ecg <- function(df) {
   df %>%
     mutate(ecg_lead = recode(ecg_lead,
                              "none" = "None",
-                             "Single-channel" = "Single\nchannel",
                              "Multiple leads" = "Multiple\nleads",
-                             "Multiple leads (including lead I)" = "Multiple\nleads",
-                             "Multiple leads (including lead II)" = "Multiple\nleads",
-                             "Multiple leads (including leads I, II, III)" = "Multiple\nleads",
+                             "Multiple leads (Lead II)" = "Lead II",
+                             "Unclassified" = "N/C",
                              "unknown" = "N/M"))
 }
 

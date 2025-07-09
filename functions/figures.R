@@ -479,7 +479,6 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
   show(control_categories_plot)
 
-
   ecg_summary_plot <- ecg_summary(df)
 
   ggsave(

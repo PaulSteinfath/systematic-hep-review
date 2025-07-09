@@ -69,13 +69,17 @@ EXPORT2_CSV_PATH = 'data/exports/20240805_pubmed_query2.csv'
 EXPORT3_CSV_PATH = 'data/exports/20240805_pubmed_query3.csv'
 TABLE_PUBMED_CSV_URL = 'https://docs.google.com/spreadsheets/d/17iQwJ36F4KCTuSRoLa7sXqZUSSO2lyHELonZgAQoxAw/export?format=csv'
 TABLE_PUBMED_CSV_PATH = 'data/HEP - Pubmed Results.csv'
+TABLE_PUBMED_CSV_POLISHED = 'data/HER_methods_review_pubmed.csv'
 TABLE_MANUAL_CSV_URL = 'https://docs.google.com/spreadsheets/d/17iQwJ36F4KCTuSRoLa7sXqZUSSO2lyHELonZgAQoxAw/export?format=csv&gid=1671894873'
 TABLE_MANUAL_CSV_PATH = 'data/HEP - Manual.csv'
+TABLE_MANUAL_CSV_POLISHED = 'data/HER_methods_review_manual.csv'
 TABLE_CODEBOOK_CSV_URL = 'https://docs.google.com/spreadsheets/d/17iQwJ36F4KCTuSRoLa7sXqZUSSO2lyHELonZgAQoxAw/export?format=csv&gid=1303473741'
 TABLE_CODEBOOK_CSV_PATH = 'data/Codebook.csv'
+TABLE_CODEBOOK_CSV_POLISHED = 'data/HER_methods_review_codebook.csv'
 EXCEL_OFFSET = 3  # correct line numbers to match Excel rows
                   # 2 rows were used for header
                   # 1 row difference because of 0-indexing in Python
+POLISHED_OFFSET = 2
 
 ## Command-line arguments
 
@@ -103,6 +107,8 @@ parser.add_argument('--only-rows', type=str, default='',
                          " without spaces, use numbers from Excel)")
 parser.add_argument('--manual', action='store_true',
                     help='Validate the table with manually added papers')
+parser.add_argument('--polished', action='store_true',
+                    help="Use polished versions of the tables and codebook")
 parser.add_argument('--show', type=int, default=20,
                     help='Maximal number of error report rows to show')
 parser.add_argument('--update', action='store_true',
@@ -128,7 +134,7 @@ def update(table_csv_url, table_csv_path):
 
 ## Codebook
 
-def load_codebook(codebook_path):
+def load_codebook(codebook_path, polished):
     """
     Load the codebook values from all tables in the specified .csv file
     
@@ -143,7 +149,7 @@ def load_codebook(codebook_path):
         Codebook table
     """
 
-    df_codebook = pd.read_csv(codebook_path, header=1)
+    df_codebook = pd.read_csv(codebook_path, header=0 if polished else 1)
     df_codebook["run_checks"] = df_codebook["run_checks"].fillna(False)
     df_codebook["checks"] = df_codebook["checks"].fillna("")
     return df_codebook
@@ -196,7 +202,7 @@ def codebook_coverage(df, codebook):
 
 ## Original export from Pubmed
 
-def get_original_data():
+def get_original_data(names):
     # Merge the data from all queries
     df_query1 = pd.read_csv(EXPORT1_CSV_PATH)
     df_query2 = pd.read_csv(EXPORT2_CSV_PATH)
@@ -208,11 +214,11 @@ def get_original_data():
     )
 
     # Resolve duplicates - some entries were updated between exports
-    resolved = {k: np.max(idx) for k, idx in df_original.groupby('PMID').indices.items()}
-    df_original = df_original.loc[resolved.values(), :].sort_values('PMID', ascending=False)
+    resolved = {k: np.max(idx) for k, idx in df_original.groupby(names.pmid).indices.items()}
+    df_original = df_original.loc[resolved.values(), :].sort_values(names.pmid, ascending=False)
 
     # Match the columns to our format
-    df_original.rename(columns={'Publication Year': 'Year'}, inplace=True)
+    df_original.rename(columns={'Publication Year': names.year}, inplace=True)
     df_original.drop(columns=['First Author', 'Journal/Book', 'Create Date', 'PMCID', 'NIHMS ID'],
                      inplace=True)
     
@@ -227,6 +233,36 @@ class Check:
     single_column: bool
     needs_codebook: bool
     needs_original: bool
+
+
+class NamesRaw:
+    pmid = "PMID"
+    year = "Year"
+    num_channels = "#Channels"
+    layout = "Layout"
+    other_cfa_removal_strategy = "Other CFA removal strategy"
+    rejected_components = "Rejected components"
+    clustering = "Cluster-based Permutation"
+    significant_test = "Significant test"
+    significant_channels = "Significant / Channels"
+    significant_relative_to = "Significant / Relative to"
+    significant_start_ms = "Significant / Start (ms)"
+    significant_end_ms = "Significant / End (ms)"
+
+
+class NamesPolished:
+    pmid = "pmids"
+    year = "year"
+    num_channels = "num_channels"
+    layout = "meeg_layout"
+    other_cfa_removal_strategy = "other_cfa_removal_strategy"
+    clustering = "clustering"
+    rejected_components = "rejected_components"
+    significant_test = "significant_test"
+    significant_channels = "significant_channels"
+    significant_relative_to = "significant_relative_to"
+    significant_start_ms = "significant_start_ms"
+    significant_end_ms = "significant_end_ms"
 
 
 ## Validation rules
@@ -316,8 +352,8 @@ def validate_analyst(x):
 ## Multi-column validation rules
 
 
-def csd_as_reference(row, col, idx):
-    csd_applied = any(x in str(row['Other CFA removal strategy'])
+def csd_as_reference(row, col, names, idx):
+    csd_applied = any(x in str(row[names.other_cfa_removal_strategy])
                       for x in ['CSD', 'Laplacian', 'Laplace', 'Hjorth'])
     lap_reference = row[col] == 'Laplacian reference'
     if csd_applied and not lap_reference:
@@ -332,8 +368,8 @@ def csd_as_reference(row, col, idx):
     return []
 
 
-def ica_details_for_cfa_only(row, col, idx):
-    cfa_ica_removed = 'CFA' in str(row['Rejected components'])
+def ica_details_for_cfa_only(row, col, names, idx):
+    cfa_ica_removed = 'CFA' in str(row[names.rejected_components])
 
     if cfa_ica_removed:
         return []
@@ -351,23 +387,23 @@ def ica_details_for_cfa_only(row, col, idx):
     return errors
 
 
-def significant_info(row, col, idx):
+def significant_info(row, col, names, idx):
     significant_cols = [
-        "Significant / Channels",
-        "Significant / Relative to",
-        "Significant / Start (ms)",
-        "Significant / End (ms)",
+        names.significant_channels,
+        names.significant_relative_to,
+        names.significant_start_ms,
+        names.significant_end_ms
     ]
-    permuted = int(row['Cluster-based Permutation'])
+    permuted = int(row[names.clustering])
     try:
-        test_significant = int(row['Significant test'])
+        test_significant = int(row[names.significant_test])
     except:
         test_significant = False  # ['nan', 'none', 'unknown']
     
     cluster_expected = permuted and test_significant
     has_significant = any(not pd.isna(row[col]) for col in significant_cols)
     missing = any(pd.isna(row[col]) for col in significant_cols)
-    assert col in (significant_cols + ['Cluster-based Permutation'])
+    assert col in (significant_cols + [names.clustering])
 
     if not (cluster_expected or has_significant):
         return []
@@ -399,7 +435,7 @@ layout_regex = {
 }
 
 
-def locations_belong_to_layout(row, col, idx, allow_all=False):
+def locations_belong_to_layout(row, col, names, idx, allow_all=False):
     test_string = row[col]
 
     # 'layout' should always pass
@@ -420,9 +456,9 @@ def locations_belong_to_layout(row, col, idx, allow_all=False):
 
     pattern = None
     for k, v in layout_regex.items():
-        if k in row["Layout"]:
+        if k in row[names.layout]:
             pattern = v
-    assert pattern is not None, f"Could not find regex for layout {row['Layout']}"
+    assert pattern is not None, f"Could not find regex for layout {row[names.layout]}"
 
     # Empty pattern - no validation required
     if not pattern:
@@ -444,7 +480,7 @@ def locations_belong_to_layout(row, col, idx, allow_all=False):
     # For 10-20 and derivatives, check T3/T7 and so on
     names_1020 = set(chunks) & set(["T3", "T4", "T5", "T6"])
     names_1010 = set(chunks) & set(["T7", "T8", "P7", "P8"])
-    if row["Layout"] == "standard19" and names_1010:
+    if row[names.layout] == "standard19" and names_1010:
         errors.append({
             'line': idx,
             'column': col,
@@ -452,7 +488,7 @@ def locations_belong_to_layout(row, col, idx, allow_all=False):
             'failure_case': ', '.join(names_1010),
             'codebook': ''
         })
-    if row["Layout"] != "standard19" and names_1020:
+    if row[names.layout] != "standard19" and names_1020:
         errors.append({
             'line': idx,
             'column': col,
@@ -505,83 +541,83 @@ assert not validate_analyst('XYZ')
 assert not csd_as_reference({
     'Reference (offline)': 'Laplacian reference',
     'Other CFA removal strategy': 'CSD transformation'
-}, 'Reference (offline)', 0)
+}, 'Reference (offline)', NamesRaw, 0)
 assert not csd_as_reference({
     'Reference (offline)': 'Common average',
     'Other CFA removal strategy': ''
-}, 'Reference (offline)', 0)
+}, 'Reference (offline)', NamesRaw, 0)
 assert len(csd_as_reference({
     'Reference (offline)': 'Common average',
     'Other CFA removal strategy': 'CSD transformation'
-}, 'Reference (offline)', 0)) == 1
+}, 'Reference (offline)', NamesRaw, 0)) == 1
 assert len(csd_as_reference({
     'Reference (offline)': 'Common average',
     'Other CFA removal strategy': 'Laplacian transformation'
-}, 'Reference (offline)', 0)) == 1
+}, 'Reference (offline)', NamesRaw, 0)) == 1
 
 assert not ica_details_for_cfa_only({
     'Rejected components': 'CFA',
     'CFA Rej. Approach': 'Manual',
     'CFA Rej. Criteria': 'Topography',
     '# rejected cardiac ICs': 2.03
-}, 'CFA Rej. Approach', 0)
+}, 'CFA Rej. Approach', NamesRaw, 0)
 assert not ica_details_for_cfa_only({
     'Rejected components': 'Blinks',
     'CFA Rej. Approach': pd.NA,
     'CFA Rej. Criteria': pd.NA,
     '# rejected cardiac ICs': ''
-}, 'CFA Rej. Approach', 0)
+}, 'CFA Rej. Approach', NamesRaw, 0)
 assert len(ica_details_for_cfa_only({
     'Rejected components': 'Blinks',
     'CFA Rej. Approach': 'Manual',
     'CFA Rej. Criteria': 'Topography',
     '# rejected cardiac ICs': 2.03
-}, '# rejected cardiac ICs', 0)) == 1
+}, '# rejected cardiac ICs', NamesRaw, 0)) == 1
 
 assert not locations_belong_to_layout({
     "Layout": "standard61",
     "EEG Locations": "layout"
-}, "EEG Locations", 0)
+}, "EEG Locations", NamesRaw, 0)
 assert not locations_belong_to_layout({
     "Layout": "standard32",
     "EEG Locations": "Fp1, T8, P10, FCz, Cz, Iz"
-}, "EEG Locations", 0)
+}, "EEG Locations", NamesRaw, 0)
 assert locations_belong_to_layout({
     "Layout": "standard19",
     "EEG Locations": "Fp1,T8,P10,FCz,Cz,Iz"
-}, "EEG Locations", 0)
+}, "EEG Locations", NamesRaw, 0)
 assert not locations_belong_to_layout({
     "Layout": "biosemi128",
     "EEG Locations": "A4, B8, C12, D16"
-}, "EEG Locations", 0)
+}, "EEG Locations", NamesRaw, 0)
 assert locations_belong_to_layout({
     "Layout": "biosemi128",
     "EEG Locations": "E12"
-}, "EEG Locations", 0)
+}, "EEG Locations", NamesRaw, 0)
 assert not locations_belong_to_layout({
     "Layout": "GSN-HydroCel-65",
     "EEG Locations": "Cz, E1, E16, E64"
-}, "EEG Locations", 0)
+}, "EEG Locations", NamesRaw, 0)
 assert locations_belong_to_layout({
     "Layout": "GSN-HydroCel-129",
     "EEG Locations": "F123"
-}, "EEG Locations", 0)
+}, "EEG Locations", NamesRaw, 0)
 assert not locations_belong_to_layout({
     "Layout": "easycap-M10",
     "EEG Locations": "2, 4, 8, 16"
-}, "EEG Locations", 0)
+}, "EEG Locations", NamesRaw, 0)
 assert locations_belong_to_layout({
     "Layout": "easycap-M10",
     "EEG Locations": "B12"
-}, "EEG Locations", 0)
+}, "EEG Locations", NamesRaw, 0)
 assert not locations_belong_to_layout({
     "Layout": "easycap-M10",
     "Channels selected": "All"
-}, "Channels selected", 0, allow_all=True)
+}, "Channels selected", NamesRaw, 0, allow_all=True)
 assert locations_belong_to_layout({
     "Layout": "easycap-M10",
     "Channels selected": "All"
-}, "Channels selected", 0, allow_all=False)
+}, "Channels selected", NamesRaw, 0, allow_all=False)
 
 assert len(significant_info({
     "Cluster-based Permutation": 1,
@@ -590,7 +626,7 @@ assert len(significant_info({
     "Significant / Relative to": "R-peak",
     "Significant / Start (ms)": 100,
     "Significant / End (ms)": 200
-}, "Significant / Channels", 0)) == 1
+}, "Significant / Channels", NamesRaw, 0)) == 1
 assert not significant_info({
     "Cluster-based Permutation": 1,
     "Significant test": 1,
@@ -598,7 +634,7 @@ assert not significant_info({
     "Significant / Relative to": "R-peak",
     "Significant / Start (ms)": 100,
     "Significant / End (ms)": 200
-}, "Significant / Start (ms)", 0)
+}, "Significant / Start (ms)", NamesRaw, 0)
 assert len(significant_info({
     "Cluster-based Permutation": 1,
     "Significant test": 1,
@@ -606,7 +642,7 @@ assert len(significant_info({
     "Significant / Relative to": pd.NA,
     "Significant / Start (ms)": pd.NA,
     "Significant / End (ms)": pd.NA
-}, "Significant / End (ms)", 0)) == 1
+}, "Significant / End (ms)", NamesRaw, 0)) == 1
 assert not significant_info({
     "Cluster-based Permutation": 1,
     "Significant test": 0,
@@ -614,7 +650,7 @@ assert not significant_info({
     "Significant / Relative to": pd.NA,
     "Significant / Start (ms)": pd.NA,
     "Significant / End (ms)": pd.NA
-}, "Significant / Channels", 0)
+}, "Significant / Channels", NamesRaw, 0)
 assert len(significant_info({
     "Cluster-based Permutation": 1,
     "Significant test": 1,
@@ -622,7 +658,7 @@ assert len(significant_info({
     "Significant / Relative to": pd.NA,
     "Significant / Start (ms)": pd.NA,
     "Significant / End (ms)": pd.NA
-}, "Significant / Channels", 0)) == 1
+}, "Significant / Channels", NamesRaw, 0)) == 1
 
 
 ## Mapping of validation functions to the codebook names
@@ -705,7 +741,7 @@ CHECK_MAPPING = {
 }
 
 
-def validate_row(row, idx, ignore_cols, missing_cols, codebook, original):
+def validate_row(row, idx, ignore_cols, missing_cols, codebook, names, original):
     errors = []
     unknown_checks = set()
 
@@ -790,7 +826,7 @@ def validate_row(row, idx, ignore_cols, missing_cols, codebook, original):
 
             # Provide the whole row to multi-column checks
             if not check.single_column:
-                errors.extend(check.fun(row, col, idx))
+                errors.extend(check.fun(row, col, names, idx))
                 continue
 
             if check.needs_codebook:
@@ -827,7 +863,7 @@ def validate_row(row, idx, ignore_cols, missing_cols, codebook, original):
     return errors, unknown_checks      
 
 
-def validate(df, df_original, codebook, ignore_cols, manual, included=True):
+def validate(df, df_original, codebook, ignore_cols, names, manual, included=True):
     # Focus only on columns that need to be validated and match the `included`
     # argument
     codebook = codebook[codebook.run_checks]
@@ -860,18 +896,18 @@ def validate(df, df_original, codebook, ignore_cols, manual, included=True):
         row_dict = row.to_dict()
         original = None
         if not manual:
-            original = df_original[df_original.PMID.astype(int) == row['PMID']]            
+            original = df_original[df_original.PMID.astype(int) == row[names.pmid]]            
             if len(original) != 1:
                 errors.append({
                     'line': idx,
-                    'column': "PMID",
+                    'column': names.pmid,
                     'error': "should match the Pubmed export", 
-                    'failure_case': row['PMID'],
+                    'failure_case': row[names.pmid],
                     'codebook': ''
                 })
                 original = None
         col_errors, col_unknown_checks = validate_row(row_dict, idx, ignore_cols, 
-                                                      missing_cols, codebook, original)
+                                                      missing_cols, codebook, names, original)
         errors.extend(col_errors)
         unknown_checks |= col_unknown_checks
 
@@ -884,7 +920,7 @@ def validate(df, df_original, codebook, ignore_cols, manual, included=True):
 
 ## Dataset
 
-def load_data(data_path):
+def load_data(data_path, names, polished):
     """
     Load and preprocess the table
     """
@@ -892,7 +928,7 @@ def load_data(data_path):
     dtype['# rejected cardiac ICs'] = str
     dtype['#Channels'] = str
     dtype['Multiple Comparisons'] = str
-    df = pd.read_csv(data_path, header=1, dtype=dtype)
+    df = pd.read_csv(data_path, header=0 if polished else 1, dtype=dtype)
 
     # Fill in the columns that need to be validated with multiple options
     df['#Channels'] = df['#Channels'].fillna('')
@@ -943,13 +979,13 @@ def filter_rows(df_full, included=True):
     return df
 
 
-def validate_own(df, df_all, df_original, codebook, 
+def validate_own(df, df_all, df_original, codebook, names, offset,
                  ignore_rows=[], ignore_cols=[], 
                  only_rows=[], only_cols=[],
                  n=20, manual=False, coverage=False, debug=False):
     logger.info('Validating the table...')
-    errors_df_included = validate(df, df_original, codebook, ignore_cols, manual=manual, included=True)
-    errors_df_all = validate(df_all, df_original, codebook, ignore_cols, manual=manual, included=False)
+    errors_df_included = validate(df, df_original, codebook, ignore_cols, names, manual=manual, included=True)
+    errors_df_all = validate(df_all, df_original, codebook, ignore_cols, names, manual=manual, included=False)
     errors_df = pd.concat([errors_df_all, errors_df_included])
     if not len(errors_df):
         logger.info('Nothing to complain about')
@@ -963,7 +999,7 @@ def validate_own(df, df_all, df_original, codebook,
     if debug:
         report['failure_case'] = report['failure_case']\
                                     .apply(lambda x: f'<{x}>')
-    report['line'] += EXCEL_OFFSET
+    report['line'] += offset
     errors_total = len(report)
 
     # Print number of errors per column
@@ -1000,19 +1036,30 @@ def validate_own(df, df_all, df_original, codebook,
 def main(args):
     table_csv_url = TABLE_PUBMED_CSV_URL
     table_csv_path = TABLE_PUBMED_CSV_PATH
+    if args.polished:
+        table_csv_path = TABLE_PUBMED_CSV_POLISHED
     if args.manual:
         table_csv_url = TABLE_MANUAL_CSV_URL
         table_csv_path = TABLE_MANUAL_CSV_PATH
+        if args.polished:
+            table_csv_path = TABLE_MANUAL_CSV_POLISHED
 
-    if args.update:
+    if args.update and not args.polished:
         update(table_csv_url, table_csv_path)
 
-    codebook = load_codebook(TABLE_CODEBOOK_CSV_PATH)
-    df_full = load_data(table_csv_path)
+    codebook_path = TABLE_CODEBOOK_CSV_PATH
+    offset = EXCEL_OFFSET
+    names = NamesRaw
+    if args.polished:
+        codebook_path = TABLE_CODEBOOK_CSV_POLISHED
+        offset = POLISHED_OFFSET
+        names = NamesPolished
+    codebook = load_codebook(codebook_path, args.polished)
+    df_full = load_data(table_csv_path, names, args.polished)
 
-    df_original = get_original_data()
+    df_original = get_original_data(names)
     if not args.manual:
-        assert len(df_original) == len(df_full.PMID.unique()), \
+        assert len(df_original) == len(df_full[names.pmid].unique()), \
             "The number of unique PMIDs in the table and in the original data " \
             "does not match"
 
@@ -1053,8 +1100,8 @@ def main(args):
         ignore_rows = []
         logger.info(f'Rows to be shown: {only_rows}')
 
-    validate_own(df, df_all, df_original, codebook, ignore_rows,
-                 ignore_cols, only_rows, only_cols,
+    validate_own(df, df_all, df_original, codebook, names, offset,
+                 ignore_rows, ignore_cols, only_rows, only_cols,
                  args.show, args.manual, args.coverage, args.debug)
 
 

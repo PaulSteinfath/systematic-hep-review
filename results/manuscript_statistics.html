@@ -11,7 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
-<meta name="date" content="2025-06-25" />
+<meta name="date" content="2025-07-09" />
 
 <title>Manuscript Summary</title>
 
@@ -58,7 +58,7 @@ if (window.hljs) {
 <h1 class="title toc-ignore">Manuscript Summary</h1>
 <h3 class="subtitle">A Systematic Review of Methods Used for Studying
 Heartbeat Evoked Responses</h3>
-<h4 class="date">2025-06-25</h4>
+<h4 class="date">2025-07-09</h4>
 
 
 
@@ -111,7 +111,7 @@ time windows, or statistical approaches).</li>
 <h2>Overview of the included studies</h2>
 <p>Literature search results:</p>
 <ul>
-<li>Included: <strong>132</strong> studies, 391 pipelines</li>
+<li>Included: <strong>132</strong> studies, 410 pipelines</li>
 <li>Earliest publication year: <strong>1986</strong></li>
 <li>Latest publication year: <strong>2024</strong></li>
 </ul>
@@ -156,10 +156,10 @@ LM <strong>: 24.4 % - </strong> N/M <strong>: 14.6 % - </strong> LAP
 <div id="artifact-removal-statistics" class="section level2">
 <h2>Artifact Removal Statistics</h2>
 <ul>
-<li><strong>Pipelines removing noisy epochs</strong>: 55 %</li>
-<li><strong>Pipelines removing bad channels</strong>: 16 %</li>
+<li><strong>Pipelines removing noisy epochs</strong>: 56 %</li>
+<li><strong>Pipelines removing bad channels</strong>: 15 %</li>
 <li><strong>Pipelines using blink correction</strong>: 7 %</li>
-<li><strong>Pipelines using ICA</strong>: 78.3 % ( 306 / 391 )</li>
+<li><strong>Pipelines using ICA</strong>: 77.1 % ( 316 / 410 )</li>
 <li><strong>Studies using ICA</strong>: 73.5 % ( 97 / 132 )</li>
 </ul>
 </div>
@@ -184,13 +184,21 @@ LM <strong>: 24.4 % - </strong> N/M <strong>: 14.6 % - </strong> LAP
 <li><strong>Low-pass filter range</strong>: 15 - 125 Hz</li>
 <li><strong>Most common high-pass cutoffs</strong>: 0.5, 0.1, 1 Hz</li>
 </ul>
+<div id="ecg-acquisition" class="section level3">
+<h3>ECG Acquisition</h3>
+<p>Studies that use 2 ECG electrodes: 89 (<strong>67.4</strong>%)</p>
+<p>Number of studies that use different ECG leads:</p>
+<ul>
+<li>Lead II: 48 (<strong>36.4</strong>%)</li>
+<li>Lead I: 15 (<strong>11.4</strong>%)</li>
+<li>Lead III: 3 (<strong>2.3</strong>%)</li>
+<li>Unclassified: 35 (<strong>26.5</strong>%)</li>
+</ul>
+</div>
+<div id="dealing-with-cardiac-field-artifacts" class="section level3">
+<h3>Dealing with cardiac field artifacts</h3>
 </div>
 </div>
-<div id="ecg-acquisition" class="section level1">
-<h1>ECG Acquisition</h1>
-</div>
-<div id="dealing-with-cardiac-field-artifacts" class="section level1">
-<h1>Dealing with cardiac field artifacts</h1>
 <div id="ica-application-timing" class="section level2">
 <h2>ICA Application Timing</h2>
 <ul>
@@ -222,9 +230,9 @@ LM <strong>: 24.4 % - </strong> N/M <strong>: 14.6 % - </strong> LAP
 <div id="rejected-cardiac-ics" class="section level2">
 <h2>Rejected Cardiac ICs</h2>
 <ul>
-<li><strong>Studies reporting number</strong>: 21</li>
-<li><strong>Range</strong>: 1 - 4.78</li>
-<li><strong>Median</strong>: 1.75 ## Other CFA Removal Strategies</li>
+<li><strong>Studies reporting number</strong>: 20</li>
+<li><strong>Range</strong>: 1 - 3</li>
+<li><strong>Median</strong>: 1.735 ## Other CFA Removal Strategies</li>
 <li>** Minimal artifact window **: 25 studies ( 39.1 %)</li>
 <li>** RR interval constraints **: 17 studies ( 26.6 %)</li>
 <li>** CSD **: 11 studies ( 17.2 %)</li>
@@ -312,8 +320,8 @@ class="section level3">
 <div id="baseline-correction" class="section level2">
 <h2>Baseline Correction</h2>
 <ul>
-<li><strong>Pipelines using baseline correction</strong>: 55.2 % ( 216 /
-391 )</li>
+<li><strong>Pipelines using baseline correction</strong>: 56.1 % ( 230 /
+410 )</li>
 <li><strong>Overall baseline start time range</strong>: -300 to -75
 ms</li>
 <li><strong>Overall baseline end time range</strong>: -200 to 50 ms</li>
@@ -323,7 +331,7 @@ ms</li>
 <div id="baseline-correction-by-reference-peak" class="section level2">
 <h2>Baseline Correction by Reference Peak</h2>
 <ul>
-<li>** R-peak **: 203 pipelines from 73 studies
+<li>** R-peak **: 217 pipelines from 73 studies
 <ul>
 <li>Start range: -300 to -75 ms</li>
 <li>End range: -200 to 50 ms</li>
@@ -353,7 +361,7 @@ class="section level2">
 <div id="significant-effects-windows" class="section level2">
 <h2>Significant Effects Windows</h2>
 <ul>
-<li><strong>Pipelines with significant effects</strong>: 276</li>
+<li><strong>Pipelines with significant effects</strong>: 312</li>
 <li><strong>Effects start time range</strong>: -250 to 860 ms</li>
 <li><strong>Effects end time range</strong>: 10 to 1000 ms</li>
 <li><strong>Effects duration range</strong>: 0 to 1000 ms</li>
@@ -361,7 +369,7 @@ class="section level2">
 <div id="significant-effects-by-reference-peak" class="section level3">
 <h3>Significant Effects by Reference Peak:</h3>
 <ul>
-<li>** R-peak **: 251 pipelines
+<li>** R-peak **: 287 pipelines
 <ul>
 <li>Start range: -250 to 860 ms</li>
 <li>End range: 10 to 1000 ms</li>
@@ -378,13 +386,13 @@ class="section level2">
 <div id="peak-effect-timing-by-analysis-method" class="section level3">
 <h3>Peak Effect Timing by Analysis Method:</h3>
 <p><strong>Clustering analysis core effect regions:</strong> -
-<strong>R-peak referenced</strong>: 250 - 400 ms ( 12.3 % of studies, 13
-/ 106 ) - <strong>T-peak referenced</strong>: 191 - 312 ms (≈ 491 - 612
+<strong>R-peak referenced</strong>: 251 - 421 ms ( 12.5 % of studies, 14
+/ 112 ) - <strong>T-peak referenced</strong>: 191 - 312 ms (≈ 491 - 612
 ms after R-peak; 18.2 % of studies, 2 / 11 )</p>
 <p><strong>Averaging analysis core effect regions:</strong> -
-<strong>R-peak referenced</strong>: 360 - 506 ms ( 7 % of studies, 8 /
-114 ) - <strong>T-peak referenced</strong>: 196 - 312 ms (≈ 496 - 612 ms
-after R-peak; 25 % of studies, 3 / 12 )</p>
+<strong>R-peak referenced</strong>: 298 - 500 ms ( 19.7 % of studies, 28
+/ 142 ) - <strong>T-peak referenced</strong>: 196 - 312 ms (≈ 496 - 612
+ms after R-peak; 25 % of studies, 3 / 12 )</p>
 </div>
 </div>
 </div>
@@ -394,7 +402,7 @@ after R-peak; 25 % of studies, 3 / 12 )</p>
 <div id="statistical-analysis" class="section level1">
 <h1>Statistical Analysis</h1>
 <hr />
-<p><em>Generated on 2025-06-25</em></p>
+<p><em>Generated on 2025-07-09</em></p>
 </div>
 
 

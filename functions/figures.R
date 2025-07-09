@@ -275,10 +275,26 @@ studies_overview <- function(df) {
   
   p_modality <- hist_panel(df, "modality", discrete = T,
                            x.label = "Imaging modality")
+
+  df_study_categories <- df %>%
+  group_by(PMID) %>%
+  summarise(
+    has_resting = any(rsHEP == 1),
+    has_task = any(rsHEP == 0),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    study_category = case_when(
+      has_resting & has_task ~ "Task &\n Resting-state",
+      has_resting & !has_task ~ "Resting-state\nonly", 
+      !has_resting & has_task ~ "Task only"
+    )
+    )
   
-  p_condition <- hist_panel(df, "rsHEP", discrete = T,
-                            x.label = "Experimental setting",
-                            custom_labels = c("Task", "Resting-state"))
+p_condition <- hist_panel(df_study_categories, "study_category", 
+                         group_col = NULL,
+                         discrete = T,
+                         x.label = "Experimental setting")
   
   fig <- plot_grid(p_year, p_modality, p_condition,
                    nrow = 1, labels = c("B", "C", "D"))

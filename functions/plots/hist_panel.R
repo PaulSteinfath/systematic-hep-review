@@ -1,4 +1,4 @@
-hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
+hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
                        drop.na = T, force.numeric = F, allowed = NULL,
                        x.label = NULL, use.log10 = F, use.log2 = F,
                        fill_as_aesthetic = F,
@@ -81,10 +81,18 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
   n_total <- nrow(df_distinct)
   label_type <- if (multiple_rows_per_group) "Pipelines" else "Studies"
   
+  # Set a custom title if provided
+  datapoint_count <- paste("n =", n_total, tolower(label_type))
+  if (!is.null(title)) {
+    p <- p +
+      labs(title = title, subtitle = datapoint_count)
+  } else {
+    p <- p +
+      labs(title = datapoint_count)
+  }
+  
   p <- p +
-    labs(title = paste("n =", n_total, tolower(label_type))) +
     theme(
-      title = element_text(size = 9), 
       axis.text.x = element_text(size = 8, 
                                  angle = if (tilt_labels) 45 else 0, 
                                  hjust = if (tilt_labels) 1 else 0.5),
@@ -92,10 +100,13 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
       axis.title.x = element_text(size = 9, 
                                   margin = margin(t = 4)),  # Adjust this value to move label closer
       axis.title.y = element_text(size = 9)
-    )
+    ) +
+    custom_theme()
   
   if (!is.null(x.label)) {
     p <- p + xlab(x.label)
+  } else {
+    p <- p + theme(axis.title.x = element_blank())
   }
   
   # Add percent signs to labels, remove empty space below the bars, apply y-axis

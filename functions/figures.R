@@ -205,11 +205,12 @@ figure_ecg_summary <- function(df, save_path, ext = 'png') {
                                         ecg_num_electrodes == "unknown", 9))
   p_ecg_num_electrodes <- hist_panel(df, "ecg_num_electrodes", 
                                      force.numeric = T, binwidth = 1,
-                                     x.label = "Number of ECG electrodes") +
+                                     x.label = "Number of ECG electrodes",
+                                     title = "Number of ECG electrodes") +
     scale_x_continuous(breaks = seq(0, 9),
                        labels = c(seq(0, 8), "N/M"))
   p_ecg_leads <- hist_panel(df, "ecg_lead", fill_as_aesthetic = T,
-                            discrete = T, x.label = "ECG lead") +
+                            discrete = T, title = "ECG lead") +
     scale_fill_manual(values = leads_palette,
                       na.value = plot_fill_default_single,
                       guide = "none") 
@@ -218,9 +219,7 @@ figure_ecg_summary <- function(df, save_path, ext = 'png') {
     p_ecg_num_electrodes,
     p_ecg_leads,
     ncol = 1,
-    labels = c("A", "B"),
-    align = "v",
-    axis = "lr"
+    labels = c("A", "B")
   )
 
   fig <- plot_grid(
@@ -228,9 +227,7 @@ figure_ecg_summary <- function(df, save_path, ext = 'png') {
     p_ecg_locations,
     nrow = 1,
     rel_widths = c(1, 1.5),
-    labels = c("", "C"),
-    align = "h",
-    axis = "tb"
+    labels = c("", "C")
   )
   
   ggsave(

@@ -15,7 +15,7 @@ other_strategy_plot <- function(df) {
       other_cfa_removal_strategy == "limit analysis to time of minimal artifact" ~ 
         "minimal artifact\nwindow",
       tolower(other_cfa_removal_strategy) %in% c(
-        "subtract/regress ecg from eeg",
+        "subtract/regress ecg from eeg"
       ) ~ "subtract/regress\nECG from EEG",
       tolower(other_cfa_removal_strategy) == "pca on heps" ~ "PCA on\nHEP",
       tolower(other_cfa_removal_strategy) == "subtract rshep from taskhep" ~ 

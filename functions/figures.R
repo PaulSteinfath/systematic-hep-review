@@ -197,7 +197,7 @@ cfa_removal <- function(df) {
 }
 
 
-ecg_summary <- function(df) {
+figure_ecg_summary <- function(df, save_path, ext = 'png') {
   # Map "unknown" to 9 so that it isn't lost during conversion to numeric and
   # is positioned nicely
   df <- df %>%
@@ -232,7 +232,17 @@ ecg_summary <- function(df) {
     align = "h",
     axis = "tb"
   )
-  fig
+  
+  ggsave(
+    filename = file.path(save_path, paste0("ecg_summary_plot.", ext)),
+    plot = fig,
+    width = 10,
+    height = 4,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
 }
 
 eeg_locations_summary <- function(df) {
@@ -478,20 +488,6 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(control_categories_plot)
-
-  ecg_summary_plot <- ecg_summary(df)
-
-  ggsave(
-    filename = file.path(save_path, paste0("ecg_summary_plot.", ext)),
-    plot = ecg_summary_plot,
-    width = 10,
-    height = 4,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  show(ecg_summary_plot)
 
   eeg_summary_plot <- eeg_locations_summary(df)
   ggsave(

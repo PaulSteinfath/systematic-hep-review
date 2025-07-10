@@ -254,3 +254,10 @@ create_year_group_columns <- function(df, years) {
   
   return(as.data.frame(new_columns, stringsAsFactors = FALSE))
 }
+
+custom_theme <- function() {
+  theme(
+    plot.title = element_text(size = 11), 
+    plot.subtitle = element_text(size = 9)
+  )
+}

@@ -22,6 +22,53 @@ source(file.path(func_path, "plots", "plot_multiple_choices.R"))
 source(file.path(func_path, "plots", "plot_entropy.R"))
 source(file.path(func_path, "plots", "create_time_windows_plot.R"))
 source(file.path(func_path, "plots", "create_single_ecg_plot.R"))
+source(file.path(func_path, "plots", "plot_hedges_g.R"))
+source(file.path(func_path, "plots", "plot_control_categories.R"))
+source(file.path(func_path, "plots", "plot_ecg_controls.R"))
+source(file.path(func_path, "plots", "plot_hedges_g_adjusted_for_noise.R"))
+source(file.path(func_path, "plots", "plot_simulated_effects.R"))
+
+create_stats_plot <- function(df){
+  
+  a <- hist_panel(df, col = "Preregistration", force.numeric = F, use_proportion = T, discrete = T, x.label = "Preregistration", custom_labels = c("No","Yes"))
+  b <- hist_panel(df = df, col = "sample_size", x.label = "Sample Size", use_proportion = T)
+  c <- hist_panel(df = df, col = "groups", x.label = "Number of Groups", binwidth = 1, use_proportion = T)
+  d <- hist_panel(df = df, col = "conditions", x.label = "Number of Conditions", binwidth = 1, use_proportion = T)
+  e <- hist_panel(df = df, col = "trials_Mean", force.numeric = T, x.label = "Number of Averaged Epochs", use_proportion = T)
+  f <- hist_panel(df = df[(df$statistics!='none')&(df$statistics!='unknown'),], col = "statistics", x.label = "Statistical test", discrete = T, tilt_labels = T)+coord_flip()
+  g <- plot_hedges_g(df = df)
+  h <- plot_control_categories(df = df)
+  i <- plot_ecg_controls(df = df)
+
+  first_row <- plot_grid(
+    a,b,c,d,e,
+    ncol = 5, labels = c("A","B", "C", "D","E"), rel_widths = c(0.8, 0.8, 0.8,0.8,1.2),
+    align = "h"
+  )
+  second_row <- plot_grid(
+    f,g,
+    ncol = 2, labels = c("F","G"),
+    rel_widths = c(1, 1),
+    align = "h"
+  )
+  third_row <-plot_grid(
+    h,i,
+    ncol = 2, labels = c("H","I"),rel_widths = c(1, 1),
+    align = "h"
+  )
+  
+  p <- plot_grid(first_row, second_row, third_row, ncol = 1, rel_heights = c(1,1.4,1.4))
+  
+}
+
+create_epoch_simulation_plot <- function(df){
+  
+  a <- plot_hedges_g_adjusted_for_noise(df, sigma_s_vals = c(0.5, 1, 2), sigma_t_vals = c(0.1, 0.2, 0.5, 1), r_thresh = 4)
+  b <- plot_simulated_effects(d_type = 'g', plot_type = 'pure', Ns=seq(10,300,10), ks=seq(10,300,10), sigma_ratio=c(0.5,1,2,2.5,4))
+ 
+  p <- plot_grid(a, b, ncol = 2)
+  
+}
 
 create_combined_plot_for_columns <- function(df){
 
@@ -520,4 +567,31 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(hep_time_windows_combined)
+  
+  stats_plot <- create_stats_plot(df)
+  ggsave(
+    filename = file.path(save_path, paste0("stats_plot.", ext)),
+    plot = stats_plot,
+    width = 10,
+    height = 11,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
+  show(stats_plot)
+  
+  epoch_simulation_plot <- create_epoch_simulation_plot(df)
+  ggsave(
+    filename = file.path(save_path, paste0("epoch_simulation_plot.", ext)),
+    plot = epoch_simulation_plot,
+    width = 7,
+    height = 5,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
+  show(epoch_simulation_plot)
+  
 }

@@ -15,7 +15,8 @@ library(stringr)
 library(tidyr)
 library(viridis)
 library(zeallot)
-
+library(pwr)
+library(ggridges)
 
 # Paths
 data_path <- file.path(getwd(), 'data')

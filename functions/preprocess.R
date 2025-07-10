@@ -225,6 +225,17 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   valid_mapping <- column_mapping[column_mapping %in% names(df_included)]
   df_included <- rename(df_included, all_of(valid_mapping))
   
+  # Create baseline_defined 
+  df_included <- df_included %>%
+    mutate(
+      baseline_defined = case_when(
+        baseline_start_ms == "unknown" | baseline_end_ms == "unknown" ~ "Unknown",
+        baseline_start_ms == "none" | baseline_end_ms == "none" ~ "No",
+        !is.na(baseline_start_ms) & !is.na(baseline_end_ms) ~ "Yes",
+        TRUE ~ "No"
+      )
+    )
+  
   if (adjust_data_types){
     df_included <- adjust_data_type(df_included, convert_to_numeric, convert_to_factors)
   }
@@ -239,7 +250,7 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   # add Paper column (readable unique identifier)
   df_included$paper <- create_author_column(df_included)
 
-  # Add columns averaging / clustering & baseline
+  # Add columns averaging / clustering
   df_included <- df_included %>%
     mutate(
       method_category = case_when(
@@ -247,11 +258,7 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
         clustering == "1" & averaging_time == "0" ~ "Clustering",
         TRUE ~ "Other"
       ),
-      method_numeric = ifelse(method_category == "Averaging", 1, 0),
-      baseline_defined = case_when(
-        !is.na(baseline_start_ms) & !is.na(baseline_end_ms) ~ 1,
-        TRUE ~ 0
-      )
+      method_numeric = ifelse(method_category == "Averaging", 1, 0)
     )
   
   if (output_screening){

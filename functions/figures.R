@@ -292,7 +292,6 @@ studies_overview <- function(df) {
     )
   
 p_condition <- hist_panel(df_study_categories, "study_category", 
-                         group_col = NULL,
                          discrete = T,
                          x.label = "Experimental setting")
   
@@ -306,44 +305,119 @@ p_condition <- hist_panel(df_study_categories, "study_category",
 create_hep_time_windows_summary_plot <- function(df) {
 
   #cluster / average histogram
-  df_hep_method_prop <- df %>%
-    filter(method_category %in% c("Averaging", "Clustering"))
+  df_hep_determination <- df %>%
+    group_by(PMID) %>%
+    summarise(
+      has_averaging = any(method_category == "Averaging"),
+      has_clustering = any(method_category == "Clustering"),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      determination_category = case_when(
+        has_averaging & has_clustering ~ "Both",
+        has_averaging & !has_clustering ~ "Averaging",
+        !has_averaging & has_clustering ~ "Clustering",
+        TRUE ~ "Other"
+      )
+    ) %>%
+    filter(determination_category != "Other") %>%
+    mutate(determination_category = factor(determination_category, 
+                                         levels = c("Averaging", "Clustering", "Both")))
 
   avg_cluster_prop_plot <- hist_panel(
-    df_hep_method_prop,
-    col = "method_numeric",
+    df_hep_determination,
+    col = "determination_category",
     discrete = TRUE, use_proportion = TRUE,
     x.label = "HER Determination",
-    custom_labels = c("Clustering", "Averaging"), 
-    tilt_labels = FALSE
+    tilt_labels = FALSE,
+    preserve_order = TRUE
   )
   
   #R-/T-peak histogram
+  df_hep_reference <- df %>%
+    group_by(PMID) %>%
+    summarise(
+      has_rpeak = any(hep_relative_to == "R-peak"),
+      has_tpeak = any(hep_relative_to == "T-peak"),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      reference_category = case_when(
+        has_rpeak & has_tpeak ~ "Both",
+        has_rpeak & !has_tpeak ~ "R-peak",
+        !has_rpeak & has_tpeak ~ "T-peak",
+        TRUE ~ "Other"
+      )
+    ) %>%
+    filter(reference_category != "Other") %>%
+    mutate(reference_category = factor(reference_category, 
+                                     levels = c("R-peak", "T-peak", "Both")))
+
   rt_peak_prop_plot <- hist_panel(
-    df,
-    col = "hep_relative_to",
+    df_hep_reference,
+    col = "reference_category",
     discrete = TRUE, use_proportion = TRUE,
     x.label = "HER Reference",
-    tilt_labels = FALSE
+    tilt_labels = FALSE,
+    preserve_order = TRUE
   )
  
   #baseline correction histogram
+  df_baseline_correction <- df %>%
+    group_by(PMID) %>%
+    summarise(
+      has_yes = any(baseline_defined == "Yes"),
+      has_no = any(baseline_defined == "No"),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      baseline_category = case_when(
+        has_yes & has_no ~ "Both",
+        has_yes & !has_no ~ "Yes",
+        !has_yes & has_no ~ "No",
+        TRUE ~ "Other"
+      )
+    ) %>%
+    filter(baseline_category != "Other") %>%
+    mutate(baseline_category = factor(baseline_category, 
+                                    levels = c("Yes", "No", "Both")))
+
   baseline_def_prop_plot <- hist_panel(
-    df,
-    col = "baseline_defined",
+    df_baseline_correction,
+    col = "baseline_category",
     discrete = TRUE, use_proportion = TRUE,
     x.label = "Baseline Correction",
-    custom_labels = c("No", "Yes"),
-    tilt_labels = FALSE
+    tilt_labels = FALSE,
+    preserve_order = TRUE
   )
 
   #primary / secondary histogram
+    df_hep_window_type <- df %>%
+    group_by(PMID) %>%
+    summarise(
+      has_primary = any(hep_window_type == "Primary"),
+      has_secondary = any(hep_window_type == "Secondary"),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      window_type_category = case_when(
+        has_primary & has_secondary ~ "Both",
+        has_primary & !has_secondary ~ "Primary",
+        !has_primary & has_secondary ~ "Secondary",
+        TRUE ~ "Other"
+      )
+    ) %>%
+    filter(window_type_category != "Other") %>%
+    mutate(window_type_category = factor(window_type_category, 
+                                       levels = c("Primary", "Secondary", "Both")))
+
   hep_type_prop_plot <- hist_panel(
-    df,
-    col = "hep_window_type",
+    df_hep_window_type,
+    col = "window_type_category",
     discrete = TRUE, use_proportion = TRUE,
     x.label = "HER Window Type",
-    tilt_labels = FALSE
+    tilt_labels = FALSE,
+    preserve_order = TRUE
   )
 
   first_row_histograms <- plot_grid(

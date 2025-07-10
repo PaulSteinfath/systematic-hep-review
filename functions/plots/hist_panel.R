@@ -3,7 +3,8 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
                        x.label = NULL, use.log10 = F, use.log2 = F,
                        fill_as_aesthetic = F,
                        modality_filter = NULL, binwidth = NULL, bins = NULL, tilt_labels = F,
-                       use_proportion = TRUE, y_limits = NULL, custom_labels = NULL) {  # Added custom_labels
+                       use_proportion = TRUE, y_limits = NULL, custom_labels = NULL,
+                       preserve_order = FALSE) { 
   
   # Filter for EEG modality if specified
   if (!is.null(modality_filter)) {
@@ -55,8 +56,15 @@ hist_panel <- function(df, col, group_col = 'PMID', discrete = F,
                                 labels = custom_labels)
     }
     
-    p <- ggplot(counts_df, aes(x = reorder(!!sym(col), n, decreasing = TRUE), 
-                               y = if(use_proportion) prop else n))
+    # Determine x-axis mapping based on preserve_order
+    if (preserve_order && is.factor(df_distinct[[col]])) {
+      p <- ggplot(counts_df, aes(x = !!sym(col), 
+                                 y = if(use_proportion) prop else n))
+    } else {
+      # Default - reorder by frequency
+      p <- ggplot(counts_df, aes(x = reorder(!!sym(col), n, decreasing = TRUE), 
+                                 y = if(use_proportion) prop else n))
+    }
     
     if (fill_as_aesthetic) {
       p <- p +

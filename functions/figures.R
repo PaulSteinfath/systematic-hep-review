@@ -335,7 +335,7 @@ create_hep_time_windows_summary_plot <- function(df) {
     df_hep_determination,
     col = "determination_category",
     discrete = TRUE, use_proportion = TRUE,
-    x.label = "HER Determination",
+    title = "HER Determination",
     tilt_labels = FALSE,
     preserve_order = TRUE
   )
@@ -364,7 +364,7 @@ create_hep_time_windows_summary_plot <- function(df) {
     df_hep_reference,
     col = "reference_category",
     discrete = TRUE, use_proportion = TRUE,
-    x.label = "HER Reference",
+    title = "HER Reference",
     tilt_labels = FALSE,
     preserve_order = TRUE
   )
@@ -393,7 +393,7 @@ create_hep_time_windows_summary_plot <- function(df) {
     df_baseline_correction,
     col = "baseline_category",
     discrete = TRUE, use_proportion = TRUE,
-    x.label = "Baseline Correction",
+    title = "Baseline Correction",
     tilt_labels = FALSE,
     preserve_order = TRUE
   )
@@ -422,7 +422,7 @@ create_hep_time_windows_summary_plot <- function(df) {
     df_hep_window_type,
     col = "window_type_category",
     discrete = TRUE, use_proportion = TRUE,
-    x.label = "HER Window Type",
+    title = "HER Window Type",
     tilt_labels = FALSE,
     preserve_order = TRUE
   )

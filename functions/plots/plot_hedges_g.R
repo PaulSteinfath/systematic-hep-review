@@ -101,7 +101,7 @@ compute_min_detectable_g <- function(test_type, sample_size, groups, conditions)
                       conditions
                     }
                     out <- pwr.anova.test(k         = cells,
-                                          n         = sample_size / cells,
+                                          n         = sample_size / groups,
                                           sig.level = 0.05,
                                           power     = 0.8)
                     2 * out$f

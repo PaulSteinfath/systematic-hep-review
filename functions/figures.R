@@ -243,7 +243,6 @@ cfa_removal <- function(df) {
   plot_grid(top_row, middle_row, bottom_row, ncol = 1)
 }
 
-
 ecg_summary <- function(df) {
   # Map "unknown" to 9 so that it isn't lost during conversion to numeric and
   # is positioned nicely
@@ -314,7 +313,6 @@ eeg_locations_summary <- function(df) {
   fig
 }
 
-
 studies_overview <- function(df) {
   p_year <- hist_panel(df, "Year", force.numeric = T, 
                        x.label = "Publication year", 
@@ -348,7 +346,6 @@ p_condition <- hist_panel(df_study_categories, "study_category",
   
   fig
 }
-
 
 create_hep_time_windows_summary_plot <- function(df) {
 
@@ -593,5 +590,18 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(epoch_simulation_plot)
+  
+  additoinal_hedges_g_plot <- plot_hedges_g(df = df, with_clustering = T, with_regression = T)
+  ggsave(
+    filename = file.path(save_path, paste0("additoinal_hedges_g_plot.", ext)),
+    plot = additoinal_hedges_g_plot,
+    width = 7,
+    height = 5,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
+  show(additoinal_hedges_g_plot)
   
 }

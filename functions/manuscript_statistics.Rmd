@@ -411,12 +411,41 @@ Filter settings: **`r common_highpass$high_pass[1]`**-**`r common_lowpass$low_pa
 
 High-pass cutoffs: **`r paste(common_highpass$high_pass, collapse = ", ")` Hz**
 
-# ECG Acquisition
+### ECG Acquisition
 
-```{r ecg}
+```{r ecg_num_electrodes}
+two_ecg_electrodes <- df_included %>%
+  distinct(PMID, ecg_num_electrodes) %>%
+  group_by(ecg_num_electrodes) %>%
+  filter(ecg_num_electrodes == 2) %>%
+  summarize(count = n()) %>%
+  mutate(freq = count / total_studies * 100)
+two_ecg_electrodes_count <- two_ecg_electrodes$count
+two_ecg_electrodes_freq <- round(two_ecg_electrodes$freq, 1)
 ```
 
-# Dealing with cardiac field artifacts
+Studies that use 2 ECG electrodes: `r two_ecg_electrodes_count` (**`r two_ecg_electrodes_freq`**%)
+
+```{r ecg_num_leads}
+ecg_leads <- df_included %>%
+  distinct(PMID, ecg_lead) %>%
+  group_by(ecg_lead) %>%
+  summarize(count = n()) %>%
+  mutate(freq = round(count / total_studies * 100, 1))
+lead_i <- ecg_leads[ecg_leads$ecg_lead == "Lead I", ]
+lead_ii <- ecg_leads[ecg_leads$ecg_lead == "Lead II", ]
+lead_iii <- ecg_leads[ecg_leads$ecg_lead == "Lead III", ]
+lead_unclassified <- ecg_leads[ecg_leads$ecg_lead == "N/C", ]
+```
+
+Number of studies that use different ECG leads:
+
+* Lead II: `r lead_ii$count` (**`r lead_ii$freq`**%)
+* Lead I: `r lead_i$count` (**`r lead_i$freq`**%)
+* Lead III: `r lead_iii$count` (**`r lead_iii$freq`**%)
+* Unclassified: `r lead_unclassified$count` (**`r lead_unclassified$freq`**%)
+
+### Dealing with cardiac field artifacts
 
 ```{r cfa}
 # ICA timing (studies using ICA)

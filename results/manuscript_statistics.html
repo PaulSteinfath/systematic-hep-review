@@ -64,15 +64,21 @@ Heartbeat Evoked Responses</h3>
 
 <div id="overview" class="section level1">
 <h1>Overview</h1>
-<p>Values from manuscript “Heartbeat-evoked responses in MEG/EEG: A
-systematic review of methods and suggestions for analysis and
-reporting”. <strong>Bold</strong> numbers appear in manuscript.</p>
-<div id="studies-vs-pipelines" class="section level2">
-<h2>Studies vs Pipelines</h2>
+<p>This document provides all values mentioned in the manuscript
+“Heartbeat-evoked responses in MEG/EEG: A systematic review of methods
+and suggestions for analysis and reporting”. All sections of this
+document apart from this overview match the corresponding section of the
+manuscript. Numbers highlighted in <strong>bold</strong> are also
+present in the manuscript.</p>
+<div id="important-distinction-studies-vs-pipelines"
+class="section level2">
+<h2>Important Distinction: Studies vs Pipelines</h2>
 <ul>
-<li><strong>Studies</strong>: Unique publications (PMID)</li>
+<li><strong>Studies</strong>: Unique publications (identified by PMID).
+Each study represents one research paper.</li>
 <li><strong>Pipelines</strong>: Individual analysis approaches within
-studies</li>
+studies. Some studies report multiple analysis pipelines (e.g. different
+time windows, or statistical approaches).</li>
 </ul>
 </div>
 </div>
@@ -80,7 +86,7 @@ studies</li>
 <h1>Methods</h1>
 <div id="literature-search" class="section level2">
 <h2>Literature search</h2>
-<p>Table 1 - retrieved papers:</p>
+<p>Table 1 - number of retrieved papers:</p>
 <ul>
 <li>15.01.2024: <strong>647</strong></li>
 <li>24.07.2024: <strong>682</strong> (rerun: <strong>683</strong>)</li>
@@ -89,15 +95,15 @@ studies</li>
 </ul>
 <p>Exported from Pubmed:</p>
 <ul>
-<li>Retrieved: <strong>749</strong></li>
-<li>Included: <strong>127</strong></li>
+<li>Retrieved: <strong>749</strong> studies</li>
+<li>Included: <strong>127</strong> studies</li>
 </ul>
 <p>Manually added:</p>
 <ul>
-<li>Retrieved: <strong>7</strong></li>
-<li>Included: <strong>5</strong></li>
+<li>Retrieved: <strong>7</strong> studies</li>
+<li>Included: <strong>5</strong> studies</li>
 </ul>
-<p>Final sample: <strong>132</strong></p>
+<p>Final sample: <strong>132</strong> studies</p>
 </div>
 </div>
 <div id="results" class="section level1">
@@ -158,19 +164,27 @@ studies</li>
 <p>Filter settings: <strong>0.5</strong>-<strong>30 Hz</strong> (most
 common)</p>
 <p>High-pass cutoffs: <strong>0.5, 0.1, 1 Hz</strong></p>
+<div id="ecg-acquisition" class="section level3">
+<h3>ECG Acquisition</h3>
+<p>Studies that use 2 ECG electrodes: 89 (<strong>67.4</strong>%)</p>
+<p>Number of studies that use different ECG leads:</p>
+<ul>
+<li>Lead II: 48 (<strong>36.4</strong>%)</li>
+<li>Lead I: 15 (<strong>11.4</strong>%)</li>
+<li>Lead III: 3 (<strong>2.3</strong>%)</li>
+<li>Unclassified: 35 (<strong>26.5</strong>%)</li>
+</ul>
 </div>
-</div>
-<div id="ecg-acquisition" class="section level1">
-<h1>ECG Acquisition</h1>
-</div>
-<div id="dealing-with-cardiac-field-artifacts" class="section level1">
-<h1>Dealing with cardiac field artifacts</h1>
+<div id="dealing-with-cardiac-field-artifacts" class="section level3">
+<h3>Dealing with cardiac field artifacts</h3>
 <p>ICA for CFA: <strong>69</strong>/<strong>132</strong></p>
 <p>ICA timing:</p>
 <ul>
 <li>Continuous: <strong>75.3%</strong></li>
 <li>Epoched: <strong>23.7%</strong></li>
 </ul>
+</div>
+</div>
 <div id="cfa-identification-approaches" class="section level2">
 <h2>CFA Identification Approaches</h2>
 <ul>

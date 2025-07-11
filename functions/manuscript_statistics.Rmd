@@ -323,13 +323,14 @@ ica_for_cfa_studies <- df_pipelines %>%
     ica_cfa_study_pct = round(mean(uses_ica_for_cfa) * 100, 1)
   )
 
-# Component rejection types (studies with ICA) - simplified since no duplicates
+# Component rejection types
 component_types_df <- df_pipelines %>%
   filter(ICA == 1) %>%
+  distinct(PMID, rejected_components) %>%
   filter(rejected_components != "", rejected_components != "unknown") %>%
   mutate(pipeline_id = row_number())
 
-# Clean rejected_components (same as before)
+# Clean rejected_components
 component_types_df$rejected_components <- sapply(component_types_df$rejected_components, function(x) {
   x <- gsub("[\r\n]+", ",", x)    
   x <- gsub(",+", ",", x)         
@@ -340,13 +341,16 @@ component_types_df$rejected_components <- sapply(component_types_df$rejected_com
   paste(comps, collapse = ",")
 })
 
-component_types <- component_types_df %>%
+# Count total pipelines before splitting
+total_ica_pipelines <- nrow(component_types_df)
+
+# Create component types data
+component_types_expanded <- component_types_df %>%
   separate_rows(rejected_components, sep = ",") %>%
   mutate(
     rejected_components = trimws(rejected_components),
     rejected_components = tolower(rejected_components)
   ) %>%
-  # Apply component mapping
   mutate(rejected_components = case_when(
     rejected_components == "eye movements" ~ "Ocular",
     rejected_components == "blinks" ~ "Ocular", 
@@ -357,10 +361,14 @@ component_types <- component_types_df %>%
     rejected_components == "other" ~ "Other",
     TRUE ~ rejected_components
   )) %>%
-  filter(rejected_components != "") %>%
-  count(rejected_components) %>%  
-  arrange(desc(n)) %>%
-  mutate(percentage = round(n / nrow(component_types_df) * 100, 1))  
+  filter(rejected_components != "")
+
+# Calculate percentages based on distinct pipeline_ids 
+component_types <- component_types_expanded %>%
+  group_by(rejected_components) %>%
+  summarise(count = n_distinct(pipeline_id), .groups = "drop") %>%
+  arrange(desc(count)) %>%
+  mutate(percentage = round(count / total_ica_pipelines * 100, 1))  
 ```
 
 

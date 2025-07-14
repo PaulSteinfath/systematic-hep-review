@@ -1017,3 +1017,18 @@ stat_comparison_results$tpeak <- perform_peak_timing_comparison(clustering_tpeak
 
 * Studies with a-priori defined analysis windows: **`r hep_window_type_stats$percentage[hep_window_type_stats$window_type_category == "Primary"]`%**
 * Studies using two-step procedures (data-dependent window selection): **`r hep_window_type_stats$percentage[hep_window_type_stats$window_type_category == "Secondary"]`%**
+
+# HEP dependent variables analysis
+
+```{r hep-values}
+hep_value_studies <- df_pipelines %>%
+  filter(value != "none") %>%
+  distinct(PMID, value) %>%
+  count(value, sort = TRUE) %>%
+  mutate(percentage = round(n / sum(n) * 100, 1))
+```
+
+* `r hep_value_studies$value[1]`: **`r hep_value_studies$n[1]`** studies (**`r hep_value_studies$percentage[1]`%**)
+* `r hep_value_studies$value[2]`: **`r hep_value_studies$n[2]`** studies (**`r hep_value_studies$percentage[2]`%**)
+* `r hep_value_studies$value[3]`: **`r hep_value_studies$n[3]`** studies (**`r hep_value_studies$percentage[3]`%**)
+* Other measures: **`r sum(hep_value_studies$n[4:nrow(hep_value_studies)])`** studies (**`r sum(hep_value_studies$percentage[4:nrow(hep_value_studies)])`%**)

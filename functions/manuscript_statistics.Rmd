@@ -702,6 +702,12 @@ baseline_correction_stats <- baseline_correction_analysis %>%
   count(baseline_category) %>%
   mutate(percentage = round(n /  final_sample_stats$total_studies * 100, 1))
 
+# Calculate overall baseline percentage for output
+baseline_pct <- baseline_correction_stats %>%
+  filter(baseline_category %in% c("Yes", "Both")) %>%
+  summarise(total_pct = sum(percentage)) %>%
+  pull(total_pct)
+
 # Baseline correction - Studies with R-peak analysis
 baseline_rpeak_studies <- df_pipelines %>%
   filter(hep_relative_to == "R-peak") %>%
@@ -799,6 +805,22 @@ baseline_tpeak_range <- baseline_window_stats %>%
     range_end = max(baseline_end_ms),
     total_studies = n_distinct(PMID)
   )
+
+# Create baseline data for output sections
+rpeak_baseline_data <- list(
+  start_min = baseline_rpeak_range$range_start,
+  end_max = baseline_rpeak_range$range_end
+)
+
+tpeak_baseline_data <- list(
+  n_studies = baseline_tpeak_range$total_studies,
+  start_min = baseline_tpeak_range$range_start,
+  end_max = baseline_tpeak_range$range_end
+)
+
+baseline_before_qrs_stats <- list(
+  percentage_before_qrs = baseline_rpeak_range$percentage_ending_before_qrs
+)
 
 # HEP Time of Interest windows
 hep_window_data <- df_pipelines %>%
@@ -925,8 +947,8 @@ stat_comparison_results$tpeak <- perform_peak_timing_comparison(clustering_tpeak
 
 # Cardiac Reference Event Selection
 
-* R-peak reference: **`r hep_reference_all_pipelines$percentage[hep_reference_all_pipelines$hep_relative_to == "R-peak"]`%** of pipelines
-* T-wave reference: **`r hep_reference_all_pipelines$percentage[hep_reference_all_pipelines$hep_relative_to == "T-peak"]`%** of pipelines
+* R-peak reference: **`r hep_reference_stats$percentage[hep_reference_stats$reference_category == "R-peak"]`%** of studies
+* T-wave reference: **`r hep_reference_stats$percentage[hep_reference_stats$reference_category == "T-peak"]`%** of studies
 
 # HEP Analysis Time Windows
 

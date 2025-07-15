@@ -70,28 +70,77 @@ create_epoch_simulation_plot <- function(df){
   
 }
 
-create_combined_plot_for_columns <- function(df){
-
-  analysis_steps <- colnames(df)[6:45] 
-
-  p1 <- plot_entropy(df,method_columns = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F,  x_lab = "", x_ticks = FALSE)
-
-  p2 <- plot_multiple_choices(df,variables = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F, x_lab = "", x_ticks = FALSE)
-
-  p3 <- plot_missing(df, columns = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F, x_ticks = TRUE)
-
-  fig_ABC <- plot_grid(
-    p1, p2, p3, 
-    ncol = 1, 
-    align = "v",
-    axis = "l",
-    labels = c("A", "B", "C"),
-    vjust = 1,
-    rel_heights = c(1, 1, 1.2)
-  )
-
-  return(fig_ABC)
-
+create_combined_plot_for_columns <- function(df) {
+  
+  analysis_steps <- colnames(df)[c(7:10,13:32,34:43,45:46,59,61)]
+  
+  # Use entropy to determine column order
+  entropy_df <- compute_entropy(df, 
+                                method_columns = analysis_steps,
+                                drop_paper_duplicates = TRUE)
+  entropy_df$Column <- apply_column_mapping(entropy_df$Column, column_mapping_readable_default)
+  entropy_df$Step <- sapply(entropy_df$Column, function(readable) {
+    var_name <- column_mapping_readable_default[readable]
+    if (is.na(var_name)) var_name <- readable
+    get_pipeline_step(var_name)
+  })
+  entropy_df$Step <- factor(entropy_df$Step, levels = names(pipeline_colors))
+  entropy_df <- entropy_df %>%
+    dplyr::arrange(Step, dplyr::desc(Entropy)) %>%
+    dplyr::mutate(Column = factor(Column, levels = unique(Column)))
+  
+  # Final fixed order to reuse (in readable names)
+  ordered_columns_readable <- levels(entropy_df$Column)
+  
+  # Map back to original variable names
+  ordered_columns_original <- vapply(ordered_columns_readable, function(readable) {
+    var_name <- column_mapping_readable_default[readable]
+    if (is.na(var_name)) readable else var_name
+  }, character(1))
+  
+  # Build all three plots with unified config
+  p1 <- plot_entropy(df,
+                            method_columns = analysis_steps,
+                            column_mapping_readable = column_mapping_readable_default,
+                            pipeline_steps = pipeline_steps,
+                            pipeline_colors = pipeline_colors,
+                            fixed = FALSE,
+                            flip = TRUE,
+                            show_title = FALSE)
+  
+  p2 <- plot_multiple_choices(df,
+                                     variables = ordered_columns_original,
+                                     column_mapping_readable = column_mapping_readable_default,
+                                     pipeline_steps = pipeline_steps,
+                                     pipeline_colors = pipeline_colors,
+                                     fixed = TRUE,
+                                     flip = TRUE,
+                                     y_ticks = FALSE,
+                                     show_title = FALSE,
+                                     x_lab = "")
+  
+  p3 <- plot_missing(df,
+                            columns = ordered_columns_original,
+                            column_mapping_readable = column_mapping_readable_default,
+                            pipeline_steps = pipeline_steps,
+                            pipeline_colors = pipeline_colors,
+                            fixed = TRUE,
+                            flip = TRUE,
+                            y_ticks = FALSE,
+                            show_title = FALSE,
+                            x_lab = "", 
+                            show_legend = TRUE)
+  
+  figABC <- plot_grid(p1, NULL, p2, NULL, p3,
+                      ncol = 5,
+                      align = "h",
+                      axis = "l",
+                      labels = c("A", "", "B", "", "C"),
+                      label_x = c(0, NA, -0.1, NA, -0.1), 
+                      label_y = c(1, NA, 1, NA, 1),  
+                      rel_widths = c(1, 0.025, 0.7, 0.025, 1))
+  
+  return(figABC)
 }
 
 # Create filter cutoff plots
@@ -486,13 +535,14 @@ make_figures <- function(df, save_path, ext = "svg") {
   ggsave(
     filename = file.path(save_path, paste0("combined_plot_for_columns.", ext)),
     plot = combined_plot_for_columns,
-    width = 10,
+    width = 11,
     height = 11,
     units = "in",
     dpi = 300,
     device = ext,
     bg = "white"
   )
+  show(combined_plot_for_columns)
 
   control_vars_plot <- create_control_variables_plot(df)
 

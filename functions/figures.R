@@ -386,7 +386,6 @@ studies_overview <- function(df) {
     )
   
 p_condition <- hist_panel(df_study_categories, "study_category", 
-                         group_col = NULL,
                          discrete = T,
                          x.label = "Experimental setting")
   

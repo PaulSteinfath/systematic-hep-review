@@ -176,7 +176,9 @@ cfa_removal <- function(df) {
     cfa_criteria_plot,
     ncol = 2, labels = c("A", "B"),
     align = "v", axis = "b",
-    rel_widths = c(0.25, 0.75)
+    rel_widths = c(0.25, 0.75),
+    label_x = c(0, 0.07),  
+    label_y = c(1, 1)
   )
 
   middle_row <- plot_grid(

@@ -94,7 +94,8 @@ create_time_windows_plot <- function(df, start_var, end_var, reference_var, x_la
   ) +
   labs(x = x_label, y = "Number of Pipelines") + 
   scale_y_continuous() +
-  theme_classic() +
+  plot_theme_default +
+  custom_theme() +
   theme(
     axis.text.y = element_text(size = 8),
     axis.title.y = element_blank(),

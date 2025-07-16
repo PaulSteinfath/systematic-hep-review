@@ -17,7 +17,8 @@ create_simple_ica_plot <- function(df) {
          y = "Proportion of Studies",
          title = "ICA Usage",
          subtitle = paste("n =", sum(ica_counts$n))) +
-    theme_classic(base_family = "sans") +
+    plot_theme_default +
+    custom_theme() +
     theme(
       axis.text = element_text(size = 8),
       axis.title = element_text(size = 9)

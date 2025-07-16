@@ -55,13 +55,14 @@ create_ica_rej <- function(df) {
   p <- ggplot(counts_df, aes(x = reorder(rejected_components, count, decreasing = TRUE),
                              y = prop)) +
     geom_bar(stat = "identity", fill = "#696969", color = "white", linewidth = 0.5) +
-    theme_classic(base_family = "sans") +
+    custom_theme() +
     scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, .1))) +
     labs(
-      x = "Types of rejected ICA components",
+      x="",
       y = "Proportion of pipelines",
-      title = paste("n = ", pipeline_n, "pipelines")
-    )
+      title = "Types of Rejected ICA Components",
+      subtitle = paste("n =", pipeline_n, "pipelines")
+    ) 
 
-  print(p)
+  return(p)
 }

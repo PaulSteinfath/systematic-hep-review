@@ -100,7 +100,7 @@ eeg_acq_prep <- function(df) {
 
   # Create individual histogtams for online / offline references
   ref_online <- hist_panel(df_ref, "reference_online",
-    x.label = "Reference (online)",
+    title = "Reference (online)",
     discrete = TRUE, tilt_labels = F,
     modality_filter = "EEG",
     allowed = ref_categories[c(
@@ -111,7 +111,7 @@ eeg_acq_prep <- function(df) {
   )
 
   ref_offline <- hist_panel(df_ref, "reference_offline",
-    x.label = "Reference (offline)",
+    title = "Reference (offline)",
     discrete = TRUE, tilt_labels = F,
     modality_filter = "EEG",
     allowed = ref_categories[c(
@@ -136,25 +136,25 @@ eeg_acq_prep <- function(df) {
   )
 
   # Combine plots
-  fig_ABC <- plot_grid(
-    ref_online, plot_BC, ica_rej_plot,
+  fig_ABCD <- plot_grid(
+    plot_grid(ref_online, ncol = 1, labels = "A"),    
+    NULL,                                              # Spacer
+    plot_BC,                                          
+    plot_grid(ica_rej_plot, ncol = 1, labels = "D"),  
     ncol = 1,
-    align = "h",
-    axis = "l",
-    labels = c("A", "", "D"),
-    vjust = 1
-  )
+    align = "hv",
+    axis = "tblr",
+    vjust = 1,
+    rel_heights = c(1, 0.05, 1, 1) # A, spacer, B&C, D
+    )
 
   plot_grid(
-    fig_ABC,
+    fig_ABCD,
     NULL,
     filter_plot,
     nrow = 1,
-    align = "hv",
-    axis = "tblr",
     labels = c("", "", "E"),
     rel_widths = c(1.2, 0.05, 1),
-    hjust = 0.5,
     vjust = 1
   )
 }

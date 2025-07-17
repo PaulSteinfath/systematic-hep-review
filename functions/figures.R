@@ -279,11 +279,12 @@ eeg_locations_summary <- function(df) {
 
 studies_overview <- function(df) {
   p_year <- hist_panel(df, "Year", force.numeric = T, 
-                       x.label = "Publication year", 
+                       title = "Publication year", 
+                       x.label = "Year", 
                        binwidth = 2, use_proportion = F)
   
   p_modality <- hist_panel(df, "modality", discrete = T,
-                           x.label = "Imaging modality")
+                           title = "Imaging modality")
 
   df_study_categories <- df %>%
   group_by(PMID) %>%
@@ -302,10 +303,11 @@ studies_overview <- function(df) {
   
 p_condition <- hist_panel(df_study_categories, "study_category", 
                          discrete = T,
-                         x.label = "Experimental setting")
+                         title = "Experimental setting")
   
   fig <- plot_grid(p_year, p_modality, p_condition,
-                   nrow = 1, labels = c("B", "C", "D"))
+                  nrow = 1, labels = c("B", "C", "D"), align = "h",
+                  axis = "bt")
   
   fig
 }

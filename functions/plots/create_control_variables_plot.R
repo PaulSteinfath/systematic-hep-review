@@ -44,7 +44,8 @@ create_control_variables_plot <- function(df) {
       expand = c(0, 0)  
     ) +
     labs(x = "Percentage of Pipelines", y = "Control Variables", fill = "Category") +
-    theme_classic() +
+    plot_theme_default +
+    custom_theme() +
     theme(
       axis.text.y = element_text(size = 9),
       legend.position = c(0.65, 0.5),  

@@ -48,8 +48,8 @@ create_combined_plot <- function(
                linetype = "11") +
     geom_point(aes(x = .data[[start_var]]), color = "grey", size = 1, shape = 32) +
     geom_point(aes(x = .data[[end_var]]), color = "grey", size = 1, shape = 32) +
-    labs(x = x_label, y = y_label, title = paste("n =", nrow(df))) +
-    theme_classic(base_family = "sans") +
+    labs(x = x_label, y = y_label) +
+    custom_theme() +
     theme(
       axis.text.y = element_blank(),
       axis.title.y = element_text(size = 9, family = "sans", face = font_face),
@@ -57,7 +57,6 @@ create_combined_plot <- function(
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
       axis.title.x = element_blank(),
-      title = element_text(size = 9),
       plot.margin = margin(0.5, 0.5, 0.1, 0.5, unit = "cm")
     )
 
@@ -88,7 +87,7 @@ create_combined_plot <- function(
       name = "#Studies"
     ) +
     labs(x = x_label, y = "", fill = "#Studies") +
-    theme_classic(base_family = "sans") +
+    custom_theme() +
     theme(
       axis.text.x = element_text(size = 8, color = "black", family = "sans", face = font_face),
       axis.title.x = element_text(size = 9, color = "black", family = "sans", face = font_face),
@@ -128,7 +127,17 @@ create_combined_plot <- function(
     align = "v",
     axis = "lr",
     rel_heights = c(7.3, 1.2)
+    
   )
+
+  # add title and subtitle  
+  combined_plot <- combined_plot +
+    labs(title = "Filter Cutoffs", subtitle = paste("n =", nrow(df), "studies")) + 
+    custom_theme() +
+    theme(
+      plot.title = element_text(hjust = 0.1, margin = margin(b = 4)),
+      plot.subtitle = element_text(hjust = 0.1)
+    )
 
   return(combined_plot)
 }

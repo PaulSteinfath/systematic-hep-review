@@ -7,6 +7,7 @@ rejected_cardiac_ics <- function(df) {
 
   hist_panel(df_rej_ic, "rejected_cardiac_ics",
     x.label = "Average Number of rejected CFA-related ICs",
+    title = "Rejected Cardiac ICs",
     discrete = FALSE,
     binwidth = 1
   ) 

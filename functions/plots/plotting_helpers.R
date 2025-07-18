@@ -222,3 +222,10 @@ prepare_column_plot_data <- function(df,
   
   return(df)
 }
+
+custom_theme <- function() {
+  theme(
+    plot.title = element_text(size = 11), 
+    plot.subtitle = element_text(size = 9)
+  )
+}

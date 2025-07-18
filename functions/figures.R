@@ -30,15 +30,16 @@ source(file.path(func_path, "plots", "plot_simulated_effects.R"))
 
 create_stats_plot <- function(df){
   
-  a <- hist_panel(df, col = "Preregistration", force.numeric = F, use_proportion = T, discrete = T, x.label = "Preregistration", custom_labels = c("No","Yes"))
-  b <- hist_panel(df = df, col = "sample_size", x.label = "Sample Size", use_proportion = T)
-  c <- hist_panel(df = df, col = "groups", x.label = "Number of Groups", binwidth = 1, use_proportion = T)  
-  d <- hist_panel(df = df, col = "conditions", x.label = "Number of Conditions", binwidth = 1, use_proportion = T)  
-  e <- hist_panel(df = df, col = "trials_Mean", force.numeric = T, x.label = "Number of Averaged Epochs", use_proportion = T)
+  a <- hist_panel(df, col = "Preregistration", title = "Preregistration", force.numeric = F, use_proportion = T, discrete = T, custom_labels = c("No","Yes"))
+  b <- hist_panel(df = df, col = "sample_size", title = "Sample Size", x.label = "Number of Subjects", use_proportion = T)
+  c <- hist_panel(df = df, col = "groups", title = "Groups", x.label = "Number of Groups", binwidth = 1, use_proportion = T)  
+  d <- hist_panel(df = df, col = "conditions", title = "Conditions", x.label = "Number of Conditions", binwidth = 1, use_proportion = T)  
+  e <- hist_panel(df = df, col = "trials_Mean", title = "Averaged Epochs", force.numeric = T, x.label = "Number of Averaged Epochs", use_proportion = T)
   
-    f <- hist_panel(df = df, 
+  f <- hist_panel(df = df, 
                   col = "statistics", 
-                  x.label = "Statistical Test", 
+                  title = "Statistical Tests",
+                  x.label = "", 
                   discrete = T, 
                   tilt_labels = T,
                   allowed = c("t-test" = "t-test",
@@ -50,10 +51,8 @@ create_stats_plot <- function(df){
                              "F-test" = "F-test")) + coord_flip()
   
   g <- plot_hedges_g(df = df)
-
   h <- plot_control_categories(df = df)
-
-  i <- plot_ecg_controls(df = df)
+  i <- plot_ecg_controls(df = df) 
 
   first_row <- plot_grid(
     a,b,c,d,e,
@@ -72,11 +71,14 @@ create_stats_plot <- function(df){
     align = "h"
   )
   
-  p <- plot_grid(first_row, second_row, third_row, ncol = 1, rel_heights = c(1,1.4,1.4))
+  # Add 10% space between rows
+  spacer <- plot_grid(NULL)
+  
+  p <- plot_grid(first_row, spacer, second_row, spacer, third_row, 
+                 ncol = 1, rel_heights = c(1, 0.1, 1.4, 0.1, 1.4))
   
   p
 }
-
 
 create_epoch_simulation_plot <- function(df){
   

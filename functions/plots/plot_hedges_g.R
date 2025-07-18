@@ -159,7 +159,7 @@ plot_hedges_g <- function(df, with_clustering=FALSE, with_regression=FALSE){
   if (!with_clustering) {df <- df[df$clustering==0,]}
   if (!with_regression) {df <- df[df$statistics!='Regression',]}
   
-  p <- hist_panel(df, col = "hedges_g", force.numeric = T, x.label = "Hedges' g", use_proportion = T) +
+  p <- hist_panel(df, col = "hedges_g", force.numeric = T, title =  "Hedges' g", x.label = "Hedges' g", use_proportion = T) +
     geom_vline(aes(xintercept = 0.37, linetype = "Coll et al. (2020)"), color = "#E69F00") +
     geom_vline(xintercept = 0.35, linetype = "dashed", color = "#E69F00") +
     geom_vline(xintercept = 0.72, linetype = "dashed", color = "#E69F00") +

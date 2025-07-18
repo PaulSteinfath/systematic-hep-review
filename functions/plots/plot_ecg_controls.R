@@ -55,8 +55,23 @@ plot_ecg_controls <- function(df, tilt_labels = TRUE) {
     use_proportion    = TRUE,
     x.label           = "ECG and Heartbeat-Related Controls",
     fill_as_aesthetic = FALSE,       
-    tilt_labels       = tilt_labels
+    tilt_labels       = tilt_labels,
+    allowed           = c("ECG" = "ECG",
+                         "HEP-ECG Correlation" = "HEP-ECG\nCorrelation",
+                         "Surrogate Heartbeats" = "Surrogate\nHeartbeats",
+                         "RR Interval" = "RR Interval",
+                         "Number of Heartbeats" = "Number of\nHeartbeats",
+                         "QT Interval" = "QT Interval",
+                         "Control interval" = "Control interval",
+                         "T-Wave Latency" = "T-Wave Latency")
   ) + coord_flip()
+  
+  # Override the default fill color to match "Other Controls" category
+  p <- p + 
+    theme(panel.background = element_rect(fill = "white")) +
+    guides(fill = "none")
+ 
+  p$layers[[1]]$aes_params$fill <- "#647499ff"
   
   return(p)
 }

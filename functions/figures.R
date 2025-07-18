@@ -32,12 +32,27 @@ create_stats_plot <- function(df){
   
   a <- hist_panel(df, col = "Preregistration", force.numeric = F, use_proportion = T, discrete = T, x.label = "Preregistration", custom_labels = c("No","Yes"))
   b <- hist_panel(df = df, col = "sample_size", x.label = "Sample Size", use_proportion = T)
-  c <- hist_panel(df = df, col = "groups", x.label = "Number of Groups", binwidth = 1, use_proportion = T)
-  d <- hist_panel(df = df, col = "conditions", x.label = "Number of Conditions", binwidth = 1, use_proportion = T)
+  c <- hist_panel(df = df, col = "groups", x.label = "Number of Groups", binwidth = 1, use_proportion = T)  
+  d <- hist_panel(df = df, col = "conditions", x.label = "Number of Conditions", binwidth = 1, use_proportion = T)  
   e <- hist_panel(df = df, col = "trials_Mean", force.numeric = T, x.label = "Number of Averaged Epochs", use_proportion = T)
-  f <- hist_panel(df = df[(df$statistics!='none')&(df$statistics!='unknown'),], col = "statistics", x.label = "Statistical test", discrete = T, tilt_labels = T)+coord_flip()
+  
+    f <- hist_panel(df = df, 
+                  col = "statistics", 
+                  x.label = "Statistical Test", 
+                  discrete = T, 
+                  tilt_labels = T,
+                  allowed = c("t-test" = "t-test",
+                             "Correlation" = "Correlation",
+                             "Regression" = "Regression", 
+                             "ANOVA" = "ANOVA",
+                             "Non-parametric comparison" = "Non-parametric\ncomparison",
+                             "Classification" = "Classification",
+                             "F-test" = "F-test")) + coord_flip()
+  
   g <- plot_hedges_g(df = df)
+
   h <- plot_control_categories(df = df)
+
   i <- plot_ecg_controls(df = df)
 
   first_row <- plot_grid(
@@ -59,7 +74,9 @@ create_stats_plot <- function(df){
   
   p <- plot_grid(first_row, second_row, third_row, ncol = 1, rel_heights = c(1,1.4,1.4))
   
+  p
 }
+
 
 create_epoch_simulation_plot <- function(df){
   

@@ -103,7 +103,7 @@ plot_missing <- function(df,
                                 show_title = FALSE,
                                 show_legend = FALSE,
                                 x_lab = "Methodological Choice",
-                                tilt_labels = TRUE,
+                                tilt_labels = FALSE,
                                 x_ticks = TRUE,
                                 y_ticks = TRUE,
                                 flip = FALSE,
@@ -126,12 +126,12 @@ plot_missing <- function(df,
                                          pipeline_colors = pipeline_colors,
                                          fixed = fixed)
   
-  y_lab <- if (percentages) "Proportion of Studies with Missing Information" else "Number of Studies with Missing Information"
+  y_lab <- if (percentages) "Proportion of Studies" else "Number of Studies"
 
   my_title <- if (!show_title) {
     NULL
   } else if (show_wordy_title) {
-    "Missing Information per Method"
+    "Missing Information"
   } else {
     paste("n =", dplyr::n_distinct(df$PMID), "studies")
   }
@@ -141,7 +141,7 @@ plot_missing <- function(df,
     labs(title = my_title, x = x_lab, y = y_lab) +
     theme(
       title = element_text(size = 9),
-      axis.text.x = element_text(size = 8,
+      axis.text.x = element_text(size = 9,
                                  angle = if (tilt_labels) 45 else 0,
                                  hjust = if (tilt_labels) 1 else 0.5),
       axis.text.y = element_text(size = 8),

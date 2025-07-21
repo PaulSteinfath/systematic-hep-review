@@ -165,7 +165,7 @@ plot_entropy <- function(df,
                                 show_wordy_title = FALSE,
                                 show_title = FALSE,
                                 show_legend = FALSE,
-                                tilt_labels = TRUE,
+                                tilt_labels = FALSE,
                                 x_ticks = TRUE,
                                 y_ticks = TRUE,
                                 flip = FALSE,
@@ -189,10 +189,19 @@ plot_entropy <- function(df,
                                          pipeline_colors = pipeline_colors,
                                          fixed = fixed)
   
+  # If fixed is TRUE, preserve the order from method_columns
+  if (fixed) {
+    ordered_readable <- sapply(method_columns, function(col) {
+      readable <- names(column_mapping_readable)[column_mapping_readable == col]
+      if (length(readable) == 0) col else readable
+    })
+    entropy_df$Column <- factor(entropy_df$Column, levels = ordered_readable)
+  }
+  
   my_title <- if (!show_title) {
     NULL
   } else if (show_wordy_title) {
-    "Entropy of Methodological Choices" 
+    "Entropy" 
   } else {
     paste("n =", dplyr::n_distinct(df$PMID), "studies")
   }
@@ -202,7 +211,7 @@ plot_entropy <- function(df,
     labs(title = my_title, x = x_lab, y = y_lab) +
     theme(
       title = element_text(size = 9),
-      axis.text.x = element_text(size = 8,
+      axis.text.x = element_text(size = 9,
                                  angle = if (tilt_labels) 45 else 0,
                                  hjust = if (tilt_labels) 1 else 0.5),
       axis.text.y = element_text(size = 8),

@@ -104,8 +104,11 @@ create_combined_plot_for_columns <- function(df) {
     get_pipeline_step(var_name)
   })
   entropy_df$Step <- factor(entropy_df$Step, levels = names(pipeline_colors))
-  entropy_df <- entropy_df %>%
-    dplyr::arrange(Step, dplyr::desc(Entropy)) %>%
+  #Sort by entropy within each step
+  step_order <- c("Statistics", "HER Estimation", "Preprocessing", "Acquisition")
+  entropy_df$Step <- factor(entropy_df$Step, levels = step_order)
+    entropy_df <- entropy_df %>%
+    dplyr::arrange(Step, Entropy) %>%
     dplyr::mutate(Column = factor(Column, levels = unique(Column)))
   
   # Final fixed order to reuse (in readable names)
@@ -119,14 +122,16 @@ create_combined_plot_for_columns <- function(df) {
   
   # Build all three plots with unified config
   p1 <- plot_entropy(df,
-                            method_columns = analysis_steps,
+                            method_columns = ordered_columns_original,
                             column_mapping_readable = column_mapping_readable_default,
                             pipeline_steps = pipeline_steps,
                             pipeline_colors = pipeline_colors,
-                            fixed = FALSE,
+                            fixed = TRUE,
                             flip = TRUE,
-                            show_title = FALSE)
-  
+                            show_title = TRUE,
+                            show_wordy_title = TRUE)
+        
+
   p2 <- plot_multiple_choices(df,
                                      variables = ordered_columns_original,
                                      column_mapping_readable = column_mapping_readable_default,
@@ -135,9 +140,9 @@ create_combined_plot_for_columns <- function(df) {
                                      fixed = TRUE,
                                      flip = TRUE,
                                      y_ticks = FALSE,
-                                     show_title = FALSE,
+                                     show_title = TRUE,
+                                     show_wordy_title = TRUE,
                                      x_lab = "")
-  
   p3 <- plot_missing(df,
                             columns = ordered_columns_original,
                             column_mapping_readable = column_mapping_readable_default,
@@ -146,10 +151,11 @@ create_combined_plot_for_columns <- function(df) {
                             fixed = TRUE,
                             flip = TRUE,
                             y_ticks = FALSE,
-                            show_title = FALSE,
+                            show_title = TRUE,
+                            show_wordy_title = TRUE,
                             x_lab = "", 
                             show_legend = TRUE)
-  
+
   figABC <- plot_grid(p1, NULL, p2, NULL, p3,
                       ncol = 5,
                       align = "h",
@@ -158,7 +164,7 @@ create_combined_plot_for_columns <- function(df) {
                       label_x = c(0, NA, -0.1, NA, -0.1), 
                       label_y = c(1, NA, 1, NA, 1),  
                       rel_widths = c(1, 0.025, 0.7, 0.025, 1))
-  
+
   return(figABC)
 }
 

@@ -211,7 +211,7 @@ prepare_column_plot_data <- function(df,
   } else {
     if (!is.null(pipeline_colors)) {
       df <- df %>%
-        dplyr::arrange(Step, dplyr::desc(.data[[value_col]])) %>%
+        dplyr::arrange(match(Step, c("Statistics", "HER Estimation", "Preprocessing", "Acquisition")), dplyr::desc(.data[[value_col]])) %>%
         dplyr::mutate(!!column_col := factor(.data[[column_col]], levels = unique(.data[[column_col]])))
     } else {
       df <- df %>%

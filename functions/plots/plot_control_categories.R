@@ -43,6 +43,15 @@ plot_control_categories <- function(df, tilt_labels = TRUE) {
     dplyr::select(PMID, category)
   
   ## 3. Plot – with fill aesthetic to allow individual colors per category
+  allowed_mapping <- c("ECG and Heartbeat-Related Controls" = "ECG and Heartbeat-\nRelated Controls",
+                      "Heart Rate Variability (HRV) Controls" = "Heart Rate Variability\n(HRV) Controls",
+                      "Cardiovascular and Blood Pressure Controls" = "Cardiovascular and\nBlood Pressure Controls",
+                      "Respiration" = "Respiration",
+                      "Demographic and Psychosocial Controls" = "Demographic and\nPsychosocial Controls",
+                      "Physiological and Environmental Controls" = "Physiological and\nEnvironmental Controls",
+                      "Task and Experimental Controls" = "Task and\nExperimental Controls",
+                      "Other Controls" = "Other Controls")
+  
   p <- hist_panel(
     long_df,
     col               = "category",
@@ -55,15 +64,6 @@ plot_control_categories <- function(df, tilt_labels = TRUE) {
     tilt_labels       = tilt_labels,
     allowed           = allowed_mapping
   ) + coord_flip()
-  
-  allowed_mapping <- c("ECG and Heartbeat-Related Controls" = "ECG and Heartbeat-\nRelated Controls",
-                      "Heart Rate Variability (HRV) Controls" = "Heart Rate Variability\n(HRV) Controls",
-                      "Cardiovascular and Blood Pressure Controls" = "Cardiovascular and\nBlood Pressure Controls",
-                      "Respiration" = "Respiration",
-                      "Demographic and Psychosocial Controls" = "Demographic and\nPsychosocial Controls",
-                      "Physiological and Environmental Controls" = "Physiological and\nEnvironmental Controls",
-                      "Task and Experimental Controls" = "Task and\nExperimental Controls",
-                      "Other Controls" = "Other Controls")
   
   category_colors <- c()
   for (cat in unique(long_df$category)) {

@@ -1,4 +1,4 @@
-plot_control_categories <- function(df, tilt_labels = TRUE) {
+plot_control_categories <- function(df, tilt_labels = FALSE) {
   ## 0. Look-ups 
   control_variable_synonyms <- get_control_variable_mappings()
   

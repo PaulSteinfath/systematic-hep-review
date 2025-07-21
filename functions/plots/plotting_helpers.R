@@ -114,8 +114,11 @@ create_year_group_columns <- function(df, years) {
 # Add pipeline step categorization - correctly categorizing all variables
 pipeline_steps <- list(
   "Acquisition" = c(
-    "channels", "ecg_num_electrodes", "ecg_lead", "ecg_locations", 
-    "ecg_ground", "reference_online", "length_min", "hep_channels_selected", "modality", "rsHEP", "meeg_num_electrodes" 
+    "meeg_num_electrodes", "ecg_num_electrodes", "ecg_lead", "ecg_locations", 
+    "ecg_ground", "reference_online", "modality"
+  ),
+  "Experiment" = c(
+    "groups", "conditions", "length_min", "rsHEP", "sample_size", "trials", "trials_Mean"
   ),
   "Preprocessing" = c(
     "reference_offline", "high_pass", "low_pass", "ICA", 
@@ -124,19 +127,19 @@ pipeline_steps <- list(
   ),
   "HER Estimation" = c(
     "hep_relative_to", "hep_start", "hep_end",
-    "baseline_start_ms", "baseline_end_ms", "value", 
+    "baseline_start_ms", "baseline_end_ms", "value", "hep_channels_selected",
     "averaging_channels", "averaging_time", "hep_window_type"
   ),
   "Statistics" = c(
-    "clustering", "statistics", "permutations", "sample_size", "trials","trials_Mean", "conditions", "groups", "hypothesis"
+    "clustering", "statistics", "permutations", "hypothesis"
   )
 )
-
 pipeline_colors <- c(
-  "Acquisition"    = "#4D4D4D",  # Dark grey
-  "Preprocessing"  = "#696969",  # Medium grey 
-  "HER Estimation" = "#A0A0A0",  # Light-medium grey
-  "Statistics"     = "#C0C0C0"   # Light grey
+  "Experiment"     = "#505050",   # Medium-dark grey
+  "Acquisition"    = "#6A6A6A",   # Medium grey
+  "Preprocessing"  = "#8A8A8A",   # Medium-light grey 
+  "HER Estimation" = "#B0B0B0",   # Light grey
+  "Statistics"     = "#D0D0D0"    # Lightest grey
 )
 
 # Enhanced function to ensure we always get a valid pipeline step
@@ -211,7 +214,7 @@ prepare_column_plot_data <- function(df,
   } else {
     if (!is.null(pipeline_colors)) {
       df <- df %>%
-        dplyr::arrange(match(Step, c("Statistics", "HER Estimation", "Preprocessing", "Acquisition")), dplyr::desc(.data[[value_col]])) %>%
+        dplyr::arrange(match(Step, c("Statistics", "HER Estimation", "Preprocessing", "Acquisition", "Experiment")), dplyr::desc(.data[[value_col]])) %>%
         dplyr::mutate(!!column_col := factor(.data[[column_col]], levels = unique(.data[[column_col]])))
     } else {
       df <- df %>%

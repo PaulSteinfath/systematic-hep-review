@@ -1,17 +1,3 @@
-entropy_columns_default <- c(
-  "sample_size",   
-  "length_min", "ecg_num_electrodes", "ecg_lead", 
-  "ecg_locations", "ecg_ground", "reference_online", 
-  "reference_offline", "high_pass", "low_pass", 
-  "ICA", "ica_on_epochs", "rejected_components", 
-  "rejected_cardiac_ics", "cfa_rej_approach", "cfa_rej_criteria", 
-  "hep_channels_selected", 
-  "hep_relative_to", "hep_start", 
-  "hep_end", "baseline_start_ms", "baseline_end_ms", 
-  "value", "averaging_channels", 
-  "averaging_time", "clustering"
-)
-
 # Helper function to compute Shannon entropy from a frequency table.
 calc_entropy <- function(freq_table) {
   p <- freq_table / sum(freq_table)
@@ -149,16 +135,10 @@ compute_entropy <- function(data, method_columns,
   return(res_df)
 }
 
-plot_entropy <- function(df, 
-                                method_columns = entropy_columns_default,
+plot_entropy <- function(entropy_df,
                                 column_mapping_readable = column_mapping_readable_default,
                                 pipeline_steps = NULL,
                                 pipeline_colors = NULL,
-                                num_bins = 10,
-                                unique_threshold = 10,
-                                all_char = FALSE,
-                                norm = TRUE,
-                                drop_paper_duplicates = TRUE,
                                 x_lab = "Methodological Choice",
                                 y_lab = "Entropy",
                                 plot_fill = plot_fill_default_single,
@@ -171,31 +151,12 @@ plot_entropy <- function(df,
                                 flip = FALSE,
                                 fixed = FALSE) {
   
-  entropy_df <- compute_entropy(
-    data = df,
-    method_columns = method_columns,
-    num_bins = num_bins,
-    unique_threshold = unique_threshold,
-    all_char = all_char,
-    norm = norm,
-    drop_paper_duplicates = drop_paper_duplicates
-  )
+  # Apply readable mapping to Column names
+  entropy_df$Column <- apply_column_mapping(entropy_df$Column, column_mapping_readable)
   
-  entropy_df <- prepare_column_plot_data(entropy_df, 
-                                         column_col = "Column", 
-                                         value_col = "Entropy", 
-                                         method_columns = method_columns,
-                                         column_mapping_readable = column_mapping_readable,
-                                         pipeline_colors = pipeline_colors,
-                                         fixed = fixed)
-  
-  # If fixed is TRUE, preserve the order from method_columns
+  # For provided entropy_df, preserve the existing order (it's already sorted in figures.R)
   if (fixed) {
-    ordered_readable <- sapply(method_columns, function(col) {
-      readable <- names(column_mapping_readable)[column_mapping_readable == col]
-      if (length(readable) == 0) col else readable
-    })
-    entropy_df$Column <- factor(entropy_df$Column, levels = ordered_readable)
+    entropy_df$Column <- factor(entropy_df$Column, levels = unique(entropy_df$Column))
   }
   
   my_title <- if (!show_title) {

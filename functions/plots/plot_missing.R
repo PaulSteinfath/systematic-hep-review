@@ -1,20 +1,10 @@
-missing_columns_default <- list("channels", 
-                                 "ecg_num_electrodes", "ecg_lead", 
-                                 "ecg_locations", "reference_online", 
-                                 "reference_offline", "high_pass", "low_pass", 
-                                 "ICA", 
-                                 "rejected_components",  
-                                 "hep_channels_selected", 
-                                 "hep_relative_to", "hep_start", 
-                                 "hep_end", 
-                                 "value",  "statistics", "permutations", "sample_size",
-                                "cfa_rej_approach", "cfa_rej_criteria","baseline_start_ms", "baseline_end_ms",
-                                "rejected_cardiac_ics", "ecg_ground", "trials", "length_min")
-
 ica_columns <- c(
   "ica_on_epochs", "rejected_components", 
   "rejected_cardiac_ics", "cfa_rej_approach", "cfa_rej_criteria"
 )
+
+# CFA-specific columns
+cfa_columns <- c("rejected_cardiac_ics", "cfa_rej_approach", "cfa_rej_criteria")
 
 is_missing <- function(x) {
   x_char <- tolower(as.character(x))
@@ -29,6 +19,12 @@ calc_missing_for_column <- function(data, col) {
   # For ica_columns: only count missing if ICA == 1.
   if (col %in% ica_columns) {
     condition <- data$ICA == 1
+    
+    # For CFA-specific columns check that CFA is among rejected components
+    if (col %in% cfa_columns) {
+      cfa_mentioned <- grepl("CFA", data$rejected_components, ignore.case = TRUE)
+      condition <- condition & cfa_mentioned
+    }
   } else {
     condition <- rep(TRUE, nrow(data))
   }
@@ -58,6 +54,12 @@ calc_missing_for_column <- function(data, col) {
 compute_denom_papers <- function(data, col) {
   if (col %in% ica_columns) {
     rel <- data$ICA == 1
+    
+    # For CFA-specific columns: check that CFA is among rejected components
+    if (col %in% cfa_columns) {
+      cfa_mentioned <- grepl("CFA", data$rejected_components, ignore.case = TRUE)
+      rel <- rel & cfa_mentioned
+    }
   } else if (grepl("perm", col, ignore.case = TRUE)) {
     rel <- data$clustering == 1
   } else if (tolower(col) %in% c("reference online", "reference_online",
@@ -73,6 +75,12 @@ compute_denom_papers <- function(data, col) {
 compute_missing_papers <- function(data, col) {
   if (col %in% ica_columns) {
     rel <- data$ICA == 1
+
+    # For CFA-specific columns: check that CFA is among rejected components
+    if (col %in% cfa_columns) {
+      cfa_mentioned <- grepl("CFA", data$rejected_components, ignore.case = TRUE)
+      rel <- rel & cfa_mentioned
+    }
   } else if (grepl("perm", col, ignore.case = TRUE)) {
     rel <- data$clustering == 1
   } else if (tolower(col) %in% c("reference online", "reference_online",
@@ -93,7 +101,7 @@ compute_missing_papers <- function(data, col) {
 }
 
 plot_missing <- function(df,
-                                columns = missing_columns_default,
+                                columns = NULL,
                                 percentages = TRUE,
                                 column_mapping_readable = column_mapping_readable_default,
                                 pipeline_steps = NULL,

@@ -41,7 +41,7 @@ create_stats_plot <- function(df){
                   title = "Statistical Tests",
                   x.label = "", 
                   discrete = T, 
-                  tilt_labels = T,
+                  tilt_labels = F,
                   allowed = c("t-test" = "t-test",
                              "Correlation" = "Correlation",
                              "Regression" = "Regression", 
@@ -91,21 +91,30 @@ create_epoch_simulation_plot <- function(df){
 
 create_combined_plot_for_columns <- function(df) {
   
-  analysis_steps <- colnames(df)[c(7:10,13:32,34:43,45:46,59,61)]
-  
+  target_columns <- c(
+    "sample_size", "rsHEP", "modality", "meeg_num_electrodes", "length_min",
+    "ecg_num_electrodes", "ecg_lead", "ecg_locations", "ecg_ground", 
+    "reference_online", "reference_offline", "high_pass", "low_pass", "ICA", 
+    "ica_on_epochs", "rejected_components", "rejected_cardiac_ics", 
+    "cfa_rej_approach", "cfa_rej_criteria", "other_cfa_removal_strategy", 
+    "other_cleaning_strategy", "hep_channels_selected", "groups", "conditions", 
+    "hep_window_type", "hep_relative_to", "hep_start", "hep_end", 
+    "baseline_start_ms", "baseline_end_ms", "hypothesis", "value", 
+    "averaging_channels", "averaging_time", "clustering", "permutations", 
+    "trials_Mean", "statistics"
+  )
+
   # Use entropy to determine column order
   entropy_df <- compute_entropy(df, 
-                                method_columns = analysis_steps,
+                                method_columns = target_columns,
                                 drop_paper_duplicates = TRUE)
-  entropy_df$Column <- apply_column_mapping(entropy_df$Column, column_mapping_readable_default)
-  entropy_df$Step <- sapply(entropy_df$Column, function(readable) {
-    var_name <- column_mapping_readable_default[readable]
-    if (is.na(var_name)) var_name <- readable
+  entropy_df$Step <- sapply(entropy_df$Column, function(var_name) {
     get_pipeline_step(var_name)
   })
   entropy_df$Step <- factor(entropy_df$Step, levels = names(pipeline_colors))
+  
   #Sort by entropy within each step
-  step_order <- c("Statistics", "HER Estimation", "Preprocessing", "Acquisition")
+  step_order <- c("Statistics", "HER Estimation", "Preprocessing", "Acquisition", "Experiment")
   entropy_df$Step <- factor(entropy_df$Step, levels = step_order)
     entropy_df <- entropy_df %>%
     dplyr::arrange(Step, Entropy) %>%
@@ -121,8 +130,7 @@ create_combined_plot_for_columns <- function(df) {
   }, character(1))
   
   # Build all three plots with unified config
-  p1 <- plot_entropy(df,
-                            method_columns = ordered_columns_original,
+  p1 <- plot_entropy(entropy_df = entropy_df,
                             column_mapping_readable = column_mapping_readable_default,
                             pipeline_steps = pipeline_steps,
                             pipeline_colors = pipeline_colors,
@@ -161,7 +169,7 @@ create_combined_plot_for_columns <- function(df) {
                       align = "h",
                       axis = "l",
                       labels = c("A", "", "B", "", "C"),
-                      label_x = c(0, NA, -0.1, NA, -0.1), 
+                      label_x = c(0.35, NA, -0.13, NA, -0.1), 
                       label_y = c(1, NA, 1, NA, 1),  
                       rel_widths = c(1, 0.025, 0.7, 0.025, 1))
 
@@ -641,11 +649,11 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
   show(cfa_removal_plot)
 
-  combined_plot_for_columns <- create_combined_plot_for_columns(df)
+  pipelines_overview <- create_combined_plot_for_columns(df)
 
   ggsave(
-    filename = file.path(save_path, paste0("combined_plot_for_columns.", ext)),
-    plot = combined_plot_for_columns,
+    filename = file.path(save_path, paste0("pipelines_overview.", ext)),
+    plot = pipelines_overview,
     width = 11,
     height = 11,
     units = "in",
@@ -653,7 +661,7 @@ make_figures <- function(df, save_path, ext = "svg") {
     device = ext,
     bg = "white"
   )
-  show(combined_plot_for_columns)
+  show(pipelines_overview)
 
   control_vars_plot <- create_control_variables_plot(df)
 
@@ -737,10 +745,10 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
   show(epoch_simulation_plot)
   
-  additoinal_hedges_g_plot <- plot_hedges_g(df = df, with_clustering = T, with_regression = T)
+  additional_hedges_g_plot <- plot_hedges_g(df = df, with_clustering = T, with_regression = T)
   ggsave(
-    filename = file.path(save_path, paste0("additoinal_hedges_g_plot.", ext)),
-    plot = additoinal_hedges_g_plot,
+    filename = file.path(save_path, paste0("additional_hedges_g_plot.", ext)),
+    plot = additional_hedges_g_plot,
     width = 7,
     height = 5,
     units = "in",
@@ -748,6 +756,6 @@ make_figures <- function(df, save_path, ext = "svg") {
     device = ext,
     bg = "white"
   )
-  show(additoinal_hedges_g_plot)
+  show(additional_hedges_g_plot)
   
 }

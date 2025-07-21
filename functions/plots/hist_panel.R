@@ -81,7 +81,7 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
     p <- ggplot(df_distinct, aes(x = !!sym(col))) +
       geom_histogram(aes(
         y = if (use_proportion) 
-          after_stat(..count../sum(..count..))
+          after_stat(count / sum(count))
         else 
           after_stat(count)
         ),

@@ -1,4 +1,4 @@
-plot_ecg_controls <- function(df, tilt_labels = TRUE) {
+plot_ecg_controls <- function(df, tilt_labels = FALSE) {
   ## 0. Look-ups
   control_variable_synonyms <- get_control_variable_mappings()
   target_cat <- "ECG and Heartbeat-Related Controls"

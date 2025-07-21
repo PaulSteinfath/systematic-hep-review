@@ -1,13 +1,5 @@
-multiple_choice_columns_default <- list(
-  "reference_offline", 
-  "ICA", "ica_on_epochs", "rejected_components", 
-  "rejected_cardiac_ics", "cfa_rej_approach", "cfa_rej_criteria", "hep_relative_to","value", "baseline_start_ms", "baseline_end_ms", 
-  "hep_channels_selected", 
-   "hep_start", "hep_end", 
-  "averaging_channels", "averaging_time", "clustering")
-
 plot_multiple_choices <- function(df,
-                                         variables = multiple_choice_columns_default,
+                                         variables = NULL,
                                          percentages = TRUE,
                                          column_mapping_readable = column_mapping_readable_default,
                                          pipeline_steps = NULL,

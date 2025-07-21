@@ -39,6 +39,7 @@ column_mapping_readable_default <- c(
   "High-Pass Filter (Hz)" = "high_pass",
   "Low-Pass Filter (Hz)" = "low_pass",
   "ICA on Epochs" = "ica_on_epochs",
+  "ICA" = "ICA",
   "Type of Rejected Components" = "rejected_components",
   "Number of Rejected Cardiac ICs" = "rejected_cardiac_ics",
   "CFA Rejection Approach" = "cfa_rej_approach",
@@ -47,7 +48,7 @@ column_mapping_readable_default <- c(
   "Other Cleaning Strategy" = "other_cleaning_strategy",
   "Number of Groups" = "groups",
   "Number of Conditions" = "conditions",
-  "Number of Trials" = "trials",
+  #"Number of Trials" = "trials", # Not sure if we need it
   "HER Relative To" = "hep_relative_to",
   "Baseline Start (ms)" = "baseline_start_ms",
   "Baseline End (ms)" = "baseline_end_ms",
@@ -118,7 +119,7 @@ pipeline_steps <- list(
     "ecg_ground", "reference_online", "modality"
   ),
   "Experiment" = c(
-    "groups", "conditions", "length_min", "rsHEP", "sample_size", "trials", "trials_Mean"
+    "groups", "conditions", "length_min", "rsHEP", "sample_size", "trials_Mean"
   ),
   "Preprocessing" = c(
     "reference_offline", "high_pass", "low_pass", "ICA", 

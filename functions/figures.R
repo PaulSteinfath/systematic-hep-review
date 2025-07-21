@@ -91,18 +91,7 @@ create_epoch_simulation_plot <- function(df){
 
 create_combined_plot_for_columns <- function(df) {
   
-  target_columns <- c(
-    "sample_size", "rsHEP", "modality", "meeg_num_electrodes", "length_min",
-    "ecg_num_electrodes", "ecg_lead", "ecg_locations", "ecg_ground", 
-    "reference_online", "reference_offline", "high_pass", "low_pass", "ICA", 
-    "ica_on_epochs", "rejected_components", "rejected_cardiac_ics", 
-    "cfa_rej_approach", "cfa_rej_criteria", "other_cfa_removal_strategy", 
-    "other_cleaning_strategy", "hep_channels_selected", "groups", "conditions", 
-    "hep_window_type", "hep_relative_to", "hep_start", "hep_end", 
-    "baseline_start_ms", "baseline_end_ms", "hypothesis", "value", 
-    "averaging_channels", "averaging_time", "clustering", "permutations", 
-    "trials_Mean", "statistics"
-  )
+  target_columns <- unlist(pipeline_steps, use.names = FALSE)
 
   # Use entropy to determine column order
   entropy_df <- compute_entropy(df, 

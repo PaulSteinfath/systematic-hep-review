@@ -68,8 +68,9 @@ column_mapping_readable_default <- c(
   "Length (min)" = "length_min", 
   "Modality (EEG/MEG)" = "modality",
   "EEG Locations" = "eeg_locations",
-  "Number of Trials" = "trials_Mean",
-  "Resting-state HER" = "rsHEP"
+  #"Number of Trials" = "trials_Mean",
+  "Resting-state HER" = "rsHEP",
+  "Number of Trials" = "trials_original"
 )
 
 save_plot <- function(p, vis_path, file_name, plot_format = "svg", plot_width = 6, plot_height = 6) {
@@ -119,7 +120,7 @@ pipeline_steps <- list(
     "ecg_ground", "reference_online", "modality"
   ),
   "Experiment" = c(
-    "groups", "conditions", "length_min", "rsHEP", "sample_size", "trials_Mean"
+    "groups", "conditions", "length_min", "rsHEP", "sample_size", "trials_original"
   ),
   "Preprocessing" = c(
     "reference_offline", "high_pass", "low_pass", "ICA", 

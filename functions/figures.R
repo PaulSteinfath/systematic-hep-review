@@ -22,29 +22,147 @@ source(file.path(func_path, "plots", "plot_multiple_choices.R"))
 source(file.path(func_path, "plots", "plot_entropy.R"))
 source(file.path(func_path, "plots", "create_time_windows_plot.R"))
 source(file.path(func_path, "plots", "create_single_ecg_plot.R"))
+source(file.path(func_path, "plots", "plot_hedges_g.R"))
+source(file.path(func_path, "plots", "plot_control_categories.R"))
+source(file.path(func_path, "plots", "plot_ecg_controls.R"))
+source(file.path(func_path, "plots", "plot_hedges_g_adjusted_for_noise.R"))
+source(file.path(func_path, "plots", "plot_simulated_effects.R"))
 
-create_combined_plot_for_columns <- function(df){
+create_stats_plot <- function(df){
+  
+  a <- hist_panel(df, col = "Preregistration", title = "Preregistration", force.numeric = F, use_proportion = T, discrete = T, custom_labels = c("No","Yes"))
+  b <- hist_panel(df = df, col = "sample_size", title = "Sample Size", x.label = "Number of Subjects", use_proportion = T)
+  c <- hist_panel(df = df, col = "groups", title = "Groups", x.label = "Number of Groups", binwidth = 1, use_proportion = T)  
+  d <- hist_panel(df = df, col = "conditions", title = "Conditions", x.label = "Number of Conditions", binwidth = 1, use_proportion = T)  
+  e <- hist_panel(df = df, col = "trials_Mean", title = "Averaged Epochs", force.numeric = T, x.label = "Number of Averaged Epochs", use_proportion = T)
+  
+  f <- hist_panel(df = df, 
+                  col = "statistics", 
+                  title = "Statistical Tests",
+                  x.label = "", 
+                  discrete = T, 
+                  tilt_labels = F,
+                  allowed = c("t-test" = "t-test",
+                             "Correlation" = "Correlation",
+                             "Regression" = "Regression", 
+                             "ANOVA" = "ANOVA",
+                             "Non-parametric comparison" = "Non-parametric\ncomparison",
+                             "Classification" = "Classification",
+                             "F-test" = "F-test")) + coord_flip()
+  
+  g <- plot_hedges_g(df = df)
+  h <- plot_control_categories(df = df)
+  i <- plot_ecg_controls(df = df) 
 
-  analysis_steps <- colnames(df)[6:45] 
-
-  p1 <- plot_entropy(df,method_columns = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F,  x_lab = "", x_ticks = FALSE)
-
-  p2 <- plot_multiple_choices(df,variables = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F, x_lab = "", x_ticks = FALSE)
-
-  p3 <- plot_missing(df, columns = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F, x_ticks = TRUE)
-
-  fig_ABC <- plot_grid(
-    p1, p2, p3, 
-    ncol = 1, 
-    align = "v",
-    axis = "l",
-    labels = c("A", "B", "C"),
-    vjust = 1,
-    rel_heights = c(1, 1, 1.2)
+  first_row <- plot_grid(
+    a,b,c,d,e,
+    ncol = 5, labels = c("A","B", "C", "D","E"), rel_widths = c(0.8, 0.8, 0.8,0.8,1.2),
+    align = "h"
   )
+  second_row <- plot_grid(
+    f,g,
+    ncol = 2, labels = c("F","G"),
+    rel_widths = c(1, 1),
+    align = "h"
+  )
+  third_row <-plot_grid(
+    h,i,
+    ncol = 2, labels = c("H","I"),rel_widths = c(1, 1),
+    align = "h"
+  )
+  
+  # Add 10% space between rows
+  spacer <- plot_grid(NULL)
+  
+  p <- plot_grid(first_row, spacer, second_row, spacer, third_row, 
+                 ncol = 1, rel_heights = c(1, 0.1, 1.4, 0.1, 1.4))
+  
+  p
+}
 
-  return(fig_ABC)
+create_epoch_simulation_plot <- function(df){
+  
+  a <- plot_hedges_g_adjusted_for_noise(df, sigma_s_vals = c(0.5, 1, 2), sigma_t_vals = c(0.1, 0.2, 0.5, 1), r_thresh = 4)
+  b <- plot_simulated_effects(d_type = 'g', plot_type = 'pure', Ns=seq(10,300,10), ks=seq(10,300,10), sigma_ratio=c(0.5,1,2,2.5,4))
+ 
+  p <- plot_grid(a, b, ncol = 2)
+  
+}
 
+create_combined_plot_for_columns <- function(df) {
+  
+  target_columns <- unlist(pipeline_steps, use.names = FALSE)
+
+  # Use entropy to determine column order
+  entropy_df <- compute_entropy(df, 
+                                method_columns = target_columns,
+                                drop_paper_duplicates = TRUE)
+  entropy_df$Step <- sapply(entropy_df$Column, function(var_name) {
+    get_pipeline_step(var_name)
+  })
+  entropy_df$Step <- factor(entropy_df$Step, levels = names(pipeline_colors))
+  
+  #Sort by entropy within each step
+  step_order <- c("Statistics", "HER Estimation", "Preprocessing", "Acquisition", "Experiment")
+  entropy_df$Step <- factor(entropy_df$Step, levels = step_order)
+    entropy_df <- entropy_df %>%
+    dplyr::arrange(Step, Entropy) %>%
+    dplyr::mutate(Column = factor(Column, levels = unique(Column)))
+  
+  # Final fixed order to reuse (in readable names)
+  ordered_columns_readable <- levels(entropy_df$Column)
+  
+  # Map back to original variable names
+  ordered_columns_original <- vapply(ordered_columns_readable, function(readable) {
+    var_name <- column_mapping_readable_default[readable]
+    if (is.na(var_name)) readable else var_name
+  }, character(1))
+  
+  # Build all three plots with unified config
+  p1 <- plot_entropy(entropy_df = entropy_df,
+                            column_mapping_readable = column_mapping_readable_default,
+                            pipeline_steps = pipeline_steps,
+                            pipeline_colors = pipeline_colors,
+                            fixed = TRUE,
+                            flip = TRUE,
+                            show_title = TRUE,
+                            show_wordy_title = TRUE)
+        
+
+  p2 <- plot_multiple_choices(df,
+                                     variables = ordered_columns_original,
+                                     column_mapping_readable = column_mapping_readable_default,
+                                     pipeline_steps = pipeline_steps,
+                                     pipeline_colors = pipeline_colors,
+                                     fixed = TRUE,
+                                     flip = TRUE,
+                                     y_ticks = FALSE,
+                                     show_title = TRUE,
+                                     show_wordy_title = TRUE,
+                                     x_lab = "")
+  p3 <- plot_missing(df,
+                            columns = ordered_columns_original,
+                            column_mapping_readable = column_mapping_readable_default,
+                            pipeline_steps = pipeline_steps,
+                            pipeline_colors = pipeline_colors,
+                            fixed = TRUE,
+                            flip = TRUE,
+                            y_ticks = FALSE,
+                            show_title = TRUE,
+                            show_wordy_title = TRUE,
+                            x_lab = "", 
+                            show_legend = TRUE)
+
+  figABC <- plot_grid(p1, NULL, p2, NULL, p3,
+                      ncol = 5,
+                      align = "h",
+                      axis = "l",
+                      labels = c("A", "", "B", "", "C"),
+                      label_x = c(0.35, NA, -0.13, NA, -0.1), 
+                      label_y = c(1, NA, 1, NA, 1),  
+                      rel_widths = c(1, 0.025, 0.7, 0.025, 1))
+
+  return(figABC)
 }
 
 # Create filter cutoff plots
@@ -100,7 +218,7 @@ eeg_acq_prep <- function(df) {
 
   # Create individual histogtams for online / offline references
   ref_online <- hist_panel(df_ref, "reference_online",
-    x.label = "Reference (online)",
+    title = "Reference (online)",
     discrete = TRUE, tilt_labels = F,
     modality_filter = "EEG",
     allowed = ref_categories[c(
@@ -111,7 +229,7 @@ eeg_acq_prep <- function(df) {
   )
 
   ref_offline <- hist_panel(df_ref, "reference_offline",
-    x.label = "Reference (offline)",
+    title = "Reference (offline)",
     discrete = TRUE, tilt_labels = F,
     modality_filter = "EEG",
     allowed = ref_categories[c(
@@ -136,25 +254,25 @@ eeg_acq_prep <- function(df) {
   )
 
   # Combine plots
-  fig_ABC <- plot_grid(
-    ref_online, plot_BC, ica_rej_plot,
+  fig_ABCD <- plot_grid(
+    plot_grid(ref_online, ncol = 1, labels = "A"),    
+    NULL,                                              # Spacer
+    plot_BC,                                          
+    plot_grid(ica_rej_plot, ncol = 1, labels = "D"),  
     ncol = 1,
-    align = "h",
-    axis = "l",
-    labels = c("A", "", "D"),
-    vjust = 1
-  )
+    align = "hv",
+    axis = "tblr",
+    vjust = 1,
+    rel_heights = c(1, 0.05, 1, 1) # A, spacer, B&C, D
+    )
 
   plot_grid(
-    fig_ABC,
+    fig_ABCD,
     NULL,
     filter_plot,
     nrow = 1,
-    align = "hv",
-    axis = "tblr",
     labels = c("", "", "E"),
     rel_widths = c(1.2, 0.05, 1),
-    hjust = 0.5,
     vjust = 1
   )
 }
@@ -176,7 +294,9 @@ cfa_removal <- function(df) {
     cfa_criteria_plot,
     ncol = 2, labels = c("A", "B"),
     align = "v", axis = "b",
-    rel_widths = c(0.25, 0.75)
+    rel_widths = c(0.25, 0.75),
+    label_x = c(0, 0.07),  
+    label_y = c(1, 1)
   )
 
   middle_row <- plot_grid(
@@ -274,14 +394,14 @@ eeg_locations_summary <- function(df) {
   fig
 }
 
-
 studies_overview <- function(df) {
   p_year <- hist_panel(df, "Year", force.numeric = T, 
-                       x.label = "Publication year", 
+                       title = "Publication year", 
+                       x.label = "Year", 
                        binwidth = 2, use_proportion = F)
   
   p_modality <- hist_panel(df, "modality", discrete = T,
-                           x.label = "Imaging modality")
+                           title = "Imaging modality")
 
   df_study_categories <- df %>%
   group_by(PMID) %>%
@@ -300,14 +420,14 @@ studies_overview <- function(df) {
   
 p_condition <- hist_panel(df_study_categories, "study_category", 
                          discrete = T,
-                         x.label = "Experimental setting")
+                         title = "Experimental setting")
   
   fig <- plot_grid(p_year, p_modality, p_condition,
-                   nrow = 1, labels = c("B", "C", "D"))
+                  nrow = 1, labels = c("B", "C", "D"), align = "h",
+                  axis = "bt")
   
   fig
 }
-
 
 create_hep_time_windows_summary_plot <- function(df) {
 
@@ -518,18 +638,19 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
   show(cfa_removal_plot)
 
-  combined_plot_for_columns <- create_combined_plot_for_columns(df)
+  pipelines_overview <- create_combined_plot_for_columns(df)
 
   ggsave(
-    filename = file.path(save_path, paste0("combined_plot_for_columns.", ext)),
-    plot = combined_plot_for_columns,
-    width = 10,
+    filename = file.path(save_path, paste0("pipelines_overview.", ext)),
+    plot = pipelines_overview,
+    width = 11,
     height = 11,
     units = "in",
     dpi = 300,
     device = ext,
     bg = "white"
   )
+  show(pipelines_overview)
 
   control_vars_plot <- create_control_variables_plot(df)
 
@@ -586,4 +707,44 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(hep_time_windows_combined)
+  
+  stats_plot <- create_stats_plot(df)
+  ggsave(
+    filename = file.path(save_path, paste0("stats_plot.", ext)),
+    plot = stats_plot,
+    width = 10,
+    height = 11,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
+  show(stats_plot)
+  
+  epoch_simulation_plot <- create_epoch_simulation_plot(df)
+  ggsave(
+    filename = file.path(save_path, paste0("epoch_simulation_plot.", ext)),
+    plot = epoch_simulation_plot,
+    width = 7,
+    height = 5,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
+  show(epoch_simulation_plot)
+  
+  additional_hedges_g_plot <- plot_hedges_g(df = df, with_clustering = T, with_regression = T)
+  ggsave(
+    filename = file.path(save_path, paste0("additional_hedges_g_plot.", ext)),
+    plot = additional_hedges_g_plot,
+    width = 7,
+    height = 5,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
+  show(additional_hedges_g_plot)
+  
 }

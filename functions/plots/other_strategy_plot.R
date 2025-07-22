@@ -28,5 +28,5 @@ other_strategy_plot <- function(df) {
              group_col = "PMID",
              discrete = TRUE,
              use_proportion = TRUE, 
-             x.label = "Other strategies for the removal of CFA")
+             title = "Other CFA Removal Strategies")
 }

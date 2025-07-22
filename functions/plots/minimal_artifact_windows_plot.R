@@ -66,12 +66,13 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
     labs(
       x = "Time (ms)",
       y = "",
-      title = paste("n =", nrow(df_minimal)),
-      caption = "HER windows for minimal artifact",
+      title = "Minimal Artifact Windows",
+      subtitle = paste("n =", nrow(df_minimal), "studies"),
       color = "Reference"
     ) +
     scale_color_manual(values = r_t_peak_palette) +
-    theme_classic(base_family = "sans") +
+    plot_theme_default +
+    custom_theme() +
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           #panel.grid.major.x = element_line(color = "gray90", linetype = "solid"),

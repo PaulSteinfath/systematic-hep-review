@@ -195,6 +195,36 @@ adjust_data_type <- function(df, adjust_numeric = c(), adjust_factor = c()) {
   return(df)
 }
 
+process_trial_column <- function(df, col) {
+  # Capture the name of the column as a string
+  col_name <- deparse(substitute(col))
+  new_mean_col <- paste0(col_name, "_Mean")
+  new_sd_col <- paste0(col_name, "_SD")
+  
+  # Process the column and return a tibble with two new columns
+  out <- df %>%
+    # Ensure the target column is character
+    mutate({{col}} := as.character({{col}})) %>%
+    transmute(
+      !!new_mean_col := case_when(
+        str_detect({{col}}, "\\[est\\d+\\]") ~ as.numeric(str_extract({{col}}, "\\d+")),
+        str_detect({{col}}, "\\d+\\+-\\d+") ~ as.numeric(str_split_fixed({{col}}, "\\+\\-", 2)[, 1]),
+        str_detect({{col}}, "^\\d+$") ~ as.numeric({{col}}),
+        is.na({{col}}) | {{col}} == "" ~ NA_real_,
+        TRUE ~ NA_real_
+      ),
+      !!new_sd_col := case_when(
+        str_detect({{col}}, "\\d+\\+-\\d+") ~ as.numeric(str_split_fixed({{col}}, "\\+\\-", 2)[, 2]),
+        TRUE ~ NA_real_
+      )
+    ) %>%
+    # Replace NA in the mean column with "unknown"
+    mutate(
+      !!new_mean_col := ifelse(is.na(!!sym(new_mean_col)), "unknown", as.character(!!sym(new_mean_col)))
+    )
+  return(out)
+}
+
 preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data_types = T) {
   
   if (output_screening){
@@ -258,6 +288,14 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
       ),
       method_numeric = ifelse(method_category == "Averaging", 1, 0)
     )
+  
+  # process trials column
+  new_trial_cols <- process_trial_column(df_included, trials)
+  df_included <- bind_cols(df_included, new_trial_cols)
+  df_included$trials_Mean <- as.numeric(df_included$trials_Mean)
+  
+  # clean up cases where additional tests follow ANOVA
+  df_included$statistics <- case_when(str_detect(df_included$Statistical.test, regex("anova", ignore_case = TRUE)) ~ "ANOVA", TRUE ~ df_included$Statistical.test)
   
   if (output_screening){
     list(df_screening, df_included)

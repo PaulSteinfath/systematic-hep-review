@@ -200,8 +200,9 @@ process_trial_column <- function(df, col) {
   col_name <- deparse(substitute(col))
   new_mean_col <- paste0(col_name, "_Mean")
   new_sd_col <- paste0(col_name, "_SD")
+  new_original_col <- paste0(col_name, "_original")
   
-  # Process the column and return a tibble with two new columns
+  # Process the column and return a tibble with three new columns
   out <- df %>%
     # Ensure the target column is character
     mutate({{col}} := as.character({{col}})) %>%
@@ -216,11 +217,14 @@ process_trial_column <- function(df, col) {
       !!new_sd_col := case_when(
         str_detect({{col}}, "\\d+\\+-\\d+") ~ as.numeric(str_split_fixed({{col}}, "\\+\\-", 2)[, 2]),
         TRUE ~ NA_real_
+      ),
+      !!new_original_col := case_when(
+        str_detect({{col}}, "\\[est\\d+\\]") ~ NA_real_,  # Set estimated values to NA
+        str_detect({{col}}, "\\d+\\+-\\d+") ~ as.numeric(str_split_fixed({{col}}, "\\+\\-", 2)[, 1]),  # Extract mean from SD entries
+        str_detect({{col}}, "^\\d+$") ~ as.numeric({{col}}),
+        is.na({{col}}) | {{col}} == "" ~ NA_real_,
+        TRUE ~ NA_real_
       )
-    ) %>%
-    # Replace NA in the mean column with "unknown"
-    mutate(
-      !!new_mean_col := ifelse(is.na(!!sym(new_mean_col)), "unknown", as.character(!!sym(new_mean_col)))
     )
   return(out)
 }
@@ -293,7 +297,8 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   new_trial_cols <- process_trial_column(df_included, trials)
   df_included <- bind_cols(df_included, new_trial_cols)
   df_included$trials_Mean <- as.numeric(df_included$trials_Mean)
-  
+  df_included$trials_original <- as.numeric(df_included$trials_original)
+
   # clean up cases where additional tests follow ANOVA
   df_included$statistics <- case_when(str_detect(df_included$Statistical.test, regex("anova", ignore_case = TRUE)) ~ "ANOVA", TRUE ~ df_included$Statistical.test)
   

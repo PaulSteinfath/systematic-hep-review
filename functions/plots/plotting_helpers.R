@@ -48,7 +48,7 @@ column_mapping_readable_default <- c(
   "Other Cleaning Strategy" = "other_cleaning_strategy",
   "Number of Groups" = "groups",
   "Number of Conditions" = "conditions",
-  #"Number of Trials" = "trials", # Not sure if we need it
+  "Number of Trials" = "trials", # Not sure if we need it
   "HER Relative To" = "hep_relative_to",
   "Baseline Start (ms)" = "baseline_start_ms",
   "Baseline End (ms)" = "baseline_end_ms",
@@ -68,7 +68,7 @@ column_mapping_readable_default <- c(
   "Length (min)" = "length_min", 
   "Modality (EEG/MEG)" = "modality",
   "EEG Locations" = "eeg_locations",
-  "Number of Trials" = "trials_Mean",
+  #"Number of Trials" = "trials_Mean",# Not sure if we need it
   "Resting-state HER" = "rsHEP"
 )
 
@@ -119,7 +119,7 @@ pipeline_steps <- list(
     "ecg_ground", "reference_online", "modality"
   ),
   "Experiment" = c(
-    "groups", "conditions", "length_min", "rsHEP", "sample_size", "trials_Mean"
+    "groups", "conditions", "length_min", "rsHEP", "sample_size", "trials"
   ),
   "Preprocessing" = c(
     "reference_offline", "high_pass", "low_pass", "ICA", 

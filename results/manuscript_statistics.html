@@ -11,7 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
-<meta name="date" content="2025-07-14" />
+<meta name="date" content="2025-07-22" />
 
 <title>Manuscript Summary</title>
 
@@ -58,7 +58,7 @@ if (window.hljs) {
 <h1 class="title toc-ignore">Manuscript Summary</h1>
 <h3 class="subtitle">A Systematic Review of Methods Used for Studying
 Heartbeat Evoked Responses</h3>
-<h4 class="date">2025-07-14</h4>
+<h4 class="date">2025-07-22</h4>
 
 
 
@@ -128,6 +128,62 @@ time windows, or statistical approaches).</li>
 </div>
 <div id="overview-of-methodological-choices" class="section level2">
 <h2>Overview of methodological choices</h2>
+<div id="methodological-variability" class="section level3">
+<h3>Methodological Variability</h3>
+<p>Studies using multiple statistical tests: <strong>56.1%</strong></p>
+<p>Studies varying HER window start or end times:
+<strong>44.7%</strong></p>
+</div>
+<div id="missing-information" class="section level3">
+<h3>Missing Information</h3>
+<p>Studies missing cardiac IC rejection information (among those using
+CFA removal): <strong>71.4%</strong></p>
+<p>Studies with unknown ECG ground location: <strong>79.5%</strong></p>
+<p>Studies missing ECG electrode locations: <strong>28%</strong></p>
+</div>
+<div id="variables-with-high-missing-information-40"
+class="section level3">
+<h3>Variables with High Missing Information (&gt;40%)</h3>
+<table>
+<caption>Variables with &gt;40% missing values across studies</caption>
+<thead>
+<tr class="header">
+<th align="left">Variable</th>
+<th align="right">Missing (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ecg_ground</td>
+<td align="right">79.5</td>
+</tr>
+<tr class="even">
+<td align="left">length_min</td>
+<td align="right">59.1</td>
+</tr>
+<tr class="odd">
+<td align="left">trials</td>
+<td align="right">55.3</td>
+</tr>
+<tr class="even">
+<td align="left">rejected_cardiac_ics</td>
+<td align="right">71.0</td>
+</tr>
+<tr class="odd">
+<td align="left">other_cfa_removal_strategy</td>
+<td align="right">52.3</td>
+</tr>
+<tr class="even">
+<td align="left">baseline_start_ms</td>
+<td align="right">43.9</td>
+</tr>
+<tr class="odd">
+<td align="left">baseline_end_ms</td>
+<td align="right">44.7</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div id="meeg-acquisition-preprocessing" class="section level2">
 <h2>M/EEG Acquisition &amp; Preprocessing</h2>
@@ -376,6 +432,108 @@ permutations)</li>
 <li>Other measures: <strong>9</strong> studies
 (<strong>6.3%</strong>)</li>
 </ul>
+<div id="statistical-analysis-and-power-considerations"
+class="section level2">
+<h2>Statistical Analysis and power considerations</h2>
+<p>Minimum, maximum and median number of participants:
+<strong>1</strong> - <strong>552</strong> - <strong>32</strong></p>
+<p>Number of groups: <strong>1</strong> - <strong>6</strong></p>
+<p>Number of conditions: <strong>1</strong> - <strong>20</strong></p>
+</div>
+<div id="statistical-analysis-methods" class="section level2">
+<h2>Statistical Analysis Methods</h2>
+<p>Statistical test families used across studies:</p>
+<ul>
+<li><strong>t-test</strong>: <strong>33.3%</strong> (74 studies)</li>
+<li><strong>Correlation</strong>: <strong>27.9%</strong> (62
+studies)<br />
+</li>
+<li><strong>ANOVA</strong>: <strong>23.4%</strong> (52 studies)</li>
+<li><strong>Regression</strong>: <strong>7.7%</strong> (17 studies)</li>
+</ul>
+<div id="statistical-tests-by-analysis-method" class="section level3">
+<h3>Statistical Tests by Analysis Method</h3>
+<table>
+<caption>Most common statistical test families by analysis method
+(Averaging vs Clustering)</caption>
+<colgroup>
+<col width="22%" />
+<col width="36%" />
+<col width="18%" />
+<col width="22%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Analysis Method</th>
+<th align="left">Statistical Test</th>
+<th align="center">Studies (n)</th>
+<th align="center">Percentage (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Averaging</td>
+<td align="left">Correlation</td>
+<td align="center">53</td>
+<td align="center">40.5</td>
+</tr>
+<tr class="even">
+<td align="left">Averaging</td>
+<td align="left">ANOVA</td>
+<td align="center">42</td>
+<td align="center">32.1</td>
+</tr>
+<tr class="odd">
+<td align="left">Averaging</td>
+<td align="left">t-test</td>
+<td align="center">15</td>
+<td align="center">11.5</td>
+</tr>
+<tr class="even">
+<td align="left">Averaging</td>
+<td align="left">Regression</td>
+<td align="center">14</td>
+<td align="center">10.7</td>
+</tr>
+<tr class="odd">
+<td align="left">Clustering</td>
+<td align="left">t-test</td>
+<td align="center">56</td>
+<td align="center">80.0</td>
+</tr>
+<tr class="even">
+<td align="left">Clustering</td>
+<td align="left">ANOVA</td>
+<td align="center">5</td>
+<td align="center">7.1</td>
+</tr>
+<tr class="odd">
+<td align="left">Clustering</td>
+<td align="left">Correlation</td>
+<td align="center">5</td>
+<td align="center">7.1</td>
+</tr>
+<tr class="even">
+<td align="left">Clustering</td>
+<td align="left">Non-parametric comparison</td>
+<td align="center">2</td>
+<td align="center">2.9</td>
+</tr>
+</tbody>
+</table>
+<p>Percentage of studies with group or condition analysis:
+<strong>73.2%</strong></p>
+<p>Percentage of studies with correlation analysis:
+<strong>26.6%</strong></p>
+<p>Minimum, maximum, and median number of trials per pipeline:
+<strong>22</strong> - <strong>5517</strong> - <strong>300</strong></p>
+</div>
+</div>
+<div id="power-analysis" class="section level2">
+<h2>Power Analysis</h2>
+<p>Only <strong>5%</strong> of pipelines (8/162) had sufficient power to
+detect the average effect size reported by Coll et al. (2020).</p>
+</div>
 </div>
 
 

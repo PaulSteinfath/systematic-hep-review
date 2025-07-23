@@ -121,14 +121,8 @@ create_combined_plot_for_columns <- function(df) {
     dplyr::arrange(Step, Entropy) %>%
     dplyr::mutate(Column = factor(Column, levels = unique(Column)))
   
-  # Final fixed order to reuse (in readable names)
-  ordered_columns_readable <- levels(entropy_df$Column)
-  
-  # Map back to original variable names
-  ordered_columns_original <- vapply(ordered_columns_readable, function(readable) {
-    var_name <- column_mapping_readable_default[readable]
-    if (is.na(var_name)) readable else var_name
-  }, character(1))
+  # Final fixed order to reuse
+  ordered_columns_original <- levels(entropy_df$Column)
   
   # Build all three plots with unified config
   p1 <- plot_entropy(entropy_df = entropy_df,

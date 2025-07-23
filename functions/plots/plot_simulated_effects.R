@@ -114,9 +114,9 @@ plot_simulated_effects <- function(
     )) +
     scale_fill_viridis(name = legend_title, option = 'A') +
     labs(
-      x     = 'Number of subjects (N)',
-      y     = 'Epochs per subject (k)',
-      title = paste0('Minimum detectable ', d_type)
+      x     = 'Number of participants (N)',
+      y     = 'Epochs per participant (k)',
+      title = paste0('Minimal detectable ', d_type)
     ) +
     theme(
       panel.grid.major = element_blank(),

@@ -14,9 +14,9 @@ create_simple_ica_plot <- function(df) {
     scale_y_continuous(labels = scales::percent,
                       expand = expansion(mult = c(0, .1))) +
     labs(x = "",
-         y = "Proportion of pipelines",
-         title = "ICA Usage",
-         subtitle = paste("n =", sum(ica_counts$n))) +
+       y = "Proportion of pipelines",
+       title = "ICA Usage",
+       subtitle = paste("n =", sum(ica_counts$n), "pipelines")) +
     plot_theme_default +
     custom_theme() +
     theme(

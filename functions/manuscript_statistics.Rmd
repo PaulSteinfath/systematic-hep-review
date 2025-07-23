@@ -51,16 +51,16 @@ meg_studies <- df_studies %>% filter(modality == "MEG")
 meg_pipelines <- df_pipelines %>% filter(modality == "MEG")
 ```
 
-# Overview
+## Overview
 
 This document provides all values mentioned in the manuscript "Heartbeat-evoked responses in MEG/EEG: A systematic review of methods and suggestions for analysis and reporting". All sections of this document apart from this overview match the corresponding section of the manuscript. Numbers highlighted in **bold** are also present in the manuscript.
 
-## Important Distinction: Studies vs Pipelines
+### Important Distinction: Studies vs Pipelines
 
 - **Studies**: Unique publications (identified by PMID). Each study represents one research paper.
 - **Pipelines**: Individual analysis approaches within studies. Some studies report multiple analysis pipelines (e.g. different time windows, or statistical approaches).
 
-# Methods
+## Methods
 
 ## Literature search
 
@@ -109,9 +109,9 @@ Manually added:
 
 Final sample: **`r total_included_pubmed + total_included_manual`** studies
 
-# Results
+## Results
 
-## Overview of the included studies
+### Overview of the included studies
 
 ```{r literature-overview}
 # Basic counts
@@ -186,8 +186,8 @@ Study type distribution:
 * Task-based: **`r study_type_task$n`** studies (**`r study_type_task$percentage`%**)
 * Resting-state: **`r study_type_rest$n`** studies (**`r study_type_rest$percentage`%**)
 * Both: **`r study_type_both$n`** studies (**`r study_type_both$percentage`%**)
-
-## Overview of methodological choices
+ 
+### Overview of methodological choices & methodological variability
 
 ```{r variations}
 # Get target columns from pipeline steps
@@ -200,13 +200,14 @@ results_df <- purrr::map_dfr(target_columns, function(var) {
     summarise(Unique_Choices = n_distinct(.data[[var]]), .groups = "drop") %>%
     summarise(Multiple_Choices = sum(Unique_Choices > 1)) %>%
     mutate(Column = var,
-           Metric = Multiple_Choices / total_studies)
+           Metric = Multiple_Choices / total_studies,
+           n = Multiple_Choices)
 })
 
 prcent_multi <- results_df %>%
   arrange(desc(Metric)) %>%
   mutate(percent = round(Metric * 100, 1)) %>%
-  select(Column, percent)
+  select(Column, percent, n)
 
 # Studies varying start or end of HER window
 multi_window_studies <- df_pipelines %>%
@@ -256,25 +257,21 @@ ecg_locations_missing_pct <- results_df_missing %>%
   pull(Percent)
 ```
 
-### Methodological Variability
+Studies using multiple statistical tests: **`r prcent_multi$percent[prcent_multi$Column == "statistics"]`%** (`r prcent_multi$n[prcent_multi$Column == "statistics"]`/`r total_studies`)
 
-Studies using multiple statistical tests: **`r prcent_multi$percent[prcent_multi$Column == "statistics"]`%**
-
-Studies varying HER window start or end times: **`r pct_varies_either`%**
+Studies varying HER window start or end times: **`r pct_varies_either`%** (`r sum(multi_window_studies$varies_either)`/`r nrow(multi_window_studies)`)
 
 ### Missing Information
 
-Studies missing cardiac IC rejection information (among those using CFA removal): **`r pct_missing_cfa_ics`%**
+Studies missing cardiac IC rejection information (among those using CFA removal): **`r pct_missing_cfa_ics`%** (`r nrow(missing_cfa_ics)`/`r nrow(cfa_ics)`)
 
-Studies with unknown ECG ground location: **`r pct_gnd_unknown`%**
+Studies with unknown ECG ground location: **`r pct_gnd_unknown`%** (`r sum(tolower(ecg_gnd$ecg_ground) == "unknown")`/`r nrow(ecg_gnd)`)
 
-Studies missing ECG electrode locations: **`r ecg_locations_missing_pct`%**
-
-### Variables with High Missing Information (>40%)
+Studies missing ECG electrode locations: **`r ecg_locations_missing_pct`%** (`r results_df_missing$Metric[results_df_missing$Column == "ecg_locations"] * compute_denom_papers(df_pipelines, "ecg_locations")`/`r compute_denom_papers(df_pipelines, "ecg_locations")`)
 
 ```{r high-missing-table, results='asis'}
 knitr::kable(results_df_high_missing, 
-             caption = "Variables with >40% missing values across studies",
+             caption = "Variables with >40% missing values across pipelines",
              col.names = c("Variable", "Missing (%)"))
 ```
 
@@ -357,9 +354,9 @@ offline_ref_counts <- eeg_studies_ref %>%
   arrange(desc(n))
 ```
 
-Online reference: Linked mastoids (**`r online_ref_counts$percentage[online_ref_counts$display_name == "LM"]`%**), Cz (**`r online_ref_counts$percentage[online_ref_counts$display_name == "Cz"]`%**)
+Online reference: Linked mastoids (**`r online_ref_counts$percentage[online_ref_counts$display_name == "LM"]`%** (`r online_ref_counts$n[online_ref_counts$display_name == "LM"]`/`r sum(online_ref_counts$n)`)), Cz (**`r online_ref_counts$percentage[online_ref_counts$display_name == "Cz"]`%** (`r online_ref_counts$n[online_ref_counts$display_name == "Cz"]`/`r sum(online_ref_counts$n)`))
 
-Offline reference: Common Average Reference (**`r offline_ref_counts$percentage[offline_ref_counts$display_name == "CAR"]`%**)
+Offline reference: Common Average Reference (**`r offline_ref_counts$percentage[offline_ref_counts$display_name == "CAR"]`%** (`r offline_ref_counts$n[offline_ref_counts$display_name == "CAR"]`/`r sum(offline_ref_counts$n)`))
 
 ### Artifact Removal
 
@@ -460,19 +457,19 @@ component_types <- component_types_expanded %>%
 
 Artifact removal:
 
-* Noisy epochs: **`r artifact_stats$noisy_epochs_pct`%**
-* Bad channels: **`r artifact_stats$bad_channels_pct`%**
+* Noisy epochs: **`r artifact_stats$noisy_epochs_pct`%** (`r sum(grepl("noisy epoch", df_studies$other_cleaning_strategy, ignore.case = TRUE), na.rm = TRUE)`/`r nrow(df_studies)`)
+* Bad channels: **`r artifact_stats$bad_channels_pct`%** (`r sum(grepl("bad channels", df_studies$other_cleaning_strategy, ignore.case = TRUE), na.rm = TRUE)`/`r nrow(df_studies)`)
 * ICA usage: **`r ica_studies$ica_study_pct`%** (`r ica_studies$n_ica_studies`/`r ica_studies$total_studies`)
 * ICA for CFA: **`r ica_for_cfa_studies$ica_cfa_study_pct`%** (`r ica_for_cfa_studies$n_ica_cfa_studies`/`r ica_for_cfa_studies$total_studies`)
 
 ICA component types removed:
 
-* `r component_types$rejected_components[1]`: **`r component_types$percentage[1]`%**
-* `r component_types$rejected_components[2]`: **`r component_types$percentage[2]`%**
-* `r component_types$rejected_components[3]`: **`r component_types$percentage[3]`%**
-* Other noise: **`r component_types$percentage[4] + component_types$percentage[5] + component_types$percentage[6]`%**
+* `r component_types$rejected_components[1]`: **`r component_types$percentage[1]`%** (`r component_types$count[1]`/`r total_ica_pipelines`)
+* `r component_types$rejected_components[2]`: **`r component_types$percentage[2]`%** (`r component_types$count[2]`/`r total_ica_pipelines`)
+* `r component_types$rejected_components[3]`: **`r component_types$percentage[3]`%** (`r component_types$count[3]`/`r total_ica_pipelines`)
+* Other noise: **`r component_types$percentage[4] + component_types$percentage[5] + component_types$percentage[6]`%** (`r component_types$count[4] + component_types$count[5] + component_types$count[6]`/`r total_ica_pipelines`)
 
-## Filter Settings
+### Filter Settings
 
 ```{r filters}
 # Filter statistics
@@ -671,32 +668,30 @@ ICA for CFA: **`r no_cfa_stats$studies_with_ica_for_cfa`**/**`r no_cfa_stats$tot
 
 ICA timing:
 
-* Continuous: **`r ica_timing$percentage[ica_timing$timing == "Continuous"]`%**
-* Epoched: **`r ica_timing$percentage[ica_timing$timing == "Epoched"]`%**
+* Continuous: **`r ica_timing$percentage[ica_timing$timing == "Continuous"]`%** (`r ica_timing$n[ica_timing$timing == "Continuous"]`/`r sum(ica_timing$n)`)
+* Epoched: **`r ica_timing$percentage[ica_timing$timing == "Epoched"]`%** (`r ica_timing$n[ica_timing$timing == "Epoched"]`/`r sum(ica_timing$n)`)
 
 ## CFA Identification Approaches
 
-* Not reported: **`r round((1 - sum(cfa_approach_counts$n) / ica_studies$n_ica_studies) * 100, 1)`%** of studies using ICA
-* `r cfa_approach_counts$cfa_rej_approach[1]`: **`r cfa_approach_counts$percentage[1]`%**
-* `r cfa_approach_counts$cfa_rej_approach[2]`: **`r cfa_approach_counts$percentage[2]`%**
-* `r cfa_approach_counts$cfa_rej_approach[3]`: **`r cfa_approach_counts$percentage[3]`%**
+* Not reported: **`r round((1 - sum(cfa_approach_counts$n) / ica_studies$n_ica_studies) * 100, 1)`%** of studies using ICA (`r ica_studies$n_ica_studies - sum(cfa_approach_counts$n)`/`r ica_studies$n_ica_studies`)
+* `r cfa_approach_counts$cfa_rej_approach[1]`: **`r cfa_approach_counts$percentage[1]`%** (`r cfa_approach_counts$n[1]`/`r sum(cfa_approach_counts$n)`)
+* `r cfa_approach_counts$cfa_rej_approach[2]`: **`r cfa_approach_counts$percentage[2]`%** (`r cfa_approach_counts$n[2]`/`r sum(cfa_approach_counts$n)`)
+* `r cfa_approach_counts$cfa_rej_approach[3]`: **`r cfa_approach_counts$percentage[3]`%** (`r cfa_approach_counts$n[3]`/`r sum(cfa_approach_counts$n)`)
 
 ## CFA Identification Criteria
 
-* `r cfa_criteria_counts$cfa_rej_criteria[1]`: **`r cfa_criteria_counts$percentage[1]`%**
-* `r cfa_criteria_counts$cfa_rej_criteria[2]`: **`r cfa_criteria_counts$percentage[2]`%**
-* `r cfa_criteria_counts$cfa_rej_criteria[3]`: **`r cfa_criteria_counts$percentage[3]`%**
-* `r cfa_criteria_counts$cfa_rej_criteria[6]`: **`r cfa_criteria_counts$percentage[6]`%**
-* `r cfa_criteria_counts$cfa_rej_criteria[4]`: **`r cfa_criteria_counts$percentage[4]`%**
-* `r cfa_criteria_counts$cfa_rej_criteria[5]`: **`r cfa_criteria_counts$percentage[5]`%**
-
+* `r cfa_criteria_counts$cfa_rej_criteria[1]`: **`r cfa_criteria_counts$percentage[1]`%** (`r cfa_criteria_counts$count[1]`/`r cfa_criteria_counts$total_pipelines[1]`)
+* `r cfa_criteria_counts$cfa_rej_criteria[2]`: **`r cfa_criteria_counts$percentage[2]`%** (`r cfa_criteria_counts$count[2]`/`r cfa_criteria_counts$total_pipelines[2]`)
+* `r cfa_criteria_counts$cfa_rej_criteria[3]`: **`r cfa_criteria_counts$percentage[3]`%** (`r cfa_criteria_counts$count[3]`/`r cfa_criteria_counts$total_pipelines[3]`)
+* `r cfa_criteria_counts$cfa_rej_criteria[6]`: **`r cfa_criteria_counts$percentage[6]`%** (`r cfa_criteria_counts$count[6]`/`r cfa_criteria_counts$total_pipelines[6]`)
+* `r cfa_criteria_counts$cfa_rej_criteria[4]`: **`r cfa_criteria_counts$percentage[4]`%** (`r cfa_criteria_counts$count[4]`/`r cfa_criteria_counts$total_pipelines[4]`)
+* `r cfa_criteria_counts$cfa_rej_criteria[5]`: **`r cfa_criteria_counts$percentage[5]`%** (`r cfa_criteria_counts$count[5]`/`r cfa_criteria_counts$total_pipelines[5]`)
 
 ## Rejected Cardiac ICs
 
-* Studies reporting number: **`r cardiac_ic_stats$n_studies`** out of **`r no_cfa_stats$studies_with_ica_for_cfa`** studies that removed CFA-related ICs
+* Studies reporting number: **`r cardiac_ic_stats$n_studies`** out of **`r no_cfa_stats$studies_with_ica_for_cfa`** studies that removed CFA-related ICs (`r cardiac_ic_stats$n_studies`/`r no_cfa_stats$studies_with_ica_for_cfa`)
 * Range: **`r cardiac_ic_stats$min_ics`** - **`r cardiac_ic_stats$max_ics`**
 * Median: **`r cardiac_ic_stats$median_ics`**
-
 
 ## Other CFA Removal Strategies
 
@@ -705,12 +700,12 @@ ICA timing:
 * `r other_cfa_strategies$strategy[5]`: `r other_cfa_strategies$n[5]` studies (**`r other_cfa_strategies$percentage[5]`%**)
 * `r other_cfa_strategies$strategy[6]`: `r other_cfa_strategies$n[6]` studies (**`r other_cfa_strategies$percentage[6]`%**)
 
-## Limit time range / analysis window
+### Limit time range / analysis window
 
-* `r other_cfa_strategies$strategy[1]`: `r other_cfa_strategies$n[1]` studies (**`r other_cfa_strategies$percentage[1]`**%)
-* `r other_cfa_strategies$strategy[2]`: **`r other_cfa_strategies$n[2]`** studies (`r other_cfa_strategies$percentage[2]`%)
+* `r other_cfa_strategies$strategy[1]`: `r other_cfa_strategies$n[1]` studies (**`r other_cfa_strategies$percentage[1]`%**)
+* `r other_cfa_strategies$strategy[2]`: **`r other_cfa_strategies$n[2]`** studies (**`r other_cfa_strategies$percentage[2]`%**)
 
-## Studies Without Any CFA Approach
+### Studies Without Any CFA Approach
 
 * Studies with ICA for CFA approach: `r no_cfa_stats$pct_with_ica_for_cfa`% (`r no_cfa_stats$studies_with_ica_for_cfa`/`r no_cfa_stats$total_studies`)
 * Studies with no CFA approach: `r no_cfa_stats$pct_with_no_cfa`% (`r no_cfa_stats$studies_with_no_cfa`/`r no_cfa_stats$total_studies`)
@@ -957,7 +952,9 @@ rpeak_overlap_analysis <- hep_window_data %>%
     list(
       core_start = round(median_start, 0),
       core_end = round(median_end, 0),
-      core_percentage = core_percentage
+      core_percentage = core_percentage,
+      core_count = studies_including_core,
+      total_rpeak = nrow(rpeak_data)
     )
   }
 
@@ -1031,53 +1028,53 @@ stat_comparison_results$rpeak <- perform_peak_timing_comparison(clustering_rpeak
 stat_comparison_results$tpeak <- perform_peak_timing_comparison(clustering_tpeak, averaging_tpeak)
 ```
 
-# Cardiac Reference Event Selection
+## Cardiac Reference Event Selection
 
-* R-peak reference: **`r hep_reference_stats$percentage[hep_reference_stats$reference_category == "R-peak"]`%** of studies
-* T-wave reference: **`r hep_reference_stats$percentage[hep_reference_stats$reference_category == "T-peak"]`%** of studies
+* R-peak reference: **`r hep_reference_stats$percentage[hep_reference_stats$reference_category == "R-peak"]`%** of studies (`r hep_reference_stats$n[hep_reference_stats$reference_category == "R-peak"]`/`r sum(hep_reference_stats$n)`)
+* T-wave reference: **`r hep_reference_stats$percentage[hep_reference_stats$reference_category == "T-peak"]`%** of studies (`r hep_reference_stats$n[hep_reference_stats$reference_category == "T-peak"]`/`r sum(hep_reference_stats$n)`)
 
-# HEP Analysis Time Windows
+## HEP Analysis Time Windows
 
-## T-wave Referenced Analysis
+### T-wave Referenced Analysis
 
 * Time range: **`r tpeak_window_stats$start_min`** to **`r tpeak_window_stats$end_max`** ms after T-wave
 * R-peak equivalent: approx. **`r tpeak_window_stats$rpeak_equiv_start_min`** to **`r tpeak_window_stats$rpeak_equiv_end_max`** ms after R-peak
 
-## R-peak Referenced Analysis
+### R-peak Referenced Analysis
 
 * Time range: **`r rpeak_window_stats$start_min`** to **`r rpeak_window_stats$end_max`** ms relative to R-peak
 * Core overlap window: **`r rpeak_overlap_analysis$core_start`** to **`r rpeak_overlap_analysis$core_end`** ms
-* Pipelines including core: **`r rpeak_overlap_analysis$core_percentage`%**
+* Pipelines including core: **`r rpeak_overlap_analysis$core_percentage`%** (`r rpeak_overlap_analysis$core_count`/`r rpeak_overlap_analysis$total_rpeak`)
 
-# Baseline Correction
+## Baseline Correction
 
-## General Statistics
+### General Statistics
 
-* Pipelines using baseline correction: **`r baseline_pct`%**
+* Pipelines using baseline correction: **`r baseline_pct`%** (`r sum(baseline_correction_stats$n[baseline_correction_stats$baseline_category %in% c("Yes", "Both")])`/`r final_sample_stats$total_studies`)
 
-## T-wave Baseline Correction
+### T-wave Baseline Correction
 
 * Studies using baseline: **`r tpeak_baseline_data$n_studies`** studies
 * Baseline window: **`r tpeak_baseline_data$start_min`** to **`r tpeak_baseline_data$end_max`** ms before T-wave
 
-## R-peak Baseline Correction
+### R-peak Baseline Correction
 
 * Baseline window range: **`r rpeak_baseline_data$start_min`** to **`r rpeak_baseline_data$end_max`** ms around R-peak
-* Studies ending baseline before QRS: **`r baseline_before_qrs_stats$percentage_before_qrs`%**
+* Studies ending baseline before QRS: **`r baseline_before_qrs_stats$percentage_before_qrs`%** (`r baseline_rpeak_range$studies_ending_before_qrs`/`r baseline_rpeak_range$total_studies`)
 
-# Significant HER Effects Time Ranges
+## Significant HER Effects Time Ranges
 
-## R-peak Referenced Effects
+### R-peak Referenced Effects
 
 * Significant effects range: **`r sig_rpeak_range$start_min`** to **`r sig_rpeak_range$end_max`** ms
 
-## T-wave Referenced Effects
+### T-wave Referenced Effects
 
 * Significant effects range: **`r sig_tpeak_range$start_min`** to **`r sig_tpeak_range$end_max`** ms
 
-# Statistical Analysis Methods Comparison
+## Statistical Analysis Methods Comparison
 
-## R-peak Analysis
+### R-peak Analysis
 
 * **Peak Distribution Analysis** (from cumulative plots):
   - Clustering peak: **`r sprintf("%.0f", stat_comparison_results$rpeak$peak1)`** ms
@@ -1085,10 +1082,10 @@ stat_comparison_results$tpeak <- perform_peak_timing_comparison(clustering_tpeak
   - Peak difference: `r sprintf("%.0f", abs(stat_comparison_results$rpeak$peak1 - stat_comparison_results$rpeak$peak2))` ms
 
 * **Statistical Test** (Permutation test on peak positions):
-  - Sample sizes: n₁ = `r stat_comparison_results$rpeak$n1`**, n₂ = **`r stat_comparison_results$rpeak$n2`
+  - Sample sizes: n₁ = `r stat_comparison_results$rpeak$n1`, n₂ = `r stat_comparison_results$rpeak$n2`
   - Permutation test: p **`r ifelse(stat_comparison_results$rpeak$permutation_p_value < 0.001, "< 0.001", paste("=", sprintf("%.3f", stat_comparison_results$rpeak$permutation_p_value)))`** (**`r stat_comparison_results$rpeak$n_permutations`** permutations)
 
-## T-wave Analysis
+### T-wave Analysis
 
 * **Peak Distribution Analysis** (from cumulative plots):
   - Clustering peak: **`r sprintf("%.0f", stat_comparison_results$tpeak$peak1)`** ms
@@ -1096,15 +1093,15 @@ stat_comparison_results$tpeak <- perform_peak_timing_comparison(clustering_tpeak
   - Peak difference: `r sprintf("%.0f", abs(stat_comparison_results$tpeak$peak1 - stat_comparison_results$tpeak$peak2))` ms
 
 * **Statistical Test** (Permutation test on peak positions):
-  - Sample sizes: n₁ = `r stat_comparison_results$tpeak$n1`**, n₂ = **`r stat_comparison_results$tpeak$n2`
+  - Sample sizes: n₁ = `r stat_comparison_results$tpeak$n1`, n₂ = `r stat_comparison_results$tpeak$n2`
   - Permutation test: p **`r ifelse(stat_comparison_results$tpeak$permutation_p_value < 0.001, "< 0.001", paste("=", sprintf("%.3f", stat_comparison_results$tpeak$permutation_p_value)))`** (**`r stat_comparison_results$tpeak$n_permutations`** permutations)
 
-## Analysis Window Definition
+### Analysis Window Definition
 
-* Studies with a-priori defined analysis windows: **`r hep_window_type_stats$percentage[hep_window_type_stats$window_type_category == "Primary"]`%**
-* Studies using two-step procedures (data-dependent window selection): **`r hep_window_type_stats$percentage[hep_window_type_stats$window_type_category == "Secondary"]`%**
+* Studies with a-priori defined analysis windows: **`r hep_window_type_stats$percentage[hep_window_type_stats$window_type_category == "Primary"]`%** (`r hep_window_type_stats$n[hep_window_type_stats$window_type_category == "Primary"]`/`r sum(hep_window_type_stats$n)`)
+* Studies using two-step procedures (data-dependent window selection): **`r hep_window_type_stats$percentage[hep_window_type_stats$window_type_category == "Secondary"]`%** (`r hep_window_type_stats$n[hep_window_type_stats$window_type_category == "Secondary"]`/`r sum(hep_window_type_stats$n)`)
 
-# HEP dependent variables analysis
+## HEP dependent variables analysis
 
 ```{r hep-values}
 hep_value_studies <- df_pipelines %>%
@@ -1164,7 +1161,7 @@ stats_table <- df_pipelines %>%
     percentage = round(n / total_in_category * 100, 1)
   ) %>%
   arrange(method_category, desc(percentage)) %>%
-  slice_head(n = 4) %>%
+  slice_head(n = 3) %>%
   ungroup() %>%
   select(method_category, statistics, n, percentage) %>%
   rename(
@@ -1188,6 +1185,7 @@ hedges_data <- bind_cols(df_pipelines, hedges_column) %>%
               filter(clustering ==0)
 
 # Average of Coll et al. (2020) reported average effect size
+# not sure if this is the right way to do it
 coll_average_effect <- mean(c(0.35, 0.37, 0.49, 0.72))
 
 # Calculate percentage of pipelines that could detect the Coll et al. effect size
@@ -1200,13 +1198,13 @@ pipelines_detect_coll <- hedges_data %>%
 
 ```
 
-Minimum, maximum and median number of participants: **`r min(df_pipelines$sample_size, na.rm = TRUE)`** - **`r max(df_pipelines$sample_size, na.rm = TRUE)`** - **`r median(df_pipelines$sample_size, na.rm = TRUE)`**
+Minimum, maximum, and median number of trials per pipeline: **`r trials_stats$min_trials`** - **`r trials_stats$max_trials`** - **`r trials_stats$mean_trials`**
 
 Number of groups: **`r min(df_pipelines$groups, na.rm = TRUE)`** - **`r max(df_pipelines$groups, na.rm = TRUE)`** 
 
-Number of conditions: **`r min(df_pipelines$conditions, na.rm = TRUE)`** - **`r max(df_pipelines$conditions, na.rm = TRUE)`**
+Number of conditions: **`r min(df_pipelines$conditions, na.rm = TRUE)`** - **`r max(df_pipelines$conditions, na.rm = TRUE)`** 
 
-## Statistical Analysis Methods
+### Statistical Analysis Methods
 
 Statistical test families used across studies:
 
@@ -1215,7 +1213,7 @@ Statistical test families used across studies:
 * **`r statistical_test_stats$statistics[3]`**: **`r statistical_test_stats$percentage[3]`%** (`r statistical_test_stats$n[3]` studies)
 * **`r statistical_test_stats$statistics[4]`**: **`r statistical_test_stats$percentage[4]`%** (`r statistical_test_stats$n[4]` studies)
 
-### Statistical Tests by Analysis Method
+#### Statistical Tests by Analysis Method
 
 ```{r stats-by-method-table, results='asis'}
 knitr::kable(stats_table, 
@@ -1223,11 +1221,123 @@ knitr::kable(stats_table,
              align = c("l", "l", "c", "c"))
 ```
 
-Percentage of studies with group or condition analysis: **`r analysis_type_stats$pct_group_or_condition`%**
+Percentage of pipelines with group or condition analysis: **`r analysis_type_stats$pct_group_or_condition`%** (`r sum(grepl("group", tolower(df_pipelines$hypothesis)), na.rm = TRUE)`/`r sum(!is.na(df_pipelines$hypothesis))`)
 
-Percentage of studies with correlation analysis: **`r analysis_type_stats$pct_correlation`%**
+Percentage of pipelines with correlation analysis: **`r analysis_type_stats$pct_correlation`%** (`r sum(grepl("correlation", tolower(df_pipelines$hypothesis)), na.rm = TRUE)`/`r sum(!is.na(df_pipelines$hypothesis))`)
 
-Minimum, maximum, and median number of trials per pipeline: **`r trials_stats$min_trials`** - **`r trials_stats$max_trials`** - **`r trials_stats$mean_trials`**
+Number of trials per pipeline: Min: **`r trials_stats$min_trials`**, Max: **`r trials_stats$max_trials`**, Median: **`r trials_stats$mean_trials `**
 
-## Power Analysis
+### Power Analysis
+
 Only **`r pipelines_detect_coll$percentage_detecting_coll`%** of pipelines (`r pipelines_detect_coll$pipelines_detecting_coll`/`r pipelines_detect_coll$total_pipelines`) had sufficient power to detect the average effect size reported by Coll et al. (2020).
+
+
+### Control Analyses
+
+```{r control analyses}
+# Load control variable mappings (same as plot_ecg_controls function)
+control_variable_synonyms <- get_control_variable_mappings()
+target_cat <- "ECG and Heartbeat-Related Controls"
+
+# Identify ECG control variables
+ecg_vars <- names(control_variable_synonyms)[
+  vapply(
+    control_variable_synonyms,
+    function(meta) identical(meta$category, target_cat),
+    logical(1)
+  )
+]
+
+# Build regex patterns for each variable
+make_pat <- function(var) {
+  terms <- c(
+    var,
+    control_variable_synonyms[[var]]$synonyms %||% character(0)
+  )
+  paste0("\\b(", paste(unique(terms), collapse = "|"), ")\\b")
+}
+var_patterns <- setNames(lapply(ecg_vars, make_pat), ecg_vars)
+
+# Pre-process the data
+df_unique <- df_pipelines %>% 
+  distinct(PMID, controls, .keep_all = TRUE)
+df_controls <- ifelse(is.na(df_unique$controls), "", df_unique$controls)
+
+# Check presence of each ECG control variable
+presence_vars <- sapply(
+  var_patterns,
+  function(pat) stringr::str_detect(tolower(df_controls), tolower(pat))
+)
+
+# Calculate overall ECG control usage
+pipelines_with_ecg_controls <- rowSums(presence_vars) > 0
+total_ecg_control_pct <- round(sum(pipelines_with_ecg_controls) / nrow(df_unique) * 100, 1)
+total_ecg_control_n <- sum(pipelines_with_ecg_controls)
+
+# Calculate percentages for each specific control type
+ecg_control_breakdown <- data.frame(
+  variable = colnames(presence_vars),
+  n = colSums(presence_vars),
+  stringsAsFactors = FALSE
+) %>%
+  mutate(percentage = round(n / nrow(df_unique) * 100, 1)) %>%
+  arrange(desc(percentage))
+
+# Cardiovascular control analyses
+# Heart Rate Variability (HRV) controls
+hrv_target_cat <- "Heart Rate Variability (HRV) Controls"
+hrv_vars <- names(control_variable_synonyms)[
+  vapply(
+    control_variable_synonyms,
+    function(meta) identical(meta$category, hrv_target_cat),
+    logical(1)
+  )
+]
+
+# Build regex patterns for HRV variables
+hrv_var_patterns <- setNames(lapply(hrv_vars, make_pat), hrv_vars)
+
+# Check presence of HRV control variables
+hrv_presence_vars <- sapply(
+  hrv_var_patterns,
+  function(pat) stringr::str_detect(tolower(df_controls), tolower(pat))
+)
+
+# Calculate HRV control usage
+pipelines_with_hrv_controls <- rowSums(hrv_presence_vars) > 0
+total_hrv_control_pct <- round(sum(pipelines_with_hrv_controls) / nrow(df_unique) * 100, 1)
+
+# Cardiovascular and Blood Pressure controls
+bp_target_cat <- "Cardiovascular and Blood Pressure Controls"
+bp_vars <- names(control_variable_synonyms)[
+  vapply(
+    control_variable_synonyms,
+    function(meta) identical(meta$category, bp_target_cat),
+    logical(1)
+  )
+]
+
+# Build regex patterns for Blood Pressure variables
+bp_var_patterns <- setNames(lapply(bp_vars, make_pat), bp_vars)
+
+# Check presence of BP control variables
+bp_presence_vars <- sapply(
+  bp_var_patterns,
+  function(pat) stringr::str_detect(tolower(df_controls), tolower(pat))
+)
+
+# Calculate BP control usage
+pipelines_with_bp_controls <- rowSums(bp_presence_vars) > 0
+total_bp_control_pct <- round(sum(pipelines_with_bp_controls) / nrow(df_unique) * 100, 1)
+
+```
+
+## Control Statistics
+
+**`r ecg_control_breakdown$percentage[1]`%** of pipelines (`r ecg_control_breakdown$n[1]`/`r nrow(df_unique)`) control for ECG.
+
+**`r total_ecg_control_pct`%** of pipelines (`r sum(pipelines_with_ecg_controls)`/`r nrow(df_unique)`) control for overall heartbeat-related variables.
+
+Heart rate variability controls: **`r total_hrv_control_pct`%** (`r sum(pipelines_with_hrv_controls)`/`r nrow(df_unique)`)
+
+Blood pressure controls: **`r total_bp_control_pct`%** (`r sum(pipelines_with_bp_controls)`/`r nrow(df_unique)`)

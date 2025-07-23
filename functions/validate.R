@@ -1,3 +1,5 @@
+source(file.path(func_path, "plots", "preprocess_controls.R"))
+
 validate_row <- function(row, col_names) {
   # Add column names for easier manipulation of the data
   names(row) <- col_names
@@ -51,14 +53,67 @@ validate_preprocessed <- function(df) {
   errors <- apply(X = df, MARGIN = 1, FUN = validate_row, 
                   col_names = colnames(df), simplify = F)
   errors <- unlist(errors, recursive = F)
-  errors <- as.data.frame(do.call(rbind, errors))
+
+  # Control mapping validation 
+  control_synonyms_map <- get_control_variable_mappings() 
+  control_mapping_errors <- validate_control_mapping(df, control_synonyms_map)
+
+  # Combine errors
+  all_errors <- c(errors, control_mapping_errors) 
   
-  if (nrow(errors) == 0) {
+  # Convert to df
+  errors_df <- dplyr::bind_rows(all_errors) 
+
+  if (nrow(errors_df) == 0) { 
     message("validate_preprocessed: no errors")
-  }
+  } else {
+      warning("Found ", nrow(errors_df), " errors in the preprocessed data frame") 
+      message(paste0("Number of errors by column:\n", paste(capture.output(table(errors_df$column, useNA = "ifany")), collapse = "\n")))
+    }
   
-  warning("Found ", nrow(errors), " errors in the preprocessed data frame")
-  message(paste0("Number of errors by column:\n", table(errors$column)))
+  errors_df 
+}
+
+validate_control_mapping <- function(df, control_synonyms_map) {
+
+  errors <- list()
+  
+  # Get all known mapped terms using the passed parameter
+  known_main_terms <- tolower(names(control_synonyms_map))
+  known_synonyms <- tolower(unlist(sapply(control_synonyms_map, function(x) x$synonyms, simplify = FALSE)))
+  all_known_mapped_terms <- unique(c(known_main_terms, known_synonyms))
+  
+  for (i in 1:nrow(df)) {
+    current_row <- df[i, ]
+    pmid <- current_row$PMID
+    controls_string <- current_row$controls
+
+    # Skip if controls is NA or empty
+    if (is.na(controls_string) || trimws(controls_string) == "") {
+      next
+    }
+
+    controls_string_lower <- tolower(controls_string)
+    
+    # Parse the controls string
+    row_terms_list <- strsplit(controls_string_lower, ",\\s*|;\\s*|\\s+and\\s+")
+    row_terms_flat <- trimws(unlist(row_terms_list))
+    
+    # Filter out empty strings 
+    row_terms_flat <- row_terms_flat[row_terms_flat != ""]
+    
+    # Find terms in this row that are not in all_known_mapped_terms
+    unmapped_in_row <- setdiff(row_terms_flat, all_known_mapped_terms)
+
+    for (term in unmapped_in_row) {
+      errors <- append(errors, list(list(
+        "PMID" = pmid,
+        "column" = "controls",
+        "error" = "Unmapped control term",
+        "failure_case" = term 
+      )))
+    }
+  }
   
   errors
 }

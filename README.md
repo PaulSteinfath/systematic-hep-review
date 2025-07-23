@@ -6,6 +6,7 @@
 * `assets` - required static files that are not created based on the data.
 * `data` - all data is expected to be stored in this folder.
   * `derivatives` - all produced data can be stored here.
+  * `exports` - CSV files as exported from Pubmed.
   * `HEP - Pubmed Results.csv` - the CSV file of our table (Pubmed tab).
   * `HEP - Manual.csv` - the CSV file of our table (Manual tab).
 * `functions` - helper functions for different parts of the analysis.

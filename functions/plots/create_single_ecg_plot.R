@@ -4,15 +4,18 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
                                    reference_values = c("R-peak", "T-peak"),
                                    x_label_main = "Time (ms)") {
 
-  # Filter based on avg_value
-  if (!is.null(avg_value) && avg_value %in% c("Averaging", "Clustering")) {
-    avg_val <- ifelse(avg_value == "Averaging", "1", "0")
-    df_filtered <- df %>% filter(averaging_time == avg_val)
-  } else {
-    # If avg_value is NULL -> don't filter by averaging_time
-    df_filtered <- df
-  }
+  # Filter based on avg_value using the preprocessed method_category column
+  df_filtered <- df 
 
+  if (!is.null(avg_value)) {
+    if (avg_value == "Averaging") {
+      df_filtered <- df %>% filter(method_category == "Averaging")
+    } else if (avg_value == "Clustering") {
+      df_filtered <- df %>% filter(method_category == "Clustering")
+    }
+    
+  }
+  
   # --- Create Time Window Plots ---
   title_hjust <- -0.02 
 
@@ -25,11 +28,11 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
       t_peak_offset = t_peak_offset,
       x_limits = shared_limits) +
    
-      ggtitle("HEP Time of Interest") +
+      ggtitle("HER Time of Interest") +
       theme(plot.title = element_text(hjust = title_hjust, size = 11, margin = margin(b = 5)))
   } else {
     hep_plot <- no_valid_data_stub("No valid data") +
-      ggtitle("HEP Time of Interest") +
+      ggtitle("HER Time of Interest") +
       theme(plot.title = element_text(hjust = title_hjust, size = 11, margin = margin(b = 5)),
         legend.position = "none")
     }

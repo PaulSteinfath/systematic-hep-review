@@ -38,10 +38,12 @@ rr_intervals_plot <- function(df) {
     geom_vline(xintercept = 0, linetype = "dotted", color = "gray40") +
     labs(x = "Time (ms)",
          y = "",
-         title = paste("n =", nrow(rr_df)),
-         caption = "Minimum RR Intervals") +
+         title = "Minimum RR Interval",
+         subtitle = paste("n =", nrow(rr_df), "studies"),
+        ) +
     scale_x_continuous(breaks = unique(sort(c(seq(0, x_max, by = 250), x_max)))) +
-    theme_classic(base_family = "sans") +
+    plot_theme_default +
+    custom_theme() +
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           #panel.grid.major.x = element_line(color = "gray90", linetype = "solid"),

@@ -137,11 +137,11 @@ pipeline_steps <- list(
   )
 )
 pipeline_colors <- c(
-  "Experiment"     = "#505050",   # Medium-dark grey
-  "Acquisition"    = "#6A6A6A",   # Medium grey
-  "Preprocessing"  = "#8A8A8A",   # Medium-light grey 
-  "HER Estimation" = "#B0B0B0",   # Light grey
-  "Statistics"     = "#D0D0D0"    # Lightest grey
+  "Experiment"     = "#2E2E2E",
+  "Acquisition"    = "#5A5A5A",
+  "Preprocessing"  = "#808080",
+  "HER Estimation" = "#A8A8A8",
+  "Statistics"     = "#D0D0D0" 
 )
 
 # Enhanced function to ensure we always get a valid pipeline step

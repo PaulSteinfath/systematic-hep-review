@@ -68,11 +68,7 @@ plot_eeg_locations_separate <- function(df,
               head_size = rel(0.5),
               color = 'black',
               linetype = 'solid',
-              linewidth = rel(0.1)) + 
-    scale_fill_viridis(option = colormap,
-                       labels = scales::percent,
-                       direction = 1,
-                       limits = c(0, lim)) + 
+              linewidth = rel(0.1)) +
     facet_wrap(. ~ meeg_layout, nrow = 1) +
     theme_void() + 
     coord_equal()
@@ -132,10 +128,6 @@ plot_eeg_locations_combined <- function(df,
          aes(x = x, y = y)) + 
     geom_raster(data = maps_merged,
                 aes(fill = fill.sum)) +
-    scale_fill_viridis(option = colormap,
-                       labels = scales::percent,
-                       direction = 1,
-                       limits = c(0, lim)) +
     geom_head(linewidth = rel(0.5),
               color = "black") +
     geom_channels(size = rel(0.25),
@@ -183,12 +175,15 @@ plot_eeg_locations <- function(df,
       theme(plot.title = element_text(hjust = 0.5))
   }
   
-  if (show_colorbar) {
-    p <- p + 
-      guides(fill = guide_colorbar(title = colorbar_title))
-  } else {
-    p <- p + guides(fill = guide_none())
-  }
+  p <- p + 
+    scale_fill_viridis(option = colormap,
+                       labels = scales::percent,
+                       direction = 1,
+                       guide = if (show_colorbar) 
+                         guide_colorbar(title = colorbar_title) 
+                       else guide_none(),
+                       limits = c(0, lim),
+                       breaks = c(0, 0.5 * lim, lim))
   
   p
 }

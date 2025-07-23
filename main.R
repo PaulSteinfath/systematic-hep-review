@@ -47,4 +47,5 @@ generate_prisma(df_screening, prisma_template_path,
                 derivatives_path, results_path, ext = 'png')
 
 figure_ecg_summary(df_included, results_path, ext = 'png')
+figure_hep_time_windows_summary(df_included, results_path, ext = 'png')
 make_figures(df_included, results_path, ext = 'png')

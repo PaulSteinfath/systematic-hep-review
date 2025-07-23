@@ -244,28 +244,6 @@ figure_ecg_summary <- function(df, save_path, ext = 'png') {
   )
 }
 
-eeg_locations_summary <- function(df, reference_var, reference_values) {
-  p_selected <- lapply(reference_values, \(x) plot_eeg_locations(df[df[reference_var] == x,], 
-                                                                "hep_channels_selected", combined = T,
-                                                                main_title = "Selected", show_colorbar = F))
-  names(p_selected) <- reference_values
-  p_significant <- lapply(reference_values, \(x) plot_eeg_locations(df[df[reference_var] == x,], 
-                                                                    "significant_channels", combined = T,
-                                                                    main_title = "Significant", show_colorbar = F))
-  names(p_significant) <- reference_values
-  
-  # XXX: rather hacky approach that works only for two reference values (seems
-  # to be enough for now)
-  fig <- plot_grid(
-    p_selected[[reference_values[[1]]]], p_significant[[reference_values[[1]]]], 
-    NULL,
-    p_selected[[reference_values[[2]]]], p_significant[[reference_values[[2]]]], 
-    nrow = 1, rel_widths = c(1, 1, 0.1, 1, 1)
-  )
-  
-  fig
-}
-
 
 studies_overview <- function(df) {
   p_year <- hist_panel(df, "Year", force.numeric = T, 
@@ -303,7 +281,7 @@ p_condition <- hist_panel(df_study_categories, "study_category",
 }
 
 
-create_hep_time_windows_summary_plot <- function(df) {
+figure_hep_time_windows_summary <- function(df, save_path, ext = 'png') {
 
   #cluster / average histogram
   df_hep_determination <- df %>%
@@ -358,7 +336,7 @@ create_hep_time_windows_summary_plot <- function(df) {
     df_hep_reference,
     col = "reference_category",
     discrete = TRUE, use_proportion = TRUE,
-    title = "HER Reference",
+    title = "Reference event",
     tilt_labels = FALSE,
     preserve_order = TRUE
   )
@@ -381,7 +359,7 @@ create_hep_time_windows_summary_plot <- function(df) {
     ) %>%
     filter(baseline_category != "Other") %>%
     mutate(baseline_category = factor(baseline_category, 
-                                    levels = c("Yes", "No", "Both")))
+                                      levels = c("Yes", "No", "Both")))
 
   baseline_def_prop_plot <- hist_panel(
     df_baseline_correction,
@@ -393,7 +371,7 @@ create_hep_time_windows_summary_plot <- function(df) {
   )
 
   #primary / secondary histogram
-    df_hep_window_type <- df %>%
+  df_hep_window_type <- df %>%
     group_by(PMID) %>%
     summarise(
       has_primary = any(hep_window_type == "Primary"),
@@ -410,7 +388,7 @@ create_hep_time_windows_summary_plot <- function(df) {
     ) %>%
     filter(window_type_category != "Other") %>%
     mutate(window_type_category = factor(window_type_category, 
-                                       levels = c("Primary", "Secondary", "Both")))
+                                         levels = c("Primary", "Secondary", "Both")))
 
   hep_type_prop_plot <- hist_panel(
     df_hep_window_type,
@@ -435,18 +413,20 @@ create_hep_time_windows_summary_plot <- function(df) {
     df,
     avg_value = "Averaging",
     shared_limits = c(-300, 1000),
-    plot_title = "E) HER Windows (Averaging)",
+    plot_title = "Averaging over channels / time points",
     reference_var = "hep_relative_to",
-    reference_values = c("R-peak", "T-peak")
+    reference_values = c("R-peak", "T-peak"),
+    debug_inset = F
   )
 
   hep_cluster_plot <- create_single_ecg_plot(
     df,
     avg_value = "Clustering",
     shared_limits = c(-300, 1000),
-    plot_title = "F) HER Windows (Clustering)",
+    plot_title = "Cluster-based permutation tests",
     reference_var = "hep_relative_to",
-    reference_values = c("R-peak", "T-peak")
+    reference_values = c("R-peak", "T-peak"),
+    debug_inset = F
   )
 
   hep_comparison_row <- plot_grid(
@@ -455,17 +435,27 @@ create_hep_time_windows_summary_plot <- function(df) {
     ncol = 2,
     align = "hv",
     axis = "tblr",
-    label_x = 0.01,
-    hjust = 0
+    labels = c('E', 'F')
   )
 
   hep_time_windows_combined <- plot_grid(
     first_row_histograms,
+    NULL,
     hep_comparison_row,
     ncol = 1,
-    rel_heights = c(0.25, 0.75)
+    rel_heights = c(0.25, 0.02, 0.75)
   )
-  return(hep_time_windows_combined)
+  
+  ggsave(
+    filename = file.path(save_path, paste0("hep_time_windows_combined.", ext)),
+    plot = hep_time_windows_combined,
+    width = 10, 
+    height = 9,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
 }
 
 # Here we generate all figures
@@ -593,17 +583,4 @@ make_figures <- function(df, save_path, ext = "svg") {
     device = ext,
     bg = "white"
   )
- 
-  hep_time_windows_combined <- create_hep_time_windows_summary_plot(df)
-  ggsave(
-    filename = file.path(save_path, paste0("hep_time_windows_combined.", ext)),
-    plot = hep_time_windows_combined,
-    width = 13, 
-    height = 9,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  show(hep_time_windows_combined)
 }

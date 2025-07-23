@@ -7,23 +7,23 @@ create_time_windows_plot <- function(df, start_var, end_var, reference_var, x_la
 
   # Prepare data based on whether it's for significant effects or other windows
   if (start_var != "merged_start") {
-  # Convert and filter for time_of_interest or baseline windows
-  df_converted <- df %>%
-    filter(!.data[[start_var]] %in% c("none", "unknown"),
-       !.data[[end_var]] %in% c("none", "unknown")) %>%
-    mutate(
-    start_time = as.numeric(.data[[start_var]]),
-    end_time   = as.numeric(.data[[end_var]])
-    ) %>%
-    filter(!is.na(start_time), !is.na(end_time)) %>%
-    distinct(PMID, .data[[start_var]], .data[[end_var]], .data[[reference_var]], .keep_all = TRUE)
-
-  df_group1 <- df_converted %>% filter(.data[[reference_var]] == reference_values[1])
-  df_group2 <- df_converted %>% filter(.data[[reference_var]] == reference_values[2]) %>%
-    mutate(
-    start_time = if(reference_values[2] == "T-peak") start_time + t_peak_offset else start_time,
-    end_time   = if(reference_values[2] == "T-peak") end_time + t_peak_offset else end_time
-    )
+    # Convert and filter for time_of_interest or baseline windows
+    df_converted <- df %>%
+      filter(!.data[[start_var]] %in% c("none", "unknown"),
+         !.data[[end_var]] %in% c("none", "unknown")) %>%
+      mutate(
+      start_time = as.numeric(.data[[start_var]]),
+      end_time   = as.numeric(.data[[end_var]])
+      ) %>%
+      filter(!is.na(start_time), !is.na(end_time)) %>%
+      distinct(PMID, .data[[start_var]], .data[[end_var]], .data[[reference_var]], .keep_all = TRUE)
+  
+    df_group1 <- df_converted %>% filter(.data[[reference_var]] == reference_values[1])
+    df_group2 <- df_converted %>% filter(.data[[reference_var]] == reference_values[2]) %>%
+      mutate(
+      start_time = if(reference_values[2] == "T-peak") start_time + t_peak_offset else start_time,
+      end_time   = if(reference_values[2] == "T-peak") end_time + t_peak_offset else end_time
+      )
   } else {
     # Convert and filter for significant effects windows
     df_converted <- df %>%

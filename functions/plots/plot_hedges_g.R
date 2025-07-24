@@ -159,12 +159,26 @@ plot_hedges_g <- function(df, with_clustering=FALSE, with_regression=FALSE){
   if (!with_clustering) {df <- df[df$clustering==0,]}
   if (!with_regression) {df <- df[df$statistics!='Regression',]}
   
-  p <- hist_panel(df, col = "hedges_g", force.numeric = T, title =  "Hedges' g", x.label = "Hedges' g", use_proportion = T) +
-    geom_vline(aes(xintercept = 0.37, linetype = "Coll et al. (2020)"), color = "#E69F00") +
-    geom_vline(xintercept = 0.35, linetype = "dashed", color = "#E69F00") +
-    geom_vline(xintercept = 0.72, linetype = "dashed", color = "#E69F00") +
-    geom_vline(xintercept = 0.49, linetype = "dashed", color = "#E69F00") +
-    scale_linetype_manual(name = "", values = c("Coll et al. (2020)" = "dashed")) +
+  palette <- c("Attention to the heart" = "#1b9e77",
+               "Interoceptive performance" = "#d95f02",
+               "Arousal" = "#7570b3",
+               "Patients vs. healthy controls" = "#e7298a")
+  
+  p <- hist_panel(df, col = "hedges_g", force.numeric = T, title = "Hedges' g", x.label = "Hedges' g", use_proportion = T) +
+    geom_point(aes(x = 0.37, y = 0.13,
+                   fill = "Attention to the heart"), 
+               shape = 25, size = 3) +
+    geom_point(aes(x = 0.35, y = 0.13, 
+                   fill = "Interoceptive performance"), 
+               shape = 25, size = 3) +
+    geom_point(aes(x = 0.72, y = 0.13, 
+                   fill = "Arousal"), 
+               shape = 25, size = 3) +
+    geom_point(aes(x = 0.49, y = 0.13, 
+                   fill = "Patients vs. healthy controls"), 
+               shape = 25, size = 3) +
+    scale_fill_manual(name = "Effect sizes from\nColl et al. (2020)", 
+                      values = palette) +
     theme(legend.position = c(1, 1),
         legend.justification = c("right", "top"),
           legend.margin = margin(0, 0, 0, 0),

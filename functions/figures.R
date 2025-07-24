@@ -28,7 +28,8 @@ source(file.path(func_path, "plots", "plot_ecg_controls.R"))
 source(file.path(func_path, "plots", "plot_hedges_g_adjusted_for_noise.R"))
 source(file.path(func_path, "plots", "plot_simulated_effects.R"))
 
-source(file.path(func_path, 'figures', 'stats.R'))
+source(file.path(func_path, 'figures', '07_stats.R'))
+source(file.path(func_path, 'figures', '08_controls.R'))
 
 create_epoch_simulation_plot <- function(df){
   

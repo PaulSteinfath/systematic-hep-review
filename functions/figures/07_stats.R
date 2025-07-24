@@ -1,4 +1,4 @@
-figure_stats <- function(df, save_path, ext = 'png'){
+figure_stats <- function(df, save_path, ext = 'png') {
   
   a <- hist_panel(df, 
                   col = "Preregistration", 
@@ -25,10 +25,7 @@ figure_stats <- function(df, save_path, ext = 'png'){
                               "Non-parametric comparison" = "Non-parametric\ncomparison",
                               "Classification" = "Classification",
                               "F-test" = "F-test")) + coord_flip()
-  
   g <- plot_hedges_g(df = df)
-  h <- plot_control_categories(df = df)
-  i <- plot_ecg_controls(df = df) 
   
   first_row <- plot_grid(
     a,b,c,d,e,
@@ -41,23 +38,18 @@ figure_stats <- function(df, save_path, ext = 'png'){
     rel_widths = c(1, 1),
     align = "h"
   )
-  third_row <-plot_grid(
-    h,i,
-    ncol = 2, labels = c("H","I"),rel_widths = c(1, 1),
-    align = "h"
-  )
   
   # Add 10% space between rows
   spacer <- plot_grid(NULL)
   
-  p <- plot_grid(first_row, spacer, second_row, spacer, third_row, 
-                 ncol = 1, rel_heights = c(1, 0.1, 1.4, 0.1, 1.4))
+  p <- plot_grid(first_row, spacer, second_row,
+                 ncol = 1, rel_heights = c(1, 0.1, 1.4))
   
   ggsave(
     filename = file.path(save_path, paste0("fig7_stats.", ext)),
     plot = p,
     width = 10,
-    height = 11,
+    height = 6.5,
     units = "in",
     dpi = 300,
     device = ext,

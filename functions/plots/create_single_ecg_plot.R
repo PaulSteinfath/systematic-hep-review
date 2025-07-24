@@ -158,7 +158,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
       legend.background = element_rect(fill = alpha("white", 0.5)),
       legend.title = element_text(size = 10), 
       legend.text = element_text(size = 9),
-      # legend.key.size = unit(0.8, "lines"),
+      legend.key.size = unit(0.8, "lines"),
       axis.title.x = element_blank(), 
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(), 

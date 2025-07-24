@@ -47,6 +47,8 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
     
     selected_channels <- plot_eeg_locations(df_filtered, 
                                             "hep_channels_selected", 
+                                            by = "study",
+                                            divide.over = NULL,
                                             combined = T,
                                             colormap = "Greys",
                                             main_title = NULL, 
@@ -106,6 +108,8 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
     
     significant_channels <- plot_eeg_locations(df_filtered, 
                                                "significant_channels", 
+                                               by = "study",
+                                               divide.over = NULL,
                                                combined = T,
                                                colormap = "Greys",
                                                main_title = NULL, 
@@ -149,7 +153,9 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
       axis.text.x = element_text(size = 8),
       plot.margin = plot_margin_bottom
     ) +
-    scale_x_continuous(limits = shared_limits, expand = c(0, 0))
+    scale_x_continuous(limits = shared_limits, 
+                       breaks = seq(-200, 800, by = 200),
+                       expand = c(0, 0))
 
   # --- Create Y Label Grob ---
   y_label_text <- "Number of Pipelines"

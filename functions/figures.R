@@ -22,29 +22,104 @@ source(file.path(func_path, "plots", "plot_multiple_choices.R"))
 source(file.path(func_path, "plots", "plot_entropy.R"))
 source(file.path(func_path, "plots", "create_time_windows_plot.R"))
 source(file.path(func_path, "plots", "create_single_ecg_plot.R"))
+source(file.path(func_path, "plots", "plot_hedges_g.R"))
+source(file.path(func_path, "plots", "plot_control_categories.R"))
+source(file.path(func_path, "plots", "plot_ecg_controls.R"))
+source(file.path(func_path, "plots", "plot_hedges_g_adjusted_for_noise.R"))
+source(file.path(func_path, "plots", "plot_simulated_effects.R"))
 
-create_combined_plot_for_columns <- function(df){
+source(file.path(func_path, 'figures', '07_stats.R'))
+source(file.path(func_path, 'figures', '08_controls.R'))
 
-  analysis_steps <- colnames(df)[6:45] 
-
-  p1 <- plot_entropy(df,method_columns = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F,  x_lab = "", x_ticks = FALSE)
-
-  p2 <- plot_multiple_choices(df,variables = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F, x_lab = "", x_ticks = FALSE)
-
-  p3 <- plot_missing(df, columns = analysis_steps, column_mapping_readable = column_mapping_readable_default, vertical = F, align_by_magnitude = F, x_ticks = TRUE)
-
-  fig_ABC <- plot_grid(
-    p1, p2, p3, 
-    ncol = 1, 
-    align = "v",
-    axis = "l",
-    labels = c("A", "B", "C"),
-    vjust = 1,
-    rel_heights = c(1, 1, 1.2)
+create_epoch_simulation_plot <- function(df){
+  
+  a <- plot_hedges_g_adjusted_for_noise(df, 
+                                        sigma_s_vals = c(1), 
+                                        sigma_t_vals = c(0.5, 1, 2, 4, 10), 
+                                        r_thresh = 4)
+  b <- plot_simulated_effects(d_type = 'g', 
+                              plot_type = 'pure', 
+                              Ns = seq(10, 300, 10), 
+                              ks = seq(10, 300, 10), 
+                              sigma_ratio = c(0.1, 0.25, 0.5, 1, 2))
+ 
+  p <- plot_grid(
+    a, NULL, b, 
+    nrow = 1, ncol = 3, 
+    labels = c("A", "", "B"),
+    rel_widths = c(0.5, 0.05, 0.5)
   )
+  
+}
 
-  return(fig_ABC)
+create_combined_plot_for_columns <- function(df) {
+  
+  target_columns <- unlist(pipeline_steps, use.names = FALSE)
 
+  # Use entropy to determine column order
+  entropy_df <- compute_entropy(df, 
+                                method_columns = target_columns,
+                                drop_paper_duplicates = TRUE)
+  entropy_df$Step <- sapply(entropy_df$Column, function(var_name) {
+    get_pipeline_step(var_name)
+  })
+  entropy_df$Step <- factor(entropy_df$Step, levels = names(pipeline_colors))
+  
+  #Sort by entropy within each step
+  step_order <- c("Statistics", "HER Estimation", "Preprocessing", "Acquisition", "Experiment")
+  entropy_df$Step <- factor(entropy_df$Step, levels = step_order)
+    entropy_df <- entropy_df %>%
+    dplyr::arrange(Step, Entropy) %>%
+    dplyr::mutate(Column = factor(Column, levels = unique(Column)))
+  
+  # Final fixed order to reuse
+  ordered_columns_original <- levels(entropy_df$Column)
+  
+  # Build all three plots with unified config
+  p1 <- plot_entropy(entropy_df = entropy_df,
+                            column_mapping_readable = column_mapping_readable_default,
+                            pipeline_steps = pipeline_steps,
+                            pipeline_colors = pipeline_colors,
+                            fixed = TRUE,
+                            flip = TRUE,
+                            show_title = TRUE,
+                            show_wordy_title = TRUE)
+        
+
+  p2 <- plot_multiple_choices(df,
+                                     variables = ordered_columns_original,
+                                     column_mapping_readable = column_mapping_readable_default,
+                                     pipeline_steps = pipeline_steps,
+                                     pipeline_colors = pipeline_colors,
+                                     fixed = TRUE,
+                                     flip = TRUE,
+                                     y_ticks = FALSE,
+                                     show_title = TRUE,
+                                     show_wordy_title = TRUE,
+                                     x_lab = "")
+  p3 <- plot_missing(df,
+                            columns = ordered_columns_original,
+                            column_mapping_readable = column_mapping_readable_default,
+                            pipeline_steps = pipeline_steps,
+                            pipeline_colors = pipeline_colors,
+                            fixed = TRUE,
+                            flip = TRUE,
+                            y_ticks = FALSE,
+                            show_title = TRUE,
+                            show_wordy_title = TRUE,
+                            x_lab = "", 
+                            show_legend = TRUE)
+
+  figABC <- plot_grid(p1, NULL, p2, NULL, p3,
+                      ncol = 5,
+                      align = "h",
+                      axis = "l",
+                      labels = c("A", "", "B", "", "C"),
+                      label_x = c(0.35, NA, -0.13, NA, -0.1), 
+                      label_y = c(1, NA, 1, NA, 1),  
+                      rel_widths = c(1, 0.025, 0.7, 0.025, 1))
+
+  return(figABC)
 }
 
 # Create filter cutoff plots
@@ -276,7 +351,6 @@ eeg_locations_summary <- function(df) {
   fig
 }
 
-
 studies_overview <- function(df) {
   p_year <- hist_panel(df, "Year", force.numeric = T, 
                        title = "Publication year", 
@@ -311,7 +385,6 @@ p_condition <- hist_panel(df_study_categories, "study_category",
   
   fig
 }
-
 
 create_hep_time_windows_summary_plot <- function(df) {
 
@@ -522,18 +595,19 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
   show(cfa_removal_plot)
 
-  combined_plot_for_columns <- create_combined_plot_for_columns(df)
+  pipelines_overview <- create_combined_plot_for_columns(df)
 
   ggsave(
-    filename = file.path(save_path, paste0("combined_plot_for_columns.", ext)),
-    plot = combined_plot_for_columns,
-    width = 10,
+    filename = file.path(save_path, paste0("pipelines_overview.", ext)),
+    plot = pipelines_overview,
+    width = 11,
     height = 11,
     units = "in",
     dpi = 300,
     device = ext,
     bg = "white"
   )
+  show(pipelines_overview)
 
   control_vars_plot <- create_control_variables_plot(df)
 
@@ -590,4 +664,31 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(hep_time_windows_combined)
+  
+  epoch_simulation_plot <- create_epoch_simulation_plot(df)
+  ggsave(
+    filename = file.path(save_path, paste0("epoch_simulation_plot.", ext)),
+    plot = epoch_simulation_plot,
+    width = 7,
+    height = 5,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
+  show(epoch_simulation_plot)
+  
+  additional_hedges_g_plot <- plot_hedges_g(df = df, with_clustering = T, with_regression = T)
+  ggsave(
+    filename = file.path(save_path, paste0("additional_hedges_g_plot.", ext)),
+    plot = additional_hedges_g_plot,
+    width = 7,
+    height = 5,
+    units = "in",
+    dpi = 300,
+    device = ext,
+    bg = "white"
+  )
+  show(additional_hedges_g_plot)
+  
 }

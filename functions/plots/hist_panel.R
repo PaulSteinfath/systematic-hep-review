@@ -79,9 +79,17 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
     p <- p + theme_classic(base_family = "sans")
   } else {
     p <- ggplot(df_distinct, aes(x = !!sym(col))) +
-      geom_histogram(aes(y = if (use_proportion) after_stat(density) else after_stat(count)),
-                     fill = plot_fill_default_single, color = 'white', linewidth = 0.5, 
-                     binwidth = binwidth, bins = bins) +
+      geom_histogram(aes(
+        y = if (use_proportion) 
+          after_stat(count / sum(count))
+        else 
+          after_stat(count)
+        ),
+        fill = plot_fill_default_single, 
+        color = 'white', 
+        linewidth = 0.5, 
+        binwidth = binwidth, 
+        bins = bins) +
       theme_classic(base_family = "sans")
   }
   

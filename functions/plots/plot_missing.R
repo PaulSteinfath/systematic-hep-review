@@ -1,23 +1,10 @@
-missing_columns_default <- list(
-                                 c("channels", 
-                                 "ecg_num_electrodes", "ecg_lead", 
-                                 "ecg_locations", "reference_online", 
-                                 "reference_offline", "high_pass", "low_pass", 
-                                 "ICA", 
-                                 "rejected_components",  
-                                 "hep_channels_selected", 
-                                 "hep_relative_to", "hep_start", 
-                                 "hep_end", 
-                                 "value",  "statistics", "permutations", "sample_size"
-                                ),
-                                c("cfa_rej_approach", "cfa_rej_criteria","baseline_start_ms", "baseline_end_ms"),
-                                c("rejected_cardiac_ics", "ecg_ground", "trials", "length_min")
-                                )
-
 ica_columns <- c(
   "ica_on_epochs", "rejected_components", 
   "rejected_cardiac_ics", "cfa_rej_approach", "cfa_rej_criteria"
 )
+
+# CFA-specific columns
+cfa_columns <- c("rejected_cardiac_ics", "cfa_rej_approach", "cfa_rej_criteria")
 
 is_missing <- function(x) {
   x_char <- tolower(as.character(x))
@@ -32,6 +19,12 @@ calc_missing_for_column <- function(data, col) {
   # For ica_columns: only count missing if ICA == 1.
   if (col %in% ica_columns) {
     condition <- data$ICA == 1
+    
+    # For CFA-specific columns check that CFA is among rejected components
+    if (col %in% cfa_columns) {
+      cfa_mentioned <- grepl("CFA", data$rejected_components, ignore.case = TRUE)
+      condition <- condition & cfa_mentioned
+    }
   } else {
     condition <- rep(TRUE, nrow(data))
   }
@@ -61,6 +54,12 @@ calc_missing_for_column <- function(data, col) {
 compute_denom_papers <- function(data, col) {
   if (col %in% ica_columns) {
     rel <- data$ICA == 1
+    
+    # For CFA-specific columns: check that CFA is among rejected components
+    if (col %in% cfa_columns) {
+      cfa_mentioned <- grepl("CFA", data$rejected_components, ignore.case = TRUE)
+      rel <- rel & cfa_mentioned
+    }
   } else if (grepl("perm", col, ignore.case = TRUE)) {
     rel <- data$clustering == 1
   } else if (tolower(col) %in% c("reference online", "reference_online",
@@ -76,6 +75,12 @@ compute_denom_papers <- function(data, col) {
 compute_missing_papers <- function(data, col) {
   if (col %in% ica_columns) {
     rel <- data$ICA == 1
+
+    # For CFA-specific columns: check that CFA is among rejected components
+    if (col %in% cfa_columns) {
+      cfa_mentioned <- grepl("CFA", data$rejected_components, ignore.case = TRUE)
+      rel <- rel & cfa_mentioned
+    }
   } else if (grepl("perm", col, ignore.case = TRUE)) {
     rel <- data$clustering == 1
   } else if (tolower(col) %in% c("reference online", "reference_online",
@@ -96,96 +101,82 @@ compute_missing_papers <- function(data, col) {
 }
 
 plot_missing <- function(df,
-                         columns = missing_columns_default,
-                         column_mapping_readable = column_mapping_readable_default,
-                         group_var = NULL,
-                         vertical = FALSE,
-                         percentages = TRUE,
-                         plot_fill = plot_fill_default,
-                         plot_theme = plot_theme_default,
-                         align_by_magnitude = TRUE,
-                         gap = 0.5,
-                         group_bar_pos = "dodge",
-                         show_wordy_title = FALSE,
-                         x_lab = "Methodological Choice",
-                         x_ticks = TRUE) {
+                                columns = NULL,
+                                percentages = TRUE,
+                                column_mapping_readable = column_mapping_readable_default,
+                                pipeline_steps = NULL,
+                                pipeline_colors = NULL,
+                                plot_fill = plot_fill_default_single,
+                                show_wordy_title = FALSE,
+                                show_title = FALSE,
+                                show_legend = FALSE,
+                                x_lab = "Methodological Choice",
+                                tilt_labels = FALSE,
+                                x_ticks = TRUE,
+                                y_ticks = TRUE,
+                                flip = FALSE,
+                                fixed = FALSE) {
   
-  # Flatten columns if needed.
-  if (is.list(columns)) {
-    flat_cols <- unlist(columns)
+  if (is.list(columns)) columns <- unlist(columns)
+  
+  results_df <- purrr::map_dfr(columns, function(col) {
+    denom <- compute_denom_papers(df, col)
+    missing <- compute_missing_papers(df, col)
+    metric  <- if (percentages) missing / denom else missing
+    data.frame(Column = col, Metric = metric, stringsAsFactors = FALSE)
+  })
+  
+  results_df <- prepare_column_plot_data(results_df, 
+                                         column_col = "Column", 
+                                         value_col = "Metric", 
+                                         method_columns = columns,
+                                         column_mapping_readable = column_mapping_readable,
+                                         pipeline_colors = pipeline_colors,
+                                         fixed = fixed)
+  
+  y_lab <- if (percentages) "Proportion of Studies" else "Number of Studies"
+
+  my_title <- if (!show_title) {
+    NULL
+  } else if (show_wordy_title) {
+    "Missing Information"
   } else {
-    flat_cols <- columns
+    paste("n =", dplyr::n_distinct(df$PMID), "studies")
   }
   
-  results_df <- NULL
+  p <- ggplot(results_df, aes(x = Column, y = Metric)) +
+    theme_classic(base_family = "sans") +
+    labs(title = my_title, x = x_lab, y = y_lab) +
+    theme(
+      title = element_text(size = 9),
+      axis.text.x = element_text(size = 9,
+                                 angle = if (tilt_labels) 45 else 0,
+                                 hjust = if (tilt_labels) 1 else 0.5),
+      axis.text.y = element_text(size = 8),
+      axis.title.x = element_text(size = 9, margin = margin(t = 4)),
+      axis.title.y = element_text(size = 9)
+    ) +
+    scale_y_continuous(labels = if (percentages) scales::percent else waiver(),
+                       expand = expansion(mult = c(0, .1)))
   
-  if (is.null(group_var)) {
-    # Ungrouped: compute for entire df.
-    for (col in flat_cols) {
-      denom <- compute_denom_papers(df, col)
-      missing_count <- compute_missing_papers(df, col)
-      metric_value <- if (percentages) (missing_count / denom * 100) else missing_count
-      temp <- data.frame(Column = col,
-                         Missing = missing_count,
-                         Metric = metric_value,
-                         stringsAsFactors = FALSE)
-      results_df <- rbind(results_df, temp)
-    }
+  if (!is.null(pipeline_colors)) {
+    p <- p + geom_bar(aes(fill = Step), stat = "identity", color = "white", linewidth = 0.5) +
+      scale_fill_manual(values = pipeline_colors, guide = if (show_legend) "legend" else "none") +
+      theme(legend.position = "right", legend.justification = "center", legend.margin = margin(0, -1, 0, 0))
   } else {
-    # Grouped: compute per group.
-    if (!(group_var %in% names(df))) {
-      stop(paste("Grouping variable", group_var, "not found in data."))
-    }
-    groups <- unique(df[[group_var]])
-    for (col in flat_cols) {
-      temp_list <- lapply(groups, function(g) {
-        dfg <- df[df[[group_var]] == g, ]
-        denom <- compute_denom_papers(dfg, col)
-        missing_count <- compute_missing_papers(dfg, col)
-        metric_value <- if (percentages) (missing_count / denom * 100) else missing_count
-        data.frame(Column = col,
-                   Missing = missing_count,
-                   total = denom,
-                   Metric = metric_value,
-                   Group = g,
-                   stringsAsFactors = FALSE)
-      })
-      temp <- do.call(rbind, temp_list)
-      results_df <- bind_rows(results_df, temp)
-    }
+    p <- p + geom_bar(stat = "identity", fill = plot_fill, color = "white", linewidth = 0.5)
   }
   
-  # Apply column mapping.
-  results_df$Column <- apply_column_mapping(results_df$Column, column_mapping_readable)
-  
-  # Define axis labels and title.
-  y_lab <- if (percentages) "Percentage of Papers with Missing Information" else "Number of Papers with Missing Information"
-  if (show_wordy_title) {
-    my_title <- if (is.null(group_var)) 
-      "Missing Information per Column" 
-    else 
-      "Missing Information per Column by Group"
-  } else {
-    n_unique_papers <- n_distinct(df$PMID)
-    my_title <- paste("n =", n_unique_papers)
+  if (!x_ticks) p <- p + theme(axis.text.x = element_blank())
+  if (!y_ticks) {
+    p <- p +
+      theme(
+        axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        plot.margin = margin(t = 5, r = 5, b = 5, l = 5)
+      )
   }
+  if (flip)     p <- p + coord_flip()
   
-  # Call the generic column_barplot().
-  p <- column_barplot(results_df = results_df,
-                      x_col = "Column",
-                      y_col = "Metric",
-                      variables = columns,
-                      vertical = vertical,
-                      group_var = if (is.null(group_var)) NULL else "Group",
-                      align_by_magnitude = align_by_magnitude,
-                      gap = gap,
-                      x_lab = x_lab,
-                      y_lab = y_lab,
-                      plot_title = my_title,
-                      plot_fill = plot_fill,
-                      plot_theme = plot_theme,
-                      column_mapping_readable = column_mapping_readable,
-                      group_bar_pos = group_bar_pos,
-                      x_ticks = x_ticks)
   return(p)
 }

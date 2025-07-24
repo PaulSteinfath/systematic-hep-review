@@ -20,6 +20,19 @@ leads_palette <- c('Lead I' = '#fc8d62',
 
 r_t_peak_palette <- c("R-peak" = "#696969", "T-peak" = "#E69F00")
 
+
+effect_sizes_Coll2020 <- data.frame(
+  kind = c("Attention to the heart",
+           "Interoceptive performance",
+           "Arousal",
+           "Patients vs. healthy controls"),
+  value = c(0.37, 0.35, 0.72, 0.49)
+)
+palette_Coll2020 <- c("Attention to the heart" = "#1b9e77",
+                      "Interoceptive performance" = "#d95f02",
+                      "Arousal" = "#7570b3",
+                      "Patients vs. healthy controls" = "#e7298a")
+
 theme_set(plot_theme_default)
 
 column_mapping_readable_default <- c(
@@ -48,7 +61,6 @@ column_mapping_readable_default <- c(
   "Other Cleaning Strategy" = "other_cleaning_strategy",
   "Number of Groups" = "groups",
   "Number of Conditions" = "conditions",
-  "Number of Trials" = "trials", # Not sure if we need it
   "HER Relative To" = "hep_relative_to",
   "Baseline Start (ms)" = "baseline_start_ms",
   "Baseline End (ms)" = "baseline_end_ms",
@@ -68,8 +80,8 @@ column_mapping_readable_default <- c(
   "Length (min)" = "length_min", 
   "Modality (EEG/MEG)" = "modality",
   "EEG Locations" = "eeg_locations",
-  #"Number of Trials" = "trials_Mean",# Not sure if we need it
-  "Resting-state HER" = "rsHEP"
+  "Resting-state HER" = "rsHEP",
+  "Number of Trials" = "trials_original"
 )
 
 save_plot <- function(p, vis_path, file_name, plot_format = "svg", plot_width = 6, plot_height = 6) {
@@ -119,7 +131,7 @@ pipeline_steps <- list(
     "ecg_ground", "reference_online", "modality"
   ),
   "Experiment" = c(
-    "groups", "conditions", "length_min", "rsHEP", "sample_size", "trials"
+    "groups", "conditions", "length_min", "rsHEP", "sample_size", "trials_original"
   ),
   "Preprocessing" = c(
     "reference_offline", "high_pass", "low_pass", "ICA", 
@@ -136,11 +148,11 @@ pipeline_steps <- list(
   )
 )
 pipeline_colors <- c(
-  "Experiment"     = "#505050",   # Medium-dark grey
-  "Acquisition"    = "#6A6A6A",   # Medium grey
-  "Preprocessing"  = "#8A8A8A",   # Medium-light grey 
-  "HER Estimation" = "#B0B0B0",   # Light grey
-  "Statistics"     = "#D0D0D0"    # Lightest grey
+  "Experiment"     = "#2E2E2E",
+  "Acquisition"    = "#5A5A5A",
+  "Preprocessing"  = "#808080",
+  "HER Estimation" = "#A8A8A8",
+  "Statistics"     = "#D0D0D0" 
 )
 
 # Enhanced function to ensure we always get a valid pipeline step

@@ -28,64 +28,27 @@ source(file.path(func_path, "plots", "plot_ecg_controls.R"))
 source(file.path(func_path, "plots", "plot_hedges_g_adjusted_for_noise.R"))
 source(file.path(func_path, "plots", "plot_simulated_effects.R"))
 
-create_stats_plot <- function(df){
-  
-  a <- hist_panel(df, col = "Preregistration", title = "Preregistration", force.numeric = F, use_proportion = T, discrete = T, custom_labels = c("No","Yes"))
-  b <- hist_panel(df = df, col = "sample_size", title = "Sample Size", x.label = "Number of Subjects", use_proportion = T)
-  c <- hist_panel(df = df, col = "groups", title = "Groups", x.label = "Number of Groups", binwidth = 1, use_proportion = T)  
-  d <- hist_panel(df = df, col = "conditions", title = "Conditions", x.label = "Number of Conditions", binwidth = 1, use_proportion = T)  
-  e <- hist_panel(df = df, col = "trials_Mean", title = "Averaged Epochs", force.numeric = T, x.label = "Number of Averaged Epochs", use_proportion = T)
-  
-  f <- hist_panel(df = df, 
-                  col = "statistics", 
-                  title = "Statistical Tests",
-                  x.label = "", 
-                  discrete = T, 
-                  tilt_labels = F,
-                  allowed = c("t-test" = "t-test",
-                             "Correlation" = "Correlation",
-                             "Regression" = "Regression", 
-                             "ANOVA" = "ANOVA",
-                             "Non-parametric comparison" = "Non-parametric\ncomparison",
-                             "Classification" = "Classification",
-                             "F-test" = "F-test")) + coord_flip()
-  
-  g <- plot_hedges_g(df = df)
-  h <- plot_control_categories(df = df)
-  i <- plot_ecg_controls(df = df) 
-
-  first_row <- plot_grid(
-    a,b,c,d,e,
-    ncol = 5, labels = c("A","B", "C", "D","E"), rel_widths = c(0.8, 0.8, 0.8,0.8,1.2),
-    align = "h"
-  )
-  second_row <- plot_grid(
-    f,g,
-    ncol = 2, labels = c("F","G"),
-    rel_widths = c(1, 1),
-    align = "h"
-  )
-  third_row <-plot_grid(
-    h,i,
-    ncol = 2, labels = c("H","I"),rel_widths = c(1, 1),
-    align = "h"
-  )
-  
-  # Add 10% space between rows
-  spacer <- plot_grid(NULL)
-  
-  p <- plot_grid(first_row, spacer, second_row, spacer, third_row, 
-                 ncol = 1, rel_heights = c(1, 0.1, 1.4, 0.1, 1.4))
-  
-  p
-}
+source(file.path(func_path, 'figures', '07_stats.R'))
+source(file.path(func_path, 'figures', '08_controls.R'))
 
 create_epoch_simulation_plot <- function(df){
   
-  a <- plot_hedges_g_adjusted_for_noise(df, sigma_s_vals = c(0.5, 1, 2), sigma_t_vals = c(0.1, 0.2, 0.5, 1), r_thresh = 4)
-  b <- plot_simulated_effects(d_type = 'g', plot_type = 'pure', Ns=seq(10,300,10), ks=seq(10,300,10), sigma_ratio=c(0.5,1,2,2.5,4))
+  a <- plot_hedges_g_adjusted_for_noise(df, 
+                                        sigma_s_vals = c(1), 
+                                        sigma_t_vals = c(0.5, 1, 2, 4, 10), 
+                                        r_thresh = 4)
+  b <- plot_simulated_effects(d_type = 'g', 
+                              plot_type = 'pure', 
+                              Ns = seq(10, 300, 10), 
+                              ks = seq(10, 300, 10), 
+                              sigma_ratio = c(0.1, 0.25, 0.5, 1, 2))
  
-  p <- plot_grid(a, b, ncol = 2)
+  p <- plot_grid(
+    a, NULL, b, 
+    nrow = 1, ncol = 3, 
+    labels = c("A", "", "B"),
+    rel_widths = c(0.5, 0.05, 0.5)
+  )
   
 }
 
@@ -109,14 +72,8 @@ create_combined_plot_for_columns <- function(df) {
     dplyr::arrange(Step, Entropy) %>%
     dplyr::mutate(Column = factor(Column, levels = unique(Column)))
   
-  # Final fixed order to reuse (in readable names)
-  ordered_columns_readable <- levels(entropy_df$Column)
-  
-  # Map back to original variable names
-  ordered_columns_original <- vapply(ordered_columns_readable, function(readable) {
-    var_name <- column_mapping_readable_default[readable]
-    if (is.na(var_name)) readable else var_name
-  }, character(1))
+  # Final fixed order to reuse
+  ordered_columns_original <- levels(entropy_df$Column)
   
   # Build all three plots with unified config
   p1 <- plot_entropy(entropy_df = entropy_df,
@@ -707,19 +664,6 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(hep_time_windows_combined)
-  
-  stats_plot <- create_stats_plot(df)
-  ggsave(
-    filename = file.path(save_path, paste0("stats_plot.", ext)),
-    plot = stats_plot,
-    width = 10,
-    height = 11,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  show(stats_plot)
   
   epoch_simulation_plot <- create_epoch_simulation_plot(df)
   ggsave(

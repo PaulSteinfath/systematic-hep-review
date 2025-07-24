@@ -2,6 +2,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
                                    shared_limits, plot_title,
                                    reference_var = "hep_relative_to",
                                    reference_values = c("R-peak", "T-peak"),
+                                   by = "pipeline",
                                    x_label_main = "Time (ms)",
                                    debug_inset = FALSE) {
 
@@ -34,21 +35,25 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
     hep_plot <- create_time_windows_plot(df_filtered, 
         "hep_start", "hep_end", reference_var,
         x_label_main,
+        "Analyzed window",
         reference_values = reference_values,
+        by = by,
         t_peak_offset = t_peak_offset,
         x_limits = shared_limits
       ) + 
       theme_aligned_middle + 
-      ggtitle("HER Time of Interest") +
       theme(plot.title = element_text(size = 11, margin = margin(b = 5)),
             legend.position = "none")
     
     selected_channels <- plot_eeg_locations(df_filtered, 
-                                            "hep_channels_selected", combined = T,
-                                            main_title = NULL, show_colorbar = T)
+                                            "hep_channels_selected", 
+                                            combined = T,
+                                            colormap = "Greys",
+                                            main_title = NULL, 
+                                            show_colorbar = T)
   } else {
     hep_plot <- no_valid_data_stub("No valid data") + 
-      ggtitle("HER Time of Interest") +
+      ggtitle("Analyzed window") +
       theme(plot.title = element_text(size = 11, margin = margin(b = 5)),
             legend.position = "none")
     
@@ -60,15 +65,16 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
     baseline_plot <- create_time_windows_plot(df_filtered,
       "baseline_start_ms", "baseline_end_ms", reference_var,
       x_label_main,
+      "Baseline window",
       reference_values = reference_values,
+      by = by,
       t_peak_offset = t_peak_offset,
       x_limits = shared_limits) +
-      ggtitle("Baseline Window") +
       theme(plot.title = element_text(size = 11, margin = margin(b = 5)),
         legend.position = "none")
   } else {
     baseline_plot <- no_valid_data_stub("No valid data") +
-      ggtitle("Baseline Window") +
+      ggtitle("Baseline window") +
       theme(plot.title = element_text(size = 11, margin = margin(b = 5)),
         legend.position = "none")
   }
@@ -90,19 +96,23 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
       "merged_end",
       "merged_ref",
       "Time relative to R-peak (ms)",
+      "Significant effects",
+      by = by,
       t_peak_offset = 300,
       x_limits = shared_limits
     ) +
       theme_aligned_middle + 
-      ggtitle("Significant Effects Found") +
       theme(plot.title = element_text(size = 11, margin = margin(b = 5)))
     
     significant_channels <- plot_eeg_locations(df_filtered, 
-                                               "significant_channels", combined = T,
-                                               main_title = NULL, show_colorbar = T)
+                                               "significant_channels", 
+                                               combined = T,
+                                               colormap = "Greys",
+                                               main_title = NULL, 
+                                               show_colorbar = T)
   } else {
     significant_plot <- no_valid_data_stub("No valid data") +
-      ggtitle("Significant Effects Found") +
+      ggtitle("Significant effects") +
       theme(plot.title = element_text(size = 11, margin = margin(b = 5)))
     
     significant_channels <- NULL
@@ -153,7 +163,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   baseline_plot_aligned <- baseline_plot +
     theme(
       legend.position = "inside",
-      legend.position.inside = c(0.98, 1.18), 
+      legend.position.inside = c(0.98, 1.5), 
       legend.justification = c("right", "top"), 
       legend.background = element_rect(fill = alpha("white", 0.5)),
       legend.title = element_text(size = 10), 

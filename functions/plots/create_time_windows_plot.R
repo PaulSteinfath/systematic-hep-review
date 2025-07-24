@@ -1,6 +1,14 @@
-create_time_windows_plot <- function(df, start_var, end_var, reference_var, x_label,
-                   reference_values = c("R-peak", "T-peak"),
-                   t_peak_offset = 300, x_limits = NULL) {
+create_time_windows_plot <- function(df, 
+                                     start_var, 
+                                     end_var, 
+                                     reference_var, 
+                                     x_label,
+                                     plot_title,
+                                     reference_values = c("R-peak", "T-peak"),
+                                     by = "pipeline",
+                                     group_col = "PMID",
+                                     t_peak_offset = 300, 
+                                     x_limits = NULL) {
 
   # Define colors for the two reference values
   ref_palette <- setNames(r_t_peak_palette[1:2], reference_values)
@@ -16,7 +24,7 @@ create_time_windows_plot <- function(df, start_var, end_var, reference_var, x_la
       end_time   = as.numeric(.data[[end_var]])
       ) %>%
       filter(!is.na(start_time), !is.na(end_time)) %>%
-      distinct(PMID, .data[[start_var]], .data[[end_var]], .data[[reference_var]], .keep_all = TRUE)
+      distinct(.data[[group_col]], start_time, end_time, .data[[reference_var]], .keep_all = TRUE)
   
     df_group1 <- df_converted %>% filter(.data[[reference_var]] == reference_values[1])
     df_group2 <- df_converted %>% filter(.data[[reference_var]] == reference_values[2]) %>%
@@ -35,7 +43,8 @@ create_time_windows_plot <- function(df, start_var, end_var, reference_var, x_la
       significant_end_ms   = as.numeric(significant_end_ms),
       start_time = if_else(averaging_time == "1", hep_start, significant_start_ms),
       end_time   = if_else(averaging_time == "1", hep_end, significant_end_ms)
-      )
+      ) %>%
+      distinct(.data[[group_col]], start_time, end_time, .data[[reference_var]], .keep_all = TRUE)
 
   df_group1 <- df_converted %>%
     filter(.data[[reference_var]] == reference_values[1]) %>%
@@ -68,9 +77,18 @@ create_time_windows_plot <- function(df, start_var, end_var, reference_var, x_la
   x_time <- seq(floor(x_min), ceiling(x_max), by = 1)
 
   # Calculate counts for both reference groups
-  counts1 <- calculate_cumulative_counts(df_group1, x_time)
-  counts2 <- calculate_cumulative_counts(df_group2, x_time)
+  counts1 <- calculate_cumulative_counts(df_group1, x_time, by=by, group_col=group_col)
+  counts2 <- calculate_cumulative_counts(df_group2, x_time, by=by, group_col=group_col)
 
+  # Data points
+  datapoint_type <- if (by == "pipeline") "Pipelines" else "Studies"
+  if (by == "pipeline") {
+    datapoint_count <- nrow(df_group1) + nrow(df_group2)
+  } else {
+    datapoint_count <- length(unique(c(df_group1[[group_col]], 
+                                       df_group2[[group_col]])))
+  }
+  
   # Combine into a single dataframe for plotting
   plot_data <- data.frame(
   Time = rep(x_time, 2),
@@ -92,7 +110,10 @@ create_time_windows_plot <- function(df, start_var, end_var, reference_var, x_la
     values = ref_palette,
     breaks = reference_values
   ) +
-  labs(x = x_label, y = "Number of Pipelines") + 
+  labs(x = x_label, 
+       y = paste("Number of", datapoint_type),
+       title = plot_title,
+       subtitle = paste("n =", datapoint_count, tolower(datapoint_type))) + 
   scale_y_continuous() +
   plot_theme_default +
   custom_theme() +

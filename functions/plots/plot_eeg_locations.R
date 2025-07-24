@@ -176,14 +176,14 @@ plot_eeg_locations <- function(df,
   }
   
   p <- p + 
-    scale_fill_viridis(option = colormap,
-                       labels = scales::percent,
-                       direction = 1,
-                       guide = if (show_colorbar) 
-                         guide_colorbar(title = colorbar_title) 
-                       else guide_none(),
-                       limits = c(0, lim),
-                       breaks = c(0, 0.5 * lim, lim))
+    scale_fill_distiller(palette = colormap,
+                         labels = scales::percent,
+                         direction = 1,
+                         guide = if (show_colorbar) 
+                           guide_colorbar(title = colorbar_title) 
+                         else guide_none(),
+                         limits = c(0, lim),
+                         breaks = c(0, 0.5 * lim, lim))
   
   p
 }

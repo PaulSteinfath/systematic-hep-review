@@ -416,6 +416,7 @@ figure_hep_time_windows_summary <- function(df, save_path, ext = 'png') {
     plot_title = "Averaging over channels / time points",
     reference_var = "hep_relative_to",
     reference_values = c("R-peak", "T-peak"),
+    by = "study",
     debug_inset = F
   )
 
@@ -426,6 +427,7 @@ figure_hep_time_windows_summary <- function(df, save_path, ext = 'png') {
     plot_title = "Cluster-based permutation tests",
     reference_var = "hep_relative_to",
     reference_values = c("R-peak", "T-peak"),
+    by = "study",
     debug_inset = F
   )
 

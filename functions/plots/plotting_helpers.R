@@ -20,6 +20,19 @@ leads_palette <- c('Lead I' = '#fc8d62',
 
 r_t_peak_palette <- c("R-peak" = "#696969", "T-peak" = "#E69F00")
 
+
+effect_sizes_Coll2020 <- data.frame(
+  kind = c("Attention to the heart",
+           "Interoceptive performance",
+           "Arousal",
+           "Patients vs. healthy controls"),
+  value = c(0.37, 0.35, 0.72, 0.49)
+)
+palette_Coll2020 <- c("Attention to the heart" = "#1b9e77",
+                      "Interoceptive performance" = "#d95f02",
+                      "Arousal" = "#7570b3",
+                      "Patients vs. healthy controls" = "#e7298a")
+
 theme_set(plot_theme_default)
 
 column_mapping_readable_default <- c(

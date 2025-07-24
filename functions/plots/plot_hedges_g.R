@@ -159,26 +159,13 @@ plot_hedges_g <- function(df, with_clustering=FALSE, with_regression=FALSE){
   if (!with_clustering) {df <- df[df$clustering==0,]}
   if (!with_regression) {df <- df[df$statistics!='Regression',]}
   
-  palette <- c("Attention to the heart" = "#1b9e77",
-               "Interoceptive performance" = "#d95f02",
-               "Arousal" = "#7570b3",
-               "Patients vs. healthy controls" = "#e7298a")
-  
   p <- hist_panel(df, col = "hedges_g", force.numeric = T, title = "Hedges' g", x.label = "Hedges' g", use_proportion = T) +
-    geom_point(aes(x = 0.37, y = 0.13,
-                   fill = "Attention to the heart"), 
-               shape = 25, size = 3) +
-    geom_point(aes(x = 0.35, y = 0.13, 
-                   fill = "Interoceptive performance"), 
-               shape = 25, size = 3) +
-    geom_point(aes(x = 0.72, y = 0.13, 
-                   fill = "Arousal"), 
-               shape = 25, size = 3) +
-    geom_point(aes(x = 0.49, y = 0.13, 
-                   fill = "Patients vs. healthy controls"), 
-               shape = 25, size = 3) +
+    geom_point(data = effect_sizes_Coll2020,
+               mapping = aes(x = value, y = 0.13, fill = kind), 
+               shape = 25, 
+               size = 3) +
     scale_fill_manual(name = "Effect sizes from\nColl et al. (2020)", 
-                      values = palette) +
+                      values = palette_Coll2020) +
     theme(legend.position = c(1, 1),
         legend.justification = c("right", "top"),
           legend.margin = margin(0, 0, 0, 0),

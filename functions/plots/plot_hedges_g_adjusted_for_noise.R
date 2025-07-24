@@ -25,7 +25,7 @@ plot_hedges_g_adjusted_for_noise <- function(df,
                                sigma_t = sigma_t_vals) %>% 
     mutate(
       r     = sigma_s / sigma_t,
-      g_adj = hedges_g * sqrt(r^2 + 1 / trials_Mean),
+      g_adj = hedges_g * sqrt(1 + 1 / (r^2 * trials_Mean)),
       r_lbl = sprintf("σs/σt=%.2f", r)
     )
   

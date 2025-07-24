@@ -81,7 +81,7 @@ plot_simulated_effects <- function(
   
   # ----‑‑‑‑‑‑‑‑‑‑ compute weighted effect size -----------------------------------------
   grid <- grid %>% mutate(
-    d_weight = d_test * sqrt(r^2 + 1 / k)
+    d_weight = d_test * sqrt(1 + 1 / (r^2 * k))
   )
   
   # Hedges' g correction if needed ------------------------------------------------------

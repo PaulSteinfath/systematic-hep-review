@@ -83,14 +83,14 @@ create_stats_plot <- function(df){
 create_epoch_simulation_plot <- function(df){
   
   a <- plot_hedges_g_adjusted_for_noise(df, 
-                                        sigma_s_vals = c(0.5, 1, 2), 
-                                        sigma_t_vals = c(0.1, 0.2, 0.5, 1), 
+                                        sigma_s_vals = c(1), 
+                                        sigma_t_vals = c(0.5, 1, 2, 4, 10), 
                                         r_thresh = 4)
   b <- plot_simulated_effects(d_type = 'g', 
                               plot_type = 'pure', 
                               Ns = seq(10, 300, 10), 
                               ks = seq(10, 300, 10), 
-                              sigma_ratio = c(0.5, 1, 2, 2.5, 4))
+                              sigma_ratio = c(0.1, 0.25, 0.5, 1, 2))
  
   p <- plot_grid(
     a, NULL, b, 

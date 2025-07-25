@@ -307,7 +307,7 @@ figure_hep_time_windows_summary <- function(df, save_path, ext = 'png') {
     df_hep_determination,
     col = "determination_category",
     discrete = TRUE, use_proportion = TRUE,
-    title = "HER Determination",
+    title = "Analysis approach",
     tilt_labels = FALSE,
     preserve_order = TRUE
   )
@@ -365,7 +365,7 @@ figure_hep_time_windows_summary <- function(df, save_path, ext = 'png') {
     df_baseline_correction,
     col = "baseline_category",
     discrete = TRUE, use_proportion = TRUE,
-    title = "Baseline Correction",
+    title = "Baseline correction",
     tilt_labels = FALSE,
     preserve_order = TRUE
   )
@@ -394,7 +394,7 @@ figure_hep_time_windows_summary <- function(df, save_path, ext = 'png') {
     df_hep_window_type,
     col = "window_type_category",
     discrete = TRUE, use_proportion = TRUE,
-    title = "HER Window Type",
+    title = "Time window type",
     tilt_labels = FALSE,
     preserve_order = TRUE
   )

@@ -51,6 +51,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
                                             divide.over = NULL,
                                             combined = T,
                                             colormap = "Greys",
+                                            stretch_palette = 1.25,
                                             main_title = NULL, 
                                             show_colorbar = T)
   } else {
@@ -112,6 +113,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
                                                divide.over = NULL,
                                                combined = T,
                                                colormap = "Greys",
+                                               stretch_palette = 1.25,
                                                main_title = NULL, 
                                                show_colorbar = T)
   } else {
@@ -223,9 +225,9 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   w_selected <- 0.2
   h_selected <- 0.15
   
-  x_selected_legend <- 0.84
+  x_selected_legend <- 0.83
   y_selected_legend <- 0.56
-  w_selected_legend <- 0.10
+  w_selected_legend <- 0.12
   h_selected_legend <- 0.035
   
   x_significant <- 0.79
@@ -233,9 +235,9 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   w_significant <- 0.2
   h_significant <- 0.15
   
-  x_significant_legend <- 0.84
+  x_significant_legend <- 0.83
   y_significant_legend <- 0.26
-  w_significant_legend <- 0.10
+  w_significant_legend <- 0.12
   h_significant_legend <- 0.035
   
   adjust_legend <- theme(legend.position = "bottom",

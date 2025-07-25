@@ -69,10 +69,11 @@ plot_eeg_locations_separate <- function(df,
                                         show_proportion,
                                         lim = NULL, 
                                         colormap = "Greys",
+                                        stretch_palette = 1,
                                         show_colorbar = F) {
   # Calculate the limit automatically if not provided
   if (is.null(lim)) {
-    lim <- max(df$freq)
+    lim <- max(df$freq) * stretch_palette
   }
   
   colorbar_title = paste(if (show_proportion) "Proportion" else "Number", "of studies")
@@ -131,6 +132,7 @@ plot_eeg_locations_combined <- function(df,
                                         display.layout = "standard61",
                                         lim = NULL,
                                         colormap = "Greys",
+                                        stretch_palette = 1,
                                         show_colorbar = F) {
   # When combining topomaps, we weigh the frequencies to account for different
   # number of rows (papers/pipelines) with different layouts, preparing the weights here
@@ -155,7 +157,7 @@ plot_eeg_locations_combined <- function(df,
   
   # Calculate the limit automatically if not provided
   if (is.null(lim)) {
-    lim <- max(maps_merged$fill.sum)
+    lim <- max(maps_merged$fill.sum) * stretch_palette
     
     # Round to the nearest even number so that halfpoint between 0 and upper
     # limit is integer
@@ -201,6 +203,7 @@ plot_eeg_locations <- function(df,
                                layouts = names(ch_names), 
                                lim = NULL,
                                colormap = "Greys",
+                               stretch_palette = 1,
                                show_colorbar = T,
                                main_title = NULL,
                                combined = T,
@@ -217,10 +220,12 @@ plot_eeg_locations <- function(df,
     p <- plot_eeg_locations_combined(df_counts, show_proportion,
                                      display.layout,
                                      lim = lim, colormap = colormap,
+                                     stretch_palette = stretch_palette,
                                      show_colorbar = show_colorbar)
   } else {
     p <- plot_eeg_locations_separate(df_counts, show_proportion,
                                      lim = lim, colormap = colormap,
+                                     stretch_palette = stretch_palette,
                                      show_colorbar = show_colorbar)
   }
   

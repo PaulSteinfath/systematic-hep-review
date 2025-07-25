@@ -66,13 +66,16 @@ count_occurrences <- function(df, col, channels = ch_names,
 
 
 plot_eeg_locations_separate <- function(df, 
+                                        show_proportion,
                                         lim = NULL, 
-                                        colormap = "magma") {
+                                        colormap = "Greys",
+                                        show_colorbar = F) {
   # Calculate the limit automatically if not provided
   if (is.null(lim)) {
     lim <- max(df$freq)
   }
   
+  colorbar_title = paste(if (show_proportion) "Proportion" else "Number", "of studies")
   ggplot(df, aes(x = x,
                  y = y,
                  fill = freq,
@@ -83,6 +86,16 @@ plot_eeg_locations_separate <- function(df,
               color = 'black',
               linetype = 'solid',
               linewidth = rel(0.1)) +
+    scale_fill_distiller(palette = colormap,
+                         labels = if (show_proportion) 
+                           scales::percent 
+                         else label_number(accuracy = 1),
+                         direction = 1,
+                         guide = if (show_colorbar) 
+                           guide_colorbar(title = colorbar_title) 
+                         else guide_none(),
+                         limits = c(0, lim),
+                         breaks = c(0, 0.5 * lim, lim)) + 
     facet_wrap(. ~ meeg_layout, nrow = 1) +
     theme_void() + 
     coord_equal()
@@ -114,19 +127,26 @@ get_weighted_scalpmap <- function(df, grid_res = 200, interp_limit = "skirt") {
 
 
 plot_eeg_locations_combined <- function(df, 
+                                        show_proportion,
                                         display.layout = "standard61",
                                         lim = NULL,
-                                        colormap = "magma") {
+                                        colormap = "Greys",
+                                        show_colorbar = F) {
   # When combining topomaps, we weigh the frequencies to account for different
   # number of rows (papers/pipelines) with different layouts, preparing the weights here
   num_rows_total <- with(df %>% distinct(meeg_layout, num_rows), sum(num_rows))
-  df$weight <- df$num_rows / num_rows_total
+  if (show_proportion) {
+    df$weight <- df$num_rows / num_rows_total
+  } else {
+    df$weight <- 1.0
+  }
   
   # Calculate and combine the topomaps
+  clip_high = if (show_proportion) 1.0 else NA
   maps <- by(df, df$meeg_layout, get_weighted_scalpmap)
   maps_merged <- purrr::reduce(maps, merge, by = c('x', 'y'), sort = F) %>%
     mutate(fill.sum = rowSums(across(starts_with("fill"))),
-           fill.sum = clip_values(fill.sum))
+           fill.sum = clip_values(fill.sum, high = clip_high))
   
   # Prepare the channels that should be displayed on top of the combined topomap
   montage = if (display.layout == "biosemi128") "biosemi128" else NULL
@@ -136,8 +156,15 @@ plot_eeg_locations_combined <- function(df,
   # Calculate the limit automatically if not provided
   if (is.null(lim)) {
     lim <- max(maps_merged$fill.sum)
+    
+    # Round to the nearest even number so that halfpoint between 0 and upper
+    # limit is integer
+    if (!show_proportion) {
+      lim <- 2 * ceiling(lim / 2)
+    }
   }
   
+  colorbar_title = paste(if (show_proportion) "Proportion" else "Number", "of studies")
   ggplot(data = df_display,
          aes(x = x, y = y)) + 
     geom_raster(data = maps_merged,
@@ -151,6 +178,16 @@ plot_eeg_locations_combined <- function(df,
                  color = "black", 
                  linewidth = rel(0.1),
                  bins = 6) +
+    scale_fill_distiller(palette = colormap,
+                         labels = if (show_proportion) 
+                           scales::percent 
+                         else label_number(accuracy = 1),
+                         direction = 1,
+                         guide = if (show_colorbar) 
+                           guide_colorbar(title = colorbar_title) 
+                         else guide_none(),
+                         limits = c(0, lim),
+                         breaks = c(0, 0.5 * lim, lim)) + 
     theme_void() +
     coord_equal()
 }
@@ -163,9 +200,8 @@ plot_eeg_locations <- function(df,
                                divide.over = "n_rows",
                                layouts = names(ch_names), 
                                lim = NULL,
-                               colormap = "magma",
+                               colormap = "Greys",
                                show_colorbar = T,
-                               colorbar_title = "Proportion",
                                main_title = NULL,
                                combined = T,
                                display.layout = "standard61") {
@@ -176,12 +212,16 @@ plot_eeg_locations <- function(df,
   df_counts <- bind_rows(lapply(counts, as.data.frame))
   
   # Plot the results for each layout separately or combined
+  show_proportion = !is.null(divide.over)
   if (combined) {
-    p <- plot_eeg_locations_combined(df_counts, display.layout,
-                                     lim = lim, colormap = colormap)
+    p <- plot_eeg_locations_combined(df_counts, show_proportion,
+                                     display.layout,
+                                     lim = lim, colormap = colormap,
+                                     show_colorbar = show_colorbar)
   } else {
-    p <- plot_eeg_locations_separate(df_counts,
-                                     lim = lim, colormap = colormap)
+    p <- plot_eeg_locations_separate(df_counts, show_proportion,
+                                     lim = lim, colormap = colormap,
+                                     show_colorbar = show_colorbar)
   }
   
   if (!is.null(main_title)) {
@@ -189,16 +229,6 @@ plot_eeg_locations <- function(df,
       labs(title = main_title) + 
       theme(plot.title = element_text(hjust = 0.5))
   }
-  
-  p <- p + 
-    scale_fill_distiller(palette = colormap,
-                         labels = if (!is.null(divide.over)) scales::percent else waiver(),
-                         direction = 1,
-                         guide = if (show_colorbar) 
-                           guide_colorbar(title = colorbar_title) 
-                         else guide_none(),
-                         limits = c(0, lim),
-                         breaks = c(0, 0.5 * lim, lim))
   
   p
 }

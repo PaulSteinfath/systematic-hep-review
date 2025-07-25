@@ -218,33 +218,35 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   # NOTE: this is performed at the very end since ggdraw screws up alignment
   final_plot <- ggdraw(final_plot)
   
-  x_selected <- 0.775
-  y_selected <- 0.59
-  w_selected <- 0.225
+  x_selected <- 0.79
+  y_selected <- 0.6
+  w_selected <- 0.2
   h_selected <- 0.15
   
-  x_selected_legend <- 0.8
-  y_selected_legend <- 0.55
-  w_selected_legend <- 0.175
+  x_selected_legend <- 0.84
+  y_selected_legend <- 0.56
+  w_selected_legend <- 0.10
   h_selected_legend <- 0.035
   
-  x_significant <- 0.775
+  x_significant <- 0.79
   y_significant <- 0.3
-  w_significant <- 0.225
+  w_significant <- 0.2
   h_significant <- 0.15
   
-  x_significant_legend <- 0.8
+  x_significant_legend <- 0.84
   y_significant_legend <- 0.26
-  w_significant_legend <- 0.175
+  w_significant_legend <- 0.10
   h_significant_legend <- 0.035
   
+  adjust_legend <- theme(legend.position = "bottom",
+                         legend.key.width = unit(0.5, "lines"),
+                         legend.key.height = unit(0.3, "lines"),
+                         legend.ticks = element_blank(),
+                         legend.title = element_blank())
+  
   if (!is.null(selected_channels)) {
-    selected_legend <- get_plot_component(selected_channels + 
-                                            theme(legend.position = "bottom",
-                                                  legend.key.size = unit(0.7, "lines"),
-                                                  legend.title = element_blank()),
+    selected_legend <- get_plot_component(selected_channels + adjust_legend,
                                           "guide-box", return_all = T)[[3]]
-    print(selected_legend)
     
     final_plot <- final_plot + 
       draw_plot(selected_channels + theme(legend.position = "none"),
@@ -263,12 +265,8 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
     }
   }
   if (!is.null(significant_channels)) {
-    significant_legend <- get_plot_component(significant_channels + 
-                                             theme(legend.position = "bottom",
-                                                   legend.key.size = unit(0.7, "lines"),
-                                                   legend.title = element_blank()),
+    significant_legend <- get_plot_component(significant_channels + adjust_legend,
                                              "guide-box", return_all = T)[[3]]
-    print(significant_legend)
     
     final_plot <- final_plot + 
       draw_plot(significant_channels + theme(legend.position = "none"),

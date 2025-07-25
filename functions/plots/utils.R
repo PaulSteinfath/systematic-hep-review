@@ -7,7 +7,7 @@ no_valid_data_stub <- function(message) {
 
 clip_values <- function(values, low = 0, high = 1) {
   # Clip values to be in [low, high] range
-  pmin(high, pmax(low, values))
+  pmin(high, pmax(low, values, na.rm = T), na.rm = T)
 }
 
 

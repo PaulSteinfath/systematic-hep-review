@@ -546,20 +546,6 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
   show(control_categories_plot)
 
-  ecg_summary_plot <- ecg_summary(df)
-
-  ggsave(
-    filename = file.path(save_path, paste0("ecg_summary_plot.", ext)),
-    plot = ecg_summary_plot,
-    width = 10,
-    height = 4,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  show(ecg_summary_plot)
-  
   eeg_locations_by_approach <- eeg_locations_summary(df, reference_var = "hep_approach",
                                                      reference_values = c("Averaging", "Clustering"))
   ggsave(

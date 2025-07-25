@@ -14,7 +14,7 @@ summarize_cfa_criteria <- function(df) {
   # pipelines with cfa_rej_criteria
   df_filt <- df %>%
     mutate(cfa_rej_criteria = tolower(cfa_rej_criteria)) %>%
-    filter(!is.na(cfa_rej_criteria), cfa_rej_criteria != "", cfa_rej_criteria != "unknown") %>%
+    filter(cfa_rej_criteria != "", cfa_rej_criteria != "unknown") %>%
     distinct(PMID, cfa_rej_criteria) %>%
     mutate(pipeline_id = row_number())  
   

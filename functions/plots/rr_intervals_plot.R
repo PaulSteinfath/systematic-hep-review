@@ -41,7 +41,7 @@ rr_intervals_plot <- function(df) {
     geom_vline(xintercept = 0, linetype = "dotted", color = "gray40") +
     labs(x = "Time (ms)",
          y = "",
-         title = "Minimum RR Interval",
+         title = "Minimal RR Interval",
          subtitle = paste("n =", nrow(rr_df), "studies"),
         ) +
     scale_x_continuous(breaks = unique(sort(c(seq(0, x_max, by = 250), x_max)))) +

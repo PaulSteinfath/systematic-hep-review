@@ -59,7 +59,7 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
     labs(
       x = "Time (ms)",
       y = "",
-      title = "Minimal Artifact Windows",
+      title = "Minimal Artifact Window",
       subtitle = paste("n =", nrow(df_minimal), "studies"),
       color = "Reference"
     ) +

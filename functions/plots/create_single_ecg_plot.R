@@ -158,7 +158,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
                        expand = c(0, 0))
 
   # --- Create Y Label Grob ---
-  y_label_text <- "Number of Pipelines"
+  y_label_text <- paste("Number of", if (by == "pipeline") "Pipelines" else "studies")
   y_axis_label_grob <- ggdraw() +
     # Adjust y position to align with the center of the baseline plot ~ 0.59 from bottom
     draw_label(y_label_text, angle = 90, fontface = 'plain', size = 10, x = 0.5, y = 0.59) +
@@ -201,7 +201,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
     y_axis_label_grob,
     combined_plots_core,
     ncol = 2,
-    rel_widths = c(0.047, 0.953)
+    rel_widths = c(0.0625, 0.9375)
   )
 
   title_grob <- ggdraw() +

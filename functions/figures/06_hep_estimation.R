@@ -166,7 +166,7 @@ figure_hep_estimation_summary <- function(df, save_path, ext = 'png') {
   )
   
   ggsave(
-    filename = file.path(save_path, paste0("hep_time_windows_combined.", ext)),
+    filename = file.path(save_path, paste0("fig6_hep_estimation.", ext)),
     plot = hep_time_windows_combined,
     width = 10, 
     height = 9,

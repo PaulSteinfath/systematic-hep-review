@@ -36,6 +36,24 @@ derivatives_path <- file.path(data_path, 'derivatives')
 df_included <- read.csv(file.path(derivatives_path, 'included.csv'))
 df_screening <- read.csv(file.path(derivatives_path, 'screening.csv'))
 
+# Load necessary functions
+source(file.path(func_path, "plots", "plotting_helpers.R"))
+source(file.path(func_path, "plots", "plot_missing.R"))
+source(file.path(func_path, "plots", "plot_hedges_g.R"))
+source(file.path(func_path, "analysis", "perm_peak_stats.R"))
+source(file.path(func_path, "plots", "preprocess_controls.R"))
+
+# Helper function to determine if percentages should refer to studies or pipelines
+check_studies_or_pipelines <- function(df, variable_column, group_col = "PMID") {
+  df_distinct <- df %>% distinct(!!sym(group_col), !!sym(variable_column))
+  multiple_rows_per_group <- any(table(df_distinct[[group_col]]) > 1)
+  if (multiple_rows_per_group) {
+    return("pipelines")
+  } else {
+    return("studies")
+  }
+}
+
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
                       results = "asis")
 
@@ -209,17 +227,7 @@ prcent_multi <- results_df %>%
   mutate(percent = round(Metric * 100, 1)) %>%
   select(Column, percent, n)
 
-# Studies varying start or end of HER window
-multi_window_studies <- df_pipelines %>%
-  distinct(PMID, hep_start, hep_end) %>%
-  group_by(PMID) %>%
-  summarise(
-    varies_start = n_distinct(hep_start) > 1,
-    varies_end = n_distinct(hep_end) > 1,
-    varies_either = varies_start | varies_end,
-    .groups = "drop"
-  )
-pct_varies_either <- round(mean(multi_window_studies$varies_either) * 100, 1)
+pct_varies_either <- prcent_multi[prcent_multi$Column == "hep_start",]$percent
 
 # Pipelines where CFA-related ICs info is missing
 cfa_ics <- df_pipelines %>%
@@ -281,17 +289,12 @@ knitr::kable(results_df_high_missing,
 
 ```{r channels}
 # EEG channel statistics
-channel_data <- eeg_studies %>%
-  filter(!is.na(meeg_num_electrodes) & meeg_num_electrodes != "unknown") %>%
-  distinct(PMID, meeg_num_electrodes) %>%
-  mutate(channels_numeric = as.numeric(meeg_num_electrodes)) %>%
-  filter(!is.na(channels_numeric))
-
 channel_stats <- channel_data %>%
+distinct(PMID, meeg_num_electrodes) %>%
   summarise(
-    min_channels = min(channels_numeric),
-    max_channels = max(channels_numeric),
-    median_channels = median(channels_numeric),
+    min_channels = min(meeg_num_electrodes),
+    max_channels = max(meeg_num_electrodes),
+    median_channels = median(meeg_num_electrodes),
     n_studies = n()
   )
 ```
@@ -307,7 +310,7 @@ major_categories <- tolower(c(
 ))
 
 # Process reference categories
-eeg_studies_ref <- eeg_studies %>%
+df_ref <- eeg_pipelines %>%
   mutate(across(
     .cols = c(reference_online, reference_offline),
     .fns = ~ case_when(
@@ -333,8 +336,9 @@ ref_categories <- c(
   "unknown" = "N/M"
 )
 
-# Online reference distribution (studies) 
-online_ref_counts <- eeg_studies_ref %>%
+# Online reference distribution
+online_ref_counts <- df_ref %>% 
+  distinct(PMID, reference_online) %>%
   count(reference_online) %>%
   filter(reference_online %in% names(ref_categories)) %>%
   mutate(
@@ -343,8 +347,12 @@ online_ref_counts <- eeg_studies_ref %>%
   ) %>%
   arrange(desc(n))
 
-# Offline reference distribution (studies)
-offline_ref_counts <- eeg_studies_ref %>%
+# Check if online references are at study or pipeline level
+online_ref_level <- check_studies_or_pipelines(df_ref, "reference_online")
+
+# Offline reference distribution
+offline_ref_counts <- df_ref %>% 
+  distinct(PMID, reference_offline)%>%
   count(reference_offline) %>%
   filter(reference_offline %in% names(ref_categories)) %>%
   mutate(
@@ -352,17 +360,20 @@ offline_ref_counts <- eeg_studies_ref %>%
     percentage = round(n / sum(n) * 100, 1)
   ) %>%
   arrange(desc(n))
+
+# Check if offline references are at study or pipeline level
+offline_ref_level <- check_studies_or_pipelines(df_ref, "reference_offline")
 ```
 
-Online reference: Linked mastoids (**`r online_ref_counts$percentage[online_ref_counts$display_name == "LM"]`%** (`r online_ref_counts$n[online_ref_counts$display_name == "LM"]`/`r sum(online_ref_counts$n)`)), Cz (**`r online_ref_counts$percentage[online_ref_counts$display_name == "Cz"]`%** (`r online_ref_counts$n[online_ref_counts$display_name == "Cz"]`/`r sum(online_ref_counts$n)`))
+Online reference: Linked mastoids (**`r online_ref_counts$percentage[online_ref_counts$display_name == "LM"]`%** (`r online_ref_counts$n[online_ref_counts$display_name == "LM"]`/`r sum(online_ref_counts$n)`) `r online_ref_level`), Cz (**`r online_ref_counts$percentage[online_ref_counts$display_name == "Cz"]`%** (`r online_ref_counts$n[online_ref_counts$display_name == "Cz"]`/`r sum(online_ref_counts$n)`) `r online_ref_level`)
 
-Offline reference: Common Average Reference (**`r offline_ref_counts$percentage[offline_ref_counts$display_name == "CAR"]`%** (`r offline_ref_counts$n[offline_ref_counts$display_name == "CAR"]`/`r sum(offline_ref_counts$n)`))
+Offline reference: Common Average Reference (**`r offline_ref_counts$percentage[offline_ref_counts$display_name == "CAR"]`%** (`r offline_ref_counts$n[offline_ref_counts$display_name == "CAR"]`/`r sum(offline_ref_counts$n)`) `r offline_ref_level`))
 
 ### Artifact Removal
 
 ```{r artifacts}
-# Artifact removal statistics (studies, same when using unique pipelines)
-artifact_stats <- df_studies %>%
+# Artifact removal statistics
+artifact_stats <- df_pipelines %>%
   summarise(
     # Noisy epochs removal 
     noisy_epochs_pct = round(mean(grepl("noisy epoch", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
@@ -375,13 +386,18 @@ artifact_stats <- df_studies %>%
 
     # ICA usage
     ica_pct = round(mean(ICA == 1, na.rm = TRUE) * 100, 1),
-    
-    # pipelines with ICA
+
+    # Pipelines with ICA
     n_ica_studies = sum(ICA == 1, na.rm = TRUE),
     total_studies = n() 
   )
 
-# Studies using ICA (unique studies)
+# Check if artifact removal strategies are at study or pipeline level
+noisy_epochs_level <- check_studies_or_pipelines(df_pipelines, "other_cleaning_strategy")
+bad_channels_level <- check_studies_or_pipelines(df_pipelines, "other_cleaning_strategy")
+ica_level <- check_studies_or_pipelines(df_pipelines, "ICA")
+
+# Studies using ICA
 ica_studies <- df_pipelines %>%
   group_by(PMID) %>%
   summarise(uses_ica = any(ICA == 1, na.rm = TRUE)) %>%
@@ -413,6 +429,9 @@ component_types_df <- df_pipelines %>%
   filter(rejected_components != "", rejected_components != "unknown") %>%
   mutate(pipeline_id = row_number())
 
+# Check if component types are at study or pipeline level
+component_types_level <- check_studies_or_pipelines(df_pipelines %>% filter(ICA == 1), "rejected_components")
+
 # Clean rejected_components
 component_types_df$rejected_components <- sapply(component_types_df$rejected_components, function(x) {
   x <- gsub("[\r\n]+", ",", x)    
@@ -442,7 +461,7 @@ component_types_expanded <- component_types_df %>%
     rejected_components == "channel noise" ~ "Channel noise",
     rejected_components == "line noise" ~ "Line noise",
     rejected_components == "other" ~ "Other",
-    TRUE ~ rejected_components
+    TRUE ~ str_to_title(rejected_components)
   )) %>%
   filter(rejected_components != "")
 
@@ -457,17 +476,17 @@ component_types <- component_types_expanded %>%
 
 Artifact removal:
 
-* Noisy epochs: **`r artifact_stats$noisy_epochs_pct`%** (`r sum(grepl("noisy epoch", df_studies$other_cleaning_strategy, ignore.case = TRUE), na.rm = TRUE)`/`r nrow(df_studies)`)
-* Bad channels: **`r artifact_stats$bad_channels_pct`%** (`r sum(grepl("bad channels", df_studies$other_cleaning_strategy, ignore.case = TRUE), na.rm = TRUE)`/`r nrow(df_studies)`)
-* ICA usage: **`r ica_studies$ica_study_pct`%** (`r ica_studies$n_ica_studies`/`r ica_studies$total_studies`)
-* ICA for CFA: **`r ica_for_cfa_studies$ica_cfa_study_pct`%** (`r ica_for_cfa_studies$n_ica_cfa_studies`/`r ica_for_cfa_studies$total_studies`)
+* Noisy epochs: **`r artifact_stats$noisy_epochs_pct`%** (`r sum(grepl("noisy epoch", df_studies$other_cleaning_strategy, ignore.case = TRUE), na.rm = TRUE)`/`r nrow(df_studies)`) `r noisy_epochs_level`
+* Bad channels: **`r artifact_stats$bad_channels_pct`%** (`r sum(grepl("bad channels", df_studies$other_cleaning_strategy, ignore.case = TRUE), na.rm = TRUE)`/`r nrow(df_studies)`) `r bad_channels_level`
+* ICA usage: **`r ica_studies$ica_study_pct`%** (`r ica_studies$n_ica_studies`/`r ica_studies$total_studies`) studies
+* ICA for CFA: **`r ica_for_cfa_studies$ica_cfa_study_pct`%** (`r ica_for_cfa_studies$n_ica_cfa_studies`/`r ica_for_cfa_studies$total_studies`) studies
 
 ICA component types removed:
 
-* `r component_types$rejected_components[1]`: **`r component_types$percentage[1]`%** (`r component_types$count[1]`/`r total_ica_pipelines`)
-* `r component_types$rejected_components[2]`: **`r component_types$percentage[2]`%** (`r component_types$count[2]`/`r total_ica_pipelines`)
-* `r component_types$rejected_components[3]`: **`r component_types$percentage[3]`%** (`r component_types$count[3]`/`r total_ica_pipelines`)
-* Other noise: **`r component_types$percentage[4] + component_types$percentage[5] + component_types$percentage[6]`%** (`r component_types$count[4] + component_types$count[5] + component_types$count[6]`/`r total_ica_pipelines`)
+* `r component_types$rejected_components[1]`: **`r component_types$percentage[1]`%** (`r component_types$count[1]`/`r total_ica_pipelines`) `r component_types_level`
+* `r component_types$rejected_components[2]`: **`r component_types$percentage[2]`%** (`r component_types$count[2]`/`r total_ica_pipelines`) `r component_types_level`
+* `r component_types$rejected_components[3]`: **`r component_types$percentage[3]`%** (`r component_types$count[3]`/`r total_ica_pipelines`) `r component_types_level`
+* Other noise: **`r component_types$percentage[4] + component_types$percentage[5] + component_types$percentage[6]`%** (`r component_types$count[4] + component_types$count[5] + component_types$count[6]`/`r total_ica_pipelines`) `r component_types_level`
 
 ### Filter Settings
 
@@ -480,10 +499,10 @@ filter_data <- df_pipelines %>%
 filter_stats <- filter_data %>%
   summarise(
     n_valid = n(),
-    high_pass_range_min = min(high_pass, na.rm = TRUE),
-    high_pass_range_max = max(high_pass, na.rm = TRUE),
-    low_pass_range_min = min(low_pass, na.rm = TRUE), 
-    low_pass_range_max = max(low_pass, na.rm = TRUE)
+    high_pass_range_min = min(high_pass),
+    high_pass_range_max = max(high_pass),
+    low_pass_range_min = min(low_pass), 
+    low_pass_range_max = max(low_pass)
   )
 
 # Most common high-pass filter values (studies)
@@ -527,19 +546,22 @@ lead_i <- ecg_leads[ecg_leads$ecg_lead == "Lead I", ]
 lead_ii <- ecg_leads[ecg_leads$ecg_lead == "Lead II", ]
 lead_iii <- ecg_leads[ecg_leads$ecg_lead == "Lead III", ]
 lead_unclassified <- ecg_leads[ecg_leads$ecg_lead == "N/C", ]
+
+# Check if ECG leads are at study or pipeline level
+ecg_lead_level <- check_studies_or_pipelines(df_included, "ecg_lead")
 ```
 
 Number of studies that use different ECG leads:
 
-* Lead II: `r lead_ii$count` (**`r lead_ii$freq`**%)
-* Lead I: `r lead_i$count` (**`r lead_i$freq`**%)
-* Lead III: `r lead_iii$count` (**`r lead_iii$freq`**%)
-* Unclassified: `r lead_unclassified$count` (**`r lead_unclassified$freq`**%)
+* Lead II: `r lead_ii$count` (**`r lead_ii$freq`**%) `r ecg_lead_level`
+* Lead I: `r lead_i$count` (**`r lead_i$freq`**%) `r ecg_lead_level`
+* Lead III: `r lead_iii$count` (**`r lead_iii$freq`**%) `r ecg_lead_level`
+* Unclassified: `r lead_unclassified$count` (**`r lead_unclassified$freq`**%) `r ecg_lead_level`
 
 ### Dealing with cardiac field artifacts
 
 ```{r cfa}
-# ICA timing (studies using ICA)
+# ICA epoch/continuous
 ica_timing <- df_studies %>%
   filter(ICA == 1 & !is.na(ica_on_epochs)) %>%
   count(ica_on_epochs) %>%
@@ -552,6 +574,9 @@ ica_timing <- df_studies %>%
     percentage = round(n / sum(n) * 100, 1)
   )
 
+# Check if ICA timing is at study or pipeline level
+ica_timing_level <- check_studies_or_pipelines(df_pipelines %>% filter(ICA == 1), "ica_on_epochs")
+
 # CFA identification approaches (studies - no difference to unique pipelines)
 cfa_approach_counts <- df_studies %>%
   filter(cfa_rej_approach != "" & 
@@ -561,39 +586,39 @@ cfa_approach_counts <- df_studies %>%
   mutate(percentage = round(n / sum(n) * 100, 1)) %>%
   rename(cfa_rej_approach = cfa_rej_approach_clean)
 
-# CFA identification criteria (studies)
+# Check if CFA approaches are at study or pipeline level
+cfa_approach_level <- check_studies_or_pipelines(df_pipelines, "cfa_rej_approach")
+
+# CFA identification criteria (studies) - using same logic as plotting function
+cfa_criteria_mapping <- c(
+  "time course" = "Time Course",
+  "topography" = "Topography",
+  "power spectrum" = "Power Spectrum",
+  "phase consistency" = "Phase Consistency",  # Note: plotting function uses "Phase\nConsistency" but we'll use this for text
+  "iclabel" = "Algorithm",
+  "corrmap" = "Algorithm",
+  "correlation" = "Correlation",
+  "sasica" = "Algorithm"
+)
 cfa_criteria_counts <- df_studies %>%
-  mutate(cfa_rej_criteria = tolower(cfa_rej_criteria)) %>%
-  filter( cfa_rej_criteria != "", cfa_rej_criteria != "unknown") %>%
+  filter(!is.na(cfa_rej_criteria), cfa_rej_criteria != "", tolower(cfa_rej_criteria) != "unknown") %>%
   distinct(PMID, cfa_rej_criteria) %>%
-  mutate(pipeline_id = row_number()) %>%
   separate_rows(cfa_rej_criteria, sep = ",") %>%
   mutate(
-    cfa_rej_criteria = str_replace_all(cfa_rej_criteria, "[\r\n]", " "),
-    cfa_rej_criteria = str_trim(cfa_rej_criteria, side = "both"),
-    cfa_rej_criteria = case_when(
-      cfa_rej_criteria == "time course" ~ "Time Course",
-      cfa_rej_criteria == "topography" ~ "Topography", 
-      cfa_rej_criteria == "power spectrum" ~ "Power Spectrum",
-      cfa_rej_criteria == "phase consistency" ~ "Phase Consistency",
-      cfa_rej_criteria == "iclabel" ~ "Algorithm",
-      cfa_rej_criteria == "corrmap" ~ "Algorithm",
-      cfa_rej_criteria == "correlation" ~ "Correlation",
-      cfa_rej_criteria == "sasica" ~ "Algorithm",
-      TRUE ~ str_to_title(cfa_rej_criteria)
-    )
+    cfa_rej_criteria = str_trim(str_replace_all(tolower(cfa_rej_criteria), "[\r\n]", " ")),
+    cfa_rej_criteria = ifelse(cfa_rej_criteria %in% names(cfa_criteria_mapping),
+                              cfa_criteria_mapping[cfa_rej_criteria],
+                              str_to_title(cfa_rej_criteria))
   ) %>%
-  filter(cfa_rej_criteria != "", cfa_rej_criteria != "unknown") %>%
-  distinct(pipeline_id, cfa_rej_criteria, .keep_all = TRUE) %>%
-  group_by(cfa_rej_criteria) %>%
-  summarise(count = n_distinct(pipeline_id), .groups = "drop") %>%
-  arrange(desc(count)) %>%
+  count(cfa_rej_criteria, name = "count") %>%
   mutate(
-    total_pipelines = length(unique(df_studies$PMID[!is.na(df_studies$cfa_rej_criteria) & 
-                                                    df_studies$cfa_rej_criteria != "" & 
-                                                    tolower(df_studies$cfa_rej_criteria) != "unknown"])),
+    total_pipelines = n_distinct(df_studies$PMID[df_studies$cfa_rej_criteria != "" & tolower(df_studies$cfa_rej_criteria) != "unknown"]),
     percentage = round(count / total_pipelines * 100, 1)
-  )
+  ) %>%
+  arrange(desc(count))
+
+# Check if CFA criteria are at study or pipeline level
+cfa_criteria_level <- check_studies_or_pipelines(df_pipelines, "cfa_rej_criteria")
 
 # Number of rejected cardiac ICs (studies)
 cardiac_ic_stats <- df_studies %>%
@@ -611,7 +636,6 @@ other_cfa_strategies <- df_pipelines %>%
          tolower(str_trim(other_cfa_removal_strategy)) != "unknown") %>%
   distinct(PMID, other_cfa_removal_strategy) %>%  
   mutate(
-    # Clean and standardize strategy names
     strategy_clean = case_when(
       other_cfa_removal_strategy == "limit analysis to time of minimal artifact" ~ 
         "Minimal artifact window",
@@ -623,14 +647,57 @@ other_cfa_strategies <- df_pipelines %>%
       tolower(other_cfa_removal_strategy) == "subtract rshep from taskhep" ~ 
         "subtract rsHEP\nfrom task HEP",
       tolower(other_cfa_removal_strategy) == "pca on heps" ~ "PCA on\nHEP",
-            tolower(other_cfa_removal_strategy) == "csd" ~ "CSD",
+      tolower(other_cfa_removal_strategy) == "csd" ~ "CSD",
       TRUE ~ str_to_title(str_trim(other_cfa_removal_strategy))
     )
   ) %>%
+  # Remove duplicates after strategy cleaning again (for RR constraints that appear with other strategies)
+  distinct(PMID, strategy_clean) %>%
   count(strategy_clean, sort = TRUE) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1)) %>%
+  mutate(
+    n = case_when(
+      strategy_clean == "Minimal artifact window" ~ minimal_artifact_valid_count,
+      TRUE ~ n
+    ),
+    percentage = round(n / total_studies * 100, 1),
+    # Calculate level for each strategy
+    level = map_chr(strategy_clean, function(strat) {
+      # For RR interval constraints, it's always at study level
+      if (strat == "RR interval\nconstraints") {
+        return("studies")
+      }
+      
+      # Get the original strategy names that map to this cleaned strategy
+      original_strategies <- df_pipelines %>%
+        filter(other_cfa_removal_strategy != "" & 
+               tolower(str_trim(other_cfa_removal_strategy)) != "unknown") %>%
+        mutate(
+          strategy_clean = case_when(
+            other_cfa_removal_strategy == "limit analysis to time of minimal artifact" ~ 
+              "Minimal artifact window",
+            !is.na(str_match(tolower(other_cfa_removal_strategy), "rr at least\\s*(\\d+)\\s*ms")[,1]) ~ 
+              "RR interval\nconstraints",
+            tolower(other_cfa_removal_strategy) %in% c(
+              "subtract/regress ecg from eeg"
+            ) ~ "Subtract/regress ECG from EEG",
+            tolower(other_cfa_removal_strategy) == "subtract rshep from taskhep" ~ 
+              "subtract rsHEP\nfrom task HEP",
+            tolower(other_cfa_removal_strategy) == "pca on heps" ~ "PCA on\nHEP",
+            tolower(other_cfa_removal_strategy) == "csd" ~ "CSD",
+            TRUE ~ str_to_title(str_trim(other_cfa_removal_strategy))
+          )
+        ) %>%
+        filter(strategy_clean == strat) %>%
+        distinct(PMID, other_cfa_removal_strategy)
+      
+      if (nrow(original_strategies) == 0) return("studies")
+      
+      # Check if this specific strategy has multiple values per PMID
+      check_studies_or_pipelines(original_strategies, "other_cfa_removal_strategy")
+    })
+  ) %>%
+  arrange(desc(n)) %>%  # Re-sort after correction
   rename(strategy = strategy_clean)
-
 
 # Papers with no CFA approach (studies)
 no_cfa_analysis <- df_studies %>%
@@ -664,15 +731,11 @@ no_cfa_stats <- no_cfa_analysis %>%
 
 # RR interval constraints analysis
 rr_interval_pipelines <- df_pipelines %>%
-distinct(PMID, other_cfa_removal_strategy) %>%
-  filter(!is.na(other_cfa_removal_strategy) & 
-         other_cfa_removal_strategy != "" &
-         tolower(str_trim(other_cfa_removal_strategy)) != "unknown") %>%
-  mutate(
-    min_rr_match = str_extract(tolower(other_cfa_removal_strategy), "rr at least\\s*(\\d+)\\s*ms"),
-    min_rr_value = as.numeric(str_extract(min_rr_match, "\\d+"))
-  ) %>%
-  filter(!is.na(min_rr_value))
+  mutate(rr_match = str_match(tolower(other_cfa_removal_strategy), "rr at least\\s*(\\d+)\\s*ms")) %>%
+  filter(!is.na(rr_match[,2])) %>%
+  mutate(min_rr_value = as.numeric(rr_match[,2])) %>%
+  filter(!is.na(min_rr_value), is.finite(min_rr_value)) %>%
+  distinct(PMID, min_rr_value)
 
 # Calculate IBI min max and number of studies
 ibi_stats <- rr_interval_pipelines %>%
@@ -686,7 +749,7 @@ ibi_stats <- rr_interval_pipelines %>%
 
 ICA for CFA: **`r no_cfa_stats$studies_with_ica_for_cfa`**/**`r no_cfa_stats$total_studies`**
 
-ICA timing:
+ICA timing (`r ica_timing_level`):
 
 * Continuous: **`r ica_timing$percentage[ica_timing$timing == "Continuous"]`%** (`r ica_timing$n[ica_timing$timing == "Continuous"]`/`r sum(ica_timing$n)`)
 * Epoched: **`r ica_timing$percentage[ica_timing$timing == "Epoched"]`%** (`r ica_timing$n[ica_timing$timing == "Epoched"]`/`r sum(ica_timing$n)`)
@@ -696,12 +759,15 @@ Minimum IBI constraints: **`r ibi_stats$min_ibi`** to **`r ibi_stats$max_ibi`** 
 ## CFA Identification Approaches
 
 * Not reported: **`r round((1 - sum(cfa_approach_counts$n) / ica_studies$n_ica_studies) * 100, 1)`%** of studies using ICA (`r ica_studies$n_ica_studies - sum(cfa_approach_counts$n)`/`r ica_studies$n_ica_studies`)
+
+CFA approaches (`r cfa_approach_level`):
 * `r cfa_approach_counts$cfa_rej_approach[1]`: **`r cfa_approach_counts$percentage[1]`%** (`r cfa_approach_counts$n[1]`/`r sum(cfa_approach_counts$n)`)
 * `r cfa_approach_counts$cfa_rej_approach[2]`: **`r cfa_approach_counts$percentage[2]`%** (`r cfa_approach_counts$n[2]`/`r sum(cfa_approach_counts$n)`)
 * `r cfa_approach_counts$cfa_rej_approach[3]`: **`r cfa_approach_counts$percentage[3]`%** (`r cfa_approach_counts$n[3]`/`r sum(cfa_approach_counts$n)`)
 
 ## CFA Identification Criteria
 
+CFA criteria (`r cfa_criteria_level`):
 * `r cfa_criteria_counts$cfa_rej_criteria[1]`: **`r cfa_criteria_counts$percentage[1]`%** (`r cfa_criteria_counts$count[1]`/`r cfa_criteria_counts$total_pipelines[1]`)
 * `r cfa_criteria_counts$cfa_rej_criteria[2]`: **`r cfa_criteria_counts$percentage[2]`%** (`r cfa_criteria_counts$count[2]`/`r cfa_criteria_counts$total_pipelines[2]`)
 * `r cfa_criteria_counts$cfa_rej_criteria[3]`: **`r cfa_criteria_counts$percentage[3]`%** (`r cfa_criteria_counts$count[3]`/`r cfa_criteria_counts$total_pipelines[3]`)
@@ -717,15 +783,16 @@ Minimum IBI constraints: **`r ibi_stats$min_ibi`** to **`r ibi_stats$max_ibi`** 
 
 ## Other CFA Removal Strategies
 
-* `r other_cfa_strategies$strategy[3]`: `r other_cfa_strategies$n[3]` studies (**`r other_cfa_strategies$percentage[3]`%**)
-* `r other_cfa_strategies$strategy[4]`: `r other_cfa_strategies$n[4]` studies (**`r other_cfa_strategies$percentage[4]`%**)
-* `r other_cfa_strategies$strategy[5]`: `r other_cfa_strategies$n[5]` studies (**`r other_cfa_strategies$percentage[5]`%**)
-* `r other_cfa_strategies$strategy[6]`: `r other_cfa_strategies$n[6]` studies (**`r other_cfa_strategies$percentage[6]`%**)
+Other CFA strategies:
+* `r other_cfa_strategies$strategy[3]`: `r other_cfa_strategies$n[3]` studies (**`r other_cfa_strategies$percentage[3]`%**) (`r other_cfa_levels$level[other_cfa_levels$strategy == other_cfa_strategies$strategy[3]]`)
+* `r other_cfa_strategies$strategy[4]`: `r other_cfa_strategies$n[4]` studies (**`r other_cfa_strategies$percentage[4]`%**) (`r other_cfa_levels$level[other_cfa_levels$strategy == other_cfa_strategies$strategy[4]]`)
+* `r other_cfa_strategies$strategy[5]`: `r other_cfa_strategies$n[5]` studies (**`r other_cfa_strategies$percentage[5]`%**) (`r other_cfa_levels$level[other_cfa_levels$strategy == other_cfa_strategies$strategy[5]]`)
+* `r other_cfa_strategies$strategy[6]`: `r other_cfa_strategies$n[6]` studies (**`r other_cfa_strategies$percentage[6]`%**) (`r other_cfa_levels$level[other_cfa_levels$strategy == other_cfa_strategies$strategy[6]]`)
 
 ### Limit time range / analysis window
 
-* `r other_cfa_strategies$strategy[1]`: `r other_cfa_strategies$n[1]` studies (**`r other_cfa_strategies$percentage[1]`%**)
-* `r other_cfa_strategies$strategy[2]`: **`r other_cfa_strategies$n[2]`** studies (**`r other_cfa_strategies$percentage[2]`%**)
+* `r other_cfa_strategies$strategy[1]`: `r other_cfa_strategies$n[1]` studies (**`r other_cfa_strategies$percentage[1]`%**) (`r other_cfa_levels$level[other_cfa_levels$strategy == other_cfa_strategies$strategy[1]]`)
+* `r other_cfa_strategies$strategy[2]`: **`r other_cfa_strategies$n[2]`** studies (**`r other_cfa_strategies$percentage[2]`%**) (`r other_cfa_levels$level[other_cfa_levels$strategy == other_cfa_strategies$strategy[2]]`)
 
 ### Studies Without Any CFA Approach
 
@@ -762,6 +829,9 @@ hep_determination_stats <- hep_determination_analysis %>%
   count(determination_category) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
 
+# Check if HEP determination is at study or pipeline level
+hep_determination_level <- check_studies_or_pipelines(df_pipelines, "method_category")
+
 #R-peak vs T-peak
 hep_reference_analysis <- df_pipelines %>%
   group_by(PMID) %>%
@@ -783,6 +853,9 @@ hep_reference_analysis <- df_pipelines %>%
 hep_reference_stats <- hep_reference_analysis %>%
   count(reference_category) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
+
+# Check if HEP reference is at study or pipeline level
+hep_reference_level <- check_studies_or_pipelines(df_pipelines, "hep_relative_to")
 
 # Baseline correction - Overall
 baseline_correction_analysis <- df_pipelines %>%
@@ -806,6 +879,9 @@ baseline_correction_analysis <- df_pipelines %>%
 baseline_correction_stats <- baseline_correction_analysis %>%
   count(baseline_category) %>%
   mutate(percentage = round(n /  final_sample_stats$total_studies * 100, 1))
+
+# Check if baseline correction is at study or pipeline level
+baseline_correction_level <- check_studies_or_pipelines(df_pipelines, "baseline_defined")
 
 # Calculate overall baseline percentage for output
 baseline_pct <- baseline_correction_stats %>%
@@ -1026,7 +1102,6 @@ sig_tpeak_range <- significant_effects_data %>%
   )
 
 # Compare peak of significant effects for clustering vs averaging 
-source(file.path(func_path, 'analysis/perm_peak_stats.R'))
 
 # R-peak analysis
 clustering_rpeak <- significant_effects_data %>%
@@ -1054,6 +1129,7 @@ stat_comparison_results$tpeak <- perform_peak_timing_comparison(clustering_tpeak
 
 ## Cardiac Reference Event Selection
 
+HEP reference events (`r hep_reference_level`):
 * R-peak reference: **`r hep_reference_stats$percentage[hep_reference_stats$reference_category == "R-peak"]`%** of studies (`r hep_reference_stats$n[hep_reference_stats$reference_category == "R-peak"]`/`r sum(hep_reference_stats$n)`)
 * T-wave reference: **`r hep_reference_stats$percentage[hep_reference_stats$reference_category == "T-peak"]`%** of studies (`r hep_reference_stats$n[hep_reference_stats$reference_category == "T-peak"]`/`r sum(hep_reference_stats$n)`)
 
@@ -1074,6 +1150,7 @@ stat_comparison_results$tpeak <- perform_peak_timing_comparison(clustering_tpeak
 
 ### General Statistics
 
+Baseline correction (`r baseline_correction_level`):
 * Pipelines using baseline correction: **`r baseline_pct`%** (`r sum(baseline_correction_stats$n[baseline_correction_stats$baseline_category %in% c("Yes", "Both")])`/`r final_sample_stats$total_studies`)
 
 ### T-wave Baseline Correction
@@ -1122,6 +1199,7 @@ stat_comparison_results$tpeak <- perform_peak_timing_comparison(clustering_tpeak
 
 ### Analysis Window Definition
 
+HEP determination method (`r hep_determination_level`):
 * Studies with a-priori defined analysis windows: **`r hep_window_type_stats$percentage[hep_window_type_stats$window_type_category == "Primary"]`%** (`r hep_window_type_stats$n[hep_window_type_stats$window_type_category == "Primary"]`/`r sum(hep_window_type_stats$n)`)
 * Studies using two-step procedures (data-dependent window selection): **`r hep_window_type_stats$percentage[hep_window_type_stats$window_type_category == "Secondary"]`%** (`r hep_window_type_stats$n[hep_window_type_stats$window_type_category == "Secondary"]`/`r sum(hep_window_type_stats$n)`)
 
@@ -1133,8 +1211,12 @@ hep_value_studies <- df_pipelines %>%
   distinct(PMID, value) %>%
   count(value, sort = TRUE) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
+
+# Check if HEP values are at study or pipeline level
+hep_value_level <- check_studies_or_pipelines(df_pipelines, "value")
 ```
 
+HEP values (`r hep_value_level`):
 * `r hep_value_studies$value[1]`: **`r hep_value_studies$n[1]`** studies (**`r hep_value_studies$percentage[1]`%**)
 * `r hep_value_studies$value[2]`: **`r hep_value_studies$n[2]`** studies (**`r hep_value_studies$percentage[2]`%**)
 * `r hep_value_studies$value[3]`: **`r hep_value_studies$n[3]`** studies (**`r hep_value_studies$percentage[3]`%**)
@@ -1152,6 +1234,9 @@ statistical_test_stats <- df_pipelines %>%
   count(statistics) %>%
   mutate(percentage = round(n / sum(n) * 100, 1)) %>%
   arrange(desc(percentage))
+
+# Check if statistical tests are at study or pipeline level
+statistics_level <- check_studies_or_pipelines(df_pipelines, "statistics")
 
 # Calculate percentages for analysis type
 analysis_type_stats <- df_pipelines %>%
@@ -1172,6 +1257,9 @@ trials_stats <- df_pipelines %>%
     max_trials = max(trials_Mean, na.rm = TRUE),
     mean_trials = round(median(trials_Mean, na.rm = TRUE), 1)
   )
+
+# Check if trials are at study or pipeline level
+trials_level <- check_studies_or_pipelines(df_pipelines, "trials_Mean")
 
 # Statistical tests split by clustering vs averaging - most common for each method
 stats_table <- df_pipelines %>%
@@ -1222,6 +1310,7 @@ pipelines_detect_coll <- hedges_data %>%
 
 ```
 
+Trials (`r trials_level`):
 Minimum, maximum, and median number of trials per pipeline: **`r trials_stats$min_trials`** - **`r trials_stats$max_trials`** - **`r trials_stats$mean_trials`**
 
 Number of groups: **`r min(df_pipelines$groups, na.rm = TRUE)`** - **`r max(df_pipelines$groups, na.rm = TRUE)`** 
@@ -1230,7 +1319,7 @@ Number of conditions: **`r min(df_pipelines$conditions, na.rm = TRUE)`** - **`r 
 
 ### Statistical Analysis Methods
 
-Statistical test families used across studies:
+Statistical test families (`r statistics_level`):
 
 * **`r statistical_test_stats$statistics[1]`**: **`r statistical_test_stats$percentage[1]`%** (`r statistical_test_stats$n[1]` studies)
 * **`r statistical_test_stats$statistics[2]`**: **`r statistical_test_stats$percentage[2]`%** (`r statistical_test_stats$n[2]` studies)  
@@ -1286,6 +1375,9 @@ var_patterns <- setNames(lapply(ecg_vars, make_pat), ecg_vars)
 df_unique <- df_pipelines %>% 
   distinct(PMID, controls, .keep_all = TRUE)
 df_controls <- ifelse(is.na(df_unique$controls), "", df_unique$controls)
+
+# Check if controls are at study or pipeline level
+controls_level <- check_studies_or_pipelines(df_pipelines, "controls")
 
 # Check presence of each ECG control variable
 presence_vars <- sapply(
@@ -1358,6 +1450,7 @@ total_bp_control_pct <- round(sum(pipelines_with_bp_controls) / nrow(df_unique) 
 
 ## Control Statistics
 
+Control variables (`r controls_level`):
 **`r ecg_control_breakdown$percentage[1]`%** of pipelines (`r ecg_control_breakdown$n[1]`/`r nrow(df_unique)`) control for ECG.
 
 **`r total_ecg_control_pct`%** of pipelines (`r sum(pipelines_with_ecg_controls)`/`r nrow(df_unique)`) control for overall heartbeat-related variables.

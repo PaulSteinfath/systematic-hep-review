@@ -1,11 +1,14 @@
 rr_intervals_plot <- function(df) {
   
   rr_df <- df %>%
-    distinct(PMID, other_cfa_removal_strategy) %>%
     mutate(rr_match = str_match(tolower(other_cfa_removal_strategy), "rr at least\\s*(\\d+)\\s*ms")) %>%
     filter(!is.na(rr_match[,2])) %>%
     mutate(rr_value = as.numeric(rr_match[,2])) %>%
     filter(!is.na(rr_value), is.finite(rr_value))
+    
+  #filter for distinct RR intervals
+  rr_df <- rr_df %>%
+    distinct(PMID, rr_value) 
     
   # Early return if no data
   if (nrow(rr_df) == 0) {

@@ -5,18 +5,19 @@ library(grid)
 library(gridExtra)
 library(gridGraphics)
 library(ggimage)
+library(ggridges)
 library(ggplot2)
 library(ggtext)
 library(magick)
 library(PRISMA2020)
 library(purrr)
+library(pwr)
 library(scales)
 library(stringr)
 library(rlang)
 library(tidyr)
 library(viridis)
 library(zeallot)
-
 
 # Paths
 data_path <- file.path(getwd(), 'data')
@@ -48,4 +49,6 @@ generate_prisma(df_screening, prisma_template_path,
 
 figure_ecg_summary(df_included, results_path, ext = 'png')
 figure_hep_time_windows_summary(df_included, results_path, ext = 'png')
+figure_stats(df_included, results_path, ext = 'png')
+figure_controls(df_included, results_path, ext = 'png')
 make_figures(df_included, results_path, ext = 'png')

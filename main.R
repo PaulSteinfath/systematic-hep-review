@@ -14,6 +14,7 @@ library(purrr)
 library(pwr)
 library(scales)
 library(stringr)
+library(testit)
 library(tidyr)
 library(viridis)
 library(zeallot)
@@ -51,3 +52,13 @@ figure_hep_estimation_summary(df_included, results_path, ext = 'png')
 figure_stats(df_included, results_path, ext = 'png')
 figure_controls(df_included, results_path, ext = 'png')
 make_figures(df_included, results_path, ext = 'png')
+
+# Save the results
+write.csv(df_included, file.path(derivatives_path, 'included.csv'), row.names = F)
+write.csv(df_screening, file.path(derivatives_path, 'screening.csv'), row.names = F)
+
+# R Markdown report with data from global environment
+rmarkdown::render(file.path(func_path, 'manuscript_statistics.Rmd'), 
+                  knit_root_dir = getwd(),
+                  output_format = 'html_document',
+                  output_dir = results_path)

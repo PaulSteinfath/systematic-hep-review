@@ -28,6 +28,7 @@ source(file.path(func_path, "plots", "plot_ecg_controls.R"))
 source(file.path(func_path, "plots", "plot_hedges_g_adjusted_for_noise.R"))
 source(file.path(func_path, "plots", "plot_simulated_effects.R"))
 
+source(file.path(func_path, 'figures', '06_hep_estimation.R'))
 source(file.path(func_path, 'figures', '07_stats.R'))
 source(file.path(func_path, 'figures', '08_controls.R'))
 
@@ -319,37 +320,6 @@ figure_ecg_summary <- function(df, save_path, ext = 'png') {
   )
 }
 
-eeg_locations_summary <- function(df) {
-  # Temporary function for testing the display of EEG locations
-  p_separate_primary <- plot_eeg_locations(df[df$hep_window_type == "Primary",], 
-                                           "hep_channels_selected", combined = F) +
-    guides(fill = guide_none())
-  p_separate_secondary <- plot_eeg_locations(df[df$hep_window_type == "Secondary",],
-                                             "hep_channels_selected", combined = F) +
-    guides(fill = guide_none())
-  p_separate_significant <- plot_eeg_locations(df, "significant_channels", 
-                                               lim = NULL, combined = F) +
-    guides(fill = guide_none())
-
-  p_combined_primary <- plot_eeg_locations(df[df$hep_window_type == "Primary",], 
-                                           "hep_channels_selected", combined = T) +
-    labs(title = "Primary")
-  p_combined_secondary <- plot_eeg_locations(df[df$hep_window_type == "Secondary",],
-                                             "hep_channels_selected", combined = T) +
-    labs(title = "Secondary")
-  p_combined_significant <- plot_eeg_locations(df, "significant_channels", 
-                                               lim = NULL, combined = T) +
-    labs(title = "Significant")
-
-  fig <- plot_grid(
-    p_separate_primary, p_combined_primary,
-    p_separate_secondary, p_combined_secondary,
-    p_separate_significant, p_combined_significant,
-    nrow = 3, ncol = 2, rel_widths = c(4, 1.5)
-  )
-  
-  fig
-}
 
 studies_overview <- function(df) {
   p_year <- hist_panel(df, "Year", force.numeric = T, 
@@ -386,170 +356,6 @@ p_condition <- hist_panel(df_study_categories, "study_category",
   fig
 }
 
-create_hep_time_windows_summary_plot <- function(df) {
-
-  #cluster / average histogram
-  df_hep_determination <- df %>%
-    group_by(PMID) %>%
-    summarise(
-      has_averaging = any(method_category == "Averaging"),
-      has_clustering = any(method_category == "Clustering"),
-      .groups = "drop"
-    ) %>%
-    mutate(
-      determination_category = case_when(
-        has_averaging & has_clustering ~ "Both",
-        has_averaging & !has_clustering ~ "Averaging",
-        !has_averaging & has_clustering ~ "Clustering",
-        TRUE ~ "Other"
-      )
-    ) %>%
-    filter(determination_category != "Other") %>%
-    mutate(determination_category = factor(determination_category, 
-                                         levels = c("Averaging", "Clustering", "Both")))
-
-  avg_cluster_prop_plot <- hist_panel(
-    df_hep_determination,
-    col = "determination_category",
-    discrete = TRUE, use_proportion = TRUE,
-    title = "HER Determination",
-    tilt_labels = FALSE,
-    preserve_order = TRUE
-  )
-  
-  #R-/T-peak histogram
-  df_hep_reference <- df %>%
-    group_by(PMID) %>%
-    summarise(
-      has_rpeak = any(hep_relative_to == "R-peak"),
-      has_tpeak = any(hep_relative_to == "T-peak"),
-      .groups = "drop"
-    ) %>%
-    mutate(
-      reference_category = case_when(
-        has_rpeak & has_tpeak ~ "Both",
-        has_rpeak & !has_tpeak ~ "R-peak",
-        !has_rpeak & has_tpeak ~ "T-peak",
-        TRUE ~ "Other"
-      )
-    ) %>%
-    filter(reference_category != "Other") %>%
-    mutate(reference_category = factor(reference_category, 
-                                     levels = c("R-peak", "T-peak", "Both")))
-
-  rt_peak_prop_plot <- hist_panel(
-    df_hep_reference,
-    col = "reference_category",
-    discrete = TRUE, use_proportion = TRUE,
-    title = "HER Reference",
-    tilt_labels = FALSE,
-    preserve_order = TRUE
-  )
- 
-  #baseline correction histogram
-  df_baseline_correction <- df %>%
-    group_by(PMID) %>%
-    summarise(
-      has_yes = any(baseline_defined == "Yes"),
-      has_no = any(baseline_defined == "No"),
-      .groups = "drop"
-    ) %>%
-    mutate(
-      baseline_category = case_when(
-        has_yes & has_no ~ "Both",
-        has_yes & !has_no ~ "Yes",
-        !has_yes & has_no ~ "No",
-        TRUE ~ "Other"
-      )
-    ) %>%
-    filter(baseline_category != "Other") %>%
-    mutate(baseline_category = factor(baseline_category, 
-                                    levels = c("Yes", "No", "Both")))
-
-  baseline_def_prop_plot <- hist_panel(
-    df_baseline_correction,
-    col = "baseline_category",
-    discrete = TRUE, use_proportion = TRUE,
-    title = "Baseline Correction",
-    tilt_labels = FALSE,
-    preserve_order = TRUE
-  )
-
-  #primary / secondary histogram
-    df_hep_window_type <- df %>%
-    group_by(PMID) %>%
-    summarise(
-      has_primary = any(hep_window_type == "Primary"),
-      has_secondary = any(hep_window_type == "Secondary"),
-      .groups = "drop"
-    ) %>%
-    mutate(
-      window_type_category = case_when(
-        has_primary & has_secondary ~ "Both",
-        has_primary & !has_secondary ~ "Primary",
-        !has_primary & has_secondary ~ "Secondary",
-        TRUE ~ "Other"
-      )
-    ) %>%
-    filter(window_type_category != "Other") %>%
-    mutate(window_type_category = factor(window_type_category, 
-                                       levels = c("Primary", "Secondary", "Both")))
-
-  hep_type_prop_plot <- hist_panel(
-    df_hep_window_type,
-    col = "window_type_category",
-    discrete = TRUE, use_proportion = TRUE,
-    title = "HER Window Type",
-    tilt_labels = FALSE,
-    preserve_order = TRUE
-  )
-
-  first_row_histograms <- plot_grid(
-    avg_cluster_prop_plot, rt_peak_prop_plot,
-    baseline_def_prop_plot, hep_type_prop_plot,
-    ncol = 4,
-    labels = c("A", "B", "C", "D"),
-    align = "hv",
-    axis = "tblr"
-  )
-
-  # Main HEP time windows plots
-  hep_average_plot <- create_single_ecg_plot(
-    df,
-    avg_value = "Averaging",
-    shared_limits = c(-300, 1000),
-    plot_title = "E) HER Windows (Averaging)",
-    reference_var = "hep_relative_to",
-    reference_values = c("R-peak", "T-peak")
-  )
-
-  hep_cluster_plot <- create_single_ecg_plot(
-    df,
-    avg_value = "Clustering",
-    shared_limits = c(-300, 1000),
-    plot_title = "F) HER Windows (Clustering)",
-    reference_var = "hep_relative_to",
-    reference_values = c("R-peak", "T-peak")
-  )
-
-  hep_comparison_row <- plot_grid(
-    hep_average_plot, 
-    hep_cluster_plot,
-    ncol = 2,
-    align = "hv",
-    axis = "tblr",
-    label_x = 0.01,
-    hjust = 0
-  )
-
-  hep_time_windows_combined <- plot_grid(
-    first_row_histograms,
-    hep_comparison_row,
-    ncol = 1,
-    rel_heights = c(0.25, 0.75)
-  )
-  return(hep_time_windows_combined)
-}
 
 # Here we generate all figures
 make_figures <- function(df, save_path, ext = "svg") {
@@ -638,33 +444,6 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
   show(control_categories_plot)
 
-  eeg_summary_plot <- eeg_locations_summary(df)
-  ggsave(
-    filename = file.path(save_path, paste0("eeg_summary_plot.", ext)),
-    plot = eeg_summary_plot,
-    width = 10,
-    height = 6,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  show(eeg_summary_plot)
-
- 
-  hep_time_windows_combined <- create_hep_time_windows_summary_plot(df)
-  ggsave(
-    filename = file.path(save_path, paste0("hep_time_windows_combined.", ext)),
-    plot = hep_time_windows_combined,
-    width = 13, 
-    height = 9,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  show(hep_time_windows_combined)
-  
   epoch_simulation_plot <- create_epoch_simulation_plot(df)
   ggsave(
     filename = file.path(save_path, paste0("epoch_simulation_plot.", ext)),

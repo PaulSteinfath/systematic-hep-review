@@ -130,6 +130,27 @@ preprocess_ecg <- function(df) {
                              "unknown" = "N/M"))
 }
 
+
+preprocess_hep_significant <- function(df) {
+  df$hep_approach <- factor(case_when(
+    (df$averaging_time == 1) & (df$clustering == 0) ~ "Averaging", 
+    (df$clustering == 1) & (df$averaging_time == 0) ~ "Clustering"
+  ))
+  
+  # Fill in significant channels and time points for pipelines with averaging
+  # TODO: move the time window logic here, for now handling channels only
+  df %>%
+    mutate(
+      significant_channels = if_else(
+        df$hep_approach == "Averaging" & df$significant_test == 1, 
+        df$hep_channels_selected,
+        df$significant_channels,
+        missing = df$significant_channels
+      )
+    )
+}
+
+
 # Clean cardiac IC rejection data
 clean_cardiac_ics <- function(x) {
   # Return NA for NULL, NA, or empty strings
@@ -274,7 +295,8 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   
   df_included <- df_included %>%
     preprocess_ecg() %>%
-    preprocess_channels()
+    preprocess_channels() %>%
+    preprocess_hep_significant()
   
   # transform included IC data
   df_included$rejected_cardiac_ics <- sapply(df_included$rejected_cardiac_ics, clean_cardiac_ics)

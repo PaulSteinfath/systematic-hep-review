@@ -97,7 +97,7 @@ figure_hep_estimation_summary <- function(df, save_path, ext = 'png') {
     ) %>%
     mutate(
       window_type_category = case_when(
-        has_primary & has_secondary ~ "Both",
+        has_primary & has_secondary ~ "Primary &\nsecondary",
         has_primary & !has_secondary ~ "Primary",
         !has_primary & has_secondary ~ "Secondary",
         TRUE ~ "Other"
@@ -105,7 +105,7 @@ figure_hep_estimation_summary <- function(df, save_path, ext = 'png') {
     ) %>%
     filter(window_type_category != "Other") %>%
     mutate(window_type_category = factor(window_type_category, 
-                                         levels = c("Primary", "Secondary", "Both")))
+                                         levels = c("Primary", "Secondary", "Primary &\nsecondary")))
   
   hep_type_prop_plot <- hist_panel(
     df_hep_window_type,

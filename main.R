@@ -59,5 +59,6 @@ write.csv(df_screening, file.path(derivatives_path, 'screening.csv'), row.names 
 
 # R Markdown report with data from global environment
 rmarkdown::render(file.path(func_path, 'manuscript_statistics.Rmd'), 
+                  knit_root_dir = getwd(),
                   output_format = 'html_document',
                   output_dir = results_path)

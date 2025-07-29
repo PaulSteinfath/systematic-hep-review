@@ -1,4 +1,3 @@
-func_path <- "/data/hu_steinfath/Desktop/Code/systematic-hep-review/functions"
 source(file.path(func_path, "plots", "utils.R"))
 
 calculate_peak_distribution <- function(method_data) {

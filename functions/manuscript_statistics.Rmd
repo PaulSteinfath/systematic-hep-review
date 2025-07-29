@@ -28,10 +28,9 @@ library(tidyr)
 library(viridis)
 library(zeallot)
 
-# Use absolute paths to avoid path resolution issues
-project_root <- "/data/hu_steinfath/Desktop/Code/systematic-hep-review"
-data_path <- file.path(project_root, 'data')
-func_path <- file.path(project_root, 'functions')
+# Paths
+data_path <- file.path(getwd(), 'data')
+func_path <- file.path(getwd(), 'functions')
 derivatives_path <- file.path(data_path, 'derivatives')
 df_included <- read.csv(file.path(derivatives_path, 'included.csv'))
 df_screening <- read.csv(file.path(derivatives_path, 'screening.csv'))
@@ -838,6 +837,7 @@ hep_determination_stats <- hep_determination_analysis %>%
   count(determination_category) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
 
+hep_determination_level <- check_studies_or_pipelines(df_pipelines, "hep_relative_to")
 
 #R-peak vs T-peak
 hep_reference_analysis <- df_pipelines %>%
@@ -1488,7 +1488,7 @@ Number and percentage of studies without significant results: **`r nrow(non_sig_
   control_variable_synonyms <- get_control_variable_mappings()
   
   ## 1. Pre-processing 
-  df_unique    <- dplyr::distinct(df, PMID, controls)
+  df_unique    <- dplyr::distinct(df_included, PMID, controls)
   df_controls  <- ifelse(is.na(df_unique$controls), "", df_unique$controls)
   
   # accumulate patterns per category
@@ -1527,6 +1527,7 @@ Number and percentage of studies without significant results: **`r nrow(non_sig_
     dplyr::filter(present) %>%          # keep only matches
     dplyr::select(PMID, category)
   
+  controls_level <- check_studies_or_pipelines(df_included, "controls")
   
   ecg_heartbeat_df_distinct <- distinct(control_long_df, PMID, category)
 
@@ -1569,7 +1570,7 @@ make_pat <- function(var) {
 var_patterns <- setNames(lapply(ecg_vars, make_pat), ecg_vars)
 
 ## 3. Pre-process the data 
-df_unique   <- dplyr::distinct(df, PMID, controls)
+df_unique   <- dplyr::distinct(df_included, PMID, controls)
 df_controls <- ifelse(is.na(df_unique$controls), "", df_unique$controls)
 
 ## 4. TRUE/FALSE presence matrix at *variable* level
@@ -1625,7 +1626,7 @@ ecg_related_pct <- ecg_counts_df %>%
 ```
 
 Control variables (`r controls_level`):
-**`r sprintf("%.1f", ecg_related_pct)`%** of pipelines (`r ecg_counts_df$n[1]`/`r nrow(df_distinct)`) control for ECG.
+**`r sprintf("%.1f", ecg_related_pct)`%** of pipelines (`r ecg_counts_df$n[1]`/`r nrow(ecg_df_distinct)`) control for ECG.
 
 **`r sprintf("%.1f", ecg_heartbeat_related_pct)`%** of pipelines (`r ecg_heartbeat_counts_df$n[1]`/`r nrow(ecg_heartbeat_df_distinct)`) control for overall heartbeat-related variables.
 

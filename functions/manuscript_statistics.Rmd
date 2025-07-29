@@ -221,13 +221,13 @@ results_df <- purrr::map_dfr(target_columns, function(var) {
            Metric = Multiple_Choices / total_studies,
            n = Multiple_Choices)
 })
-
 prcent_multi <- results_df %>%
   arrange(desc(Metric)) %>%
   mutate(percent = round(Metric * 100, 1)) %>%
   select(Column, percent, n)
 
 pct_varies_either <- prcent_multi[prcent_multi$Column == "hep_start",]$percent
+pct_varies_n <- prcent_multi[prcent_multi$Column == "hep_start",]$n
 
 # Pipelines where CFA-related ICs info is missing
 cfa_ics <- df_pipelines %>%
@@ -267,7 +267,7 @@ ecg_locations_missing_pct <- results_df_missing %>%
 
 Studies using multiple statistical tests: **`r prcent_multi$percent[prcent_multi$Column == "statistics"]`%** (`r prcent_multi$n[prcent_multi$Column == "statistics"]`/`r total_studies`)
 
-Studies varying HER window start or end times: **`r pct_varies_either`%** (`r sum(multi_window_studies$varies_either)`/`r nrow(multi_window_studies)`)
+Studies varying HER window start or end times: **`r pct_varies_either`%** (`r pct_varies_n`/`r final_sample_stats$total_studies`)
 
 ### Missing Information
 
@@ -285,11 +285,11 @@ knitr::kable(results_df_high_missing,
 
 ## M/EEG Acquisition & Preprocessing
 
-### Channel Information
+### Sensor Information
 
 ```{r channels}
-# EEG channel statistics
-channel_stats <- channel_data %>%
+#Sensor statistics
+sensor_stats <- df_pipelines %>%
 distinct(PMID, meeg_num_electrodes) %>%
   summarise(
     min_channels = min(meeg_num_electrodes),
@@ -631,6 +631,15 @@ cardiac_ic_stats <- df_studies %>%
   )
 
 # Other CFA removal strategies (pipelines)
+# For minimal artifact window, we need to match plotting function logic 
+# by only counting studies with valid time window data
+minimal_artifact_valid_count <- df_pipelines %>%
+  distinct(PMID, other_cfa_removal_strategy, .keep_all = TRUE) %>%
+  filter(str_detect(tolower(other_cfa_removal_strategy), "limit analysis to time of minimal artifact")) %>%
+  filter(!is.na(hep_start), !is.na(hep_end),
+         is.finite(hep_start), is.finite(hep_end)) %>%
+  nrow()
+
 other_cfa_strategies <- df_pipelines %>%
   filter(other_cfa_removal_strategy != "" & 
          tolower(str_trim(other_cfa_removal_strategy)) != "unknown") %>%
@@ -784,15 +793,15 @@ CFA criteria (`r cfa_criteria_level`):
 ## Other CFA Removal Strategies
 
 Other CFA strategies:
-* `r other_cfa_strategies$strategy[3]`: `r other_cfa_strategies$n[3]` studies (**`r other_cfa_strategies$percentage[3]`%**) (`r other_cfa_levels$level[other_cfa_levels$strategy == other_cfa_strategies$strategy[3]]`)
-* `r other_cfa_strategies$strategy[4]`: `r other_cfa_strategies$n[4]` studies (**`r other_cfa_strategies$percentage[4]`%**) (`r other_cfa_levels$level[other_cfa_levels$strategy == other_cfa_strategies$strategy[4]]`)
-* `r other_cfa_strategies$strategy[5]`: `r other_cfa_strategies$n[5]` studies (**`r other_cfa_strategies$percentage[5]`%**) (`r other_cfa_levels$level[other_cfa_levels$strategy == other_cfa_strategies$strategy[5]]`)
-* `r other_cfa_strategies$strategy[6]`: `r other_cfa_strategies$n[6]` studies (**`r other_cfa_strategies$percentage[6]`%**) (`r other_cfa_levels$level[other_cfa_levels$strategy == other_cfa_strategies$strategy[6]]`)
+* `r other_cfa_strategies$strategy[3]`: `r other_cfa_strategies$n[3]` studies (**`r other_cfa_strategies$percentage[3]`%**) (`r other_cfa_strategies$level[3]`)
+* `r other_cfa_strategies$strategy[4]`: `r other_cfa_strategies$n[4]` studies (**`r other_cfa_strategies$percentage[4]`%**) (`r other_cfa_strategies$level[4]`)
+* `r other_cfa_strategies$strategy[5]`: `r other_cfa_strategies$n[5]` studies (**`r other_cfa_strategies$percentage[5]`%**) (`r other_cfa_strategies$level[5]`)
+* `r other_cfa_strategies$strategy[6]`: `r other_cfa_strategies$n[6]` studies (**`r other_cfa_strategies$percentage[6]`%**) (`r other_cfa_strategies$level[6]`)
 
 ### Limit time range / analysis window
 
-* `r other_cfa_strategies$strategy[1]`: `r other_cfa_strategies$n[1]` studies (**`r other_cfa_strategies$percentage[1]`%**) (`r other_cfa_levels$level[other_cfa_levels$strategy == other_cfa_strategies$strategy[1]]`)
-* `r other_cfa_strategies$strategy[2]`: **`r other_cfa_strategies$n[2]`** studies (**`r other_cfa_strategies$percentage[2]`%**) (`r other_cfa_levels$level[other_cfa_levels$strategy == other_cfa_strategies$strategy[2]]`)
+* `r other_cfa_strategies$strategy[1]`: `r other_cfa_strategies$n[1]` studies (**`r other_cfa_strategies$percentage[1]`%**) (`r other_cfa_strategies$level[1]`)
+* `r other_cfa_strategies$strategy[2]`: **`r other_cfa_strategies$n[2]`** studies (**`r other_cfa_strategies$percentage[2]`%**) (`r other_cfa_strategies$level[2]`)
 
 ### Studies Without Any CFA Approach
 
@@ -829,8 +838,6 @@ hep_determination_stats <- hep_determination_analysis %>%
   count(determination_category) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
 
-# Check if HEP determination is at study or pipeline level
-hep_determination_level <- check_studies_or_pipelines(df_pipelines, "method_category")
 
 #R-peak vs T-peak
 hep_reference_analysis <- df_pipelines %>%
@@ -857,8 +864,9 @@ hep_reference_stats <- hep_reference_analysis %>%
 # Check if HEP reference is at study or pipeline level
 hep_reference_level <- check_studies_or_pipelines(df_pipelines, "hep_relative_to")
 
-# Baseline correction - Overall
+# Baseline correction 
 baseline_correction_analysis <- df_pipelines %>%
+  distinct(PMID, baseline_defined, .keep_all = TRUE) %>%
   group_by(PMID) %>%
   summarise(
     has_yes = any(baseline_defined == "Yes"),
@@ -873,12 +881,17 @@ baseline_correction_analysis <- df_pipelines %>%
       TRUE ~ "Other"
     )
   ) %>%
-  filter(baseline_category != "Other")
+  filter(baseline_category != "Other") %>%
+  mutate(baseline_category = factor(baseline_category, 
+                                  levels = c("Yes", "No", "Both")))
 
 # % studies using baseline calculated using absolute number of studies to also include "unknown"
 baseline_correction_stats <- baseline_correction_analysis %>%
   count(baseline_category) %>%
-  mutate(percentage = round(n /  final_sample_stats$total_studies * 100, 1))
+  mutate(
+    percentage_within_reporting = round(n / sum(n) * 100, 1),
+    percentage_of_all_studies = round(n / total_studies * 100, 1)
+  )
 
 # Check if baseline correction is at study or pipeline level
 baseline_correction_level <- check_studies_or_pipelines(df_pipelines, "baseline_defined")
@@ -886,7 +899,7 @@ baseline_correction_level <- check_studies_or_pipelines(df_pipelines, "baseline_
 # Calculate overall baseline percentage for output
 baseline_pct <- baseline_correction_stats %>%
   filter(baseline_category %in% c("Yes", "Both")) %>%
-  summarise(total_pct = sum(percentage)) %>%
+  summarise(total_pct = sum(percentage_within_reporting)) %>%
   pull(total_pct)
 
 # Baseline correction - Studies with R-peak analysis
@@ -944,7 +957,7 @@ baseline_tpeak_summary <- baseline_tpeak_studies %>%
   )
 
 # Primary vs Secondary
-hep_window_type_analysis <- df_pipelines %>%
+  hep_window_type_analysis <- df_pipelines %>%
   group_by(PMID) %>%
   summarise(
     has_primary = any(hep_window_type == "Primary"),
@@ -953,12 +966,16 @@ hep_window_type_analysis <- df_pipelines %>%
   ) %>%
   mutate(
     window_type_category = case_when(
+      has_primary & has_secondary ~ "Both",
       has_primary & !has_secondary ~ "Primary",
-      has_secondary ~ "Secondary",
+      !has_primary & has_secondary ~ "Secondary",
       TRUE ~ "Other"
     )
   ) %>%
-  filter(window_type_category != "Other")
+  filter(window_type_category != "Other") %>%
+  mutate(window_type_category = factor(window_type_category, 
+                                      levels = c("Primary", "Secondary", "Both")))
+
 
 hep_window_type_stats <- hep_window_type_analysis %>%
   count(window_type_category) %>%
@@ -1038,25 +1055,52 @@ rpeak_window_stats <- hep_window_data %>%
     end_max = max(end_time)
   )
 
-# Find the overlap region for R-peak studies
-rpeak_overlap_analysis <- hep_window_data %>%
-  filter(hep_relative_to == "R-peak") %>%
-  {
-    rpeak_data <- .
-    median_start <- median(rpeak_data$start_time, na.rm = TRUE)
-    median_end <- median(rpeak_data$end_time, na.rm = TRUE)
-    studies_including_core <- rpeak_data %>%
-      filter(start_time <= median_start & end_time >= median_end) %>%
-      nrow()
-    core_percentage <- round(studies_including_core / nrow(rpeak_data) * 100, 1)
-    list(
-      core_start = round(median_start, 0),
-      core_end = round(median_end, 0),
-      core_percentage = core_percentage,
-      core_count = studies_including_core,
-      total_rpeak = nrow(rpeak_data)
-    )
-  }
+  # Find the overlap region for R-peak studies using cumsum-based inflection points
+  # Split by averaging vs clustering approaches
+  rpeak_overlap_analysis <- hep_window_data %>%
+    filter(hep_relative_to == "R-peak") %>%
+    split(.$method_category) %>%
+    map(function(data) {
+      if (nrow(data) == 0) return(NULL)
+      
+      all_edges <- sort(unique(c(data$start_time, data$end_time)))
+      start_counts <- tabulate(match(data$start_time, all_edges), nbins = length(all_edges))
+      end_counts <- tabulate(match(data$end_time, all_edges), nbins = length(all_edges))
+      starts_cumsum <- cumsum(start_counts)
+      ends_cumsum <- cumsum(end_counts)
+      start_diffs <- diff(starts_cumsum)
+      core_start_idx <- which.max(start_diffs) + 1
+      core_start <- all_edges[core_start_idx]
+      end_diffs <- diff(ends_cumsum)
+      core_end_idx <- which.max(end_diffs) + 1
+      core_end <- all_edges[core_end_idx]
+      
+      # Count studies that overlap with the core window (any overlap)
+      studies_overlapping_core <- data %>%
+        filter(!(end_time < core_start | start_time > core_end)) %>%
+        nrow()
+      
+      # Keep the original "fully including" calculation for comparison
+      studies_fully_including_core <- data %>%
+        filter(start_time <= core_start & end_time >= core_end) %>%
+        nrow()
+      
+      list(
+        core_start = round(core_start, 0),
+        core_end = round(core_end, 0),
+        # Use overlap as primary metric (more meaningful)
+        core_percentage = round(studies_overlapping_core / nrow(data) * 100, 1),
+        core_count = studies_overlapping_core,
+        total_rpeak = nrow(data),
+        # Additional info
+        fully_including_percentage = round(studies_fully_including_core / nrow(data) * 100, 1),
+        fully_including_count = studies_fully_including_core,
+        median_window_size = round(median(data$end_time - data$start_time), 0),
+        core_window_size = round(core_end - core_start, 0)
+      )
+    }) %>%
+    compact()  # Remove NULL entries
+
 
 # Significant effects 
 df_signif <- df_pipelines %>% filter(significant_test == 1)
@@ -1143,12 +1187,28 @@ HEP reference events (`r hep_reference_level`):
 ### R-peak Referenced Analysis
 
 * Time range: **`r rpeak_window_stats$start_min`** to **`r rpeak_window_stats$end_max`** ms relative to R-peak
-* Core overlap window: **`r rpeak_overlap_analysis$core_start`** to **`r rpeak_overlap_analysis$core_end`** ms
-* Pipelines including core: **`r rpeak_overlap_analysis$core_percentage`%** (`r rpeak_overlap_analysis$core_count`/`r rpeak_overlap_analysis$total_rpeak`)
+
+**Core overlap windows by analysis method:**
+`r if("Averaging" %in% names(rpeak_overlap_analysis)) paste0("* Averaging: **", rpeak_overlap_analysis$Averaging$core_start, "** to **", rpeak_overlap_analysis$Averaging$core_end, "** ms (", rpeak_overlap_analysis$Averaging$core_window_size, "ms window)")` 
+`r if("Averaging" %in% names(rpeak_overlap_analysis)) paste0("  - Studies overlapping with core: ", rpeak_overlap_analysis$Averaging$core_percentage, "% (", rpeak_overlap_analysis$Averaging$core_count, "/", rpeak_overlap_analysis$Averaging$total_rpeak, ")")` 
+`r if("Averaging" %in% names(rpeak_overlap_analysis)) paste0("  - Studies fully including core: ", rpeak_overlap_analysis$Averaging$fully_including_percentage, "% (", rpeak_overlap_analysis$Averaging$fully_including_count, "/", rpeak_overlap_analysis$Averaging$total_rpeak, ")")` 
+`r if("Averaging" %in% names(rpeak_overlap_analysis)) paste0("  - Median window size: ", rpeak_overlap_analysis$Averaging$median_window_size, "ms")` 
+
+`r if("Clustering" %in% names(rpeak_overlap_analysis)) paste0("* Clustering: **", rpeak_overlap_analysis$Clustering$core_start, "** to **", rpeak_overlap_analysis$Clustering$core_end, "** ms (", rpeak_overlap_analysis$Clustering$core_window_size, "ms window)")` 
+`r if("Clustering" %in% names(rpeak_overlap_analysis)) paste0("  - Studies overlapping with core: ", rpeak_overlap_analysis$Clustering$core_percentage, "% (", rpeak_overlap_analysis$Clustering$core_count, "/", rpeak_overlap_analysis$Clustering$total_rpeak, ")")` 
+`r if("Clustering" %in% names(rpeak_overlap_analysis)) paste0("  - Studies fully including core: ", rpeak_overlap_analysis$Clustering$fully_including_percentage, "% (", rpeak_overlap_analysis$Clustering$fully_including_count, "/", rpeak_overlap_analysis$Clustering$total_rpeak, ")")` 
+`r if("Clustering" %in% names(rpeak_overlap_analysis)) paste0("  - Median window size: ", rpeak_overlap_analysis$Clustering$median_window_size, "ms")`
 
 ## Baseline Correction
 
 ### General Statistics
+
+**Overall baseline correction usage across all studies:**
+* Studies using baseline correction: **`r baseline_correction_stats %>% filter(baseline_category %in% c("Yes", "No", "Both")) %>% summarise(total_pct = sum(percentage_of_all_studies)) %>% pull(total_pct)`%** (`r sum(baseline_correction_stats$n[baseline_correction_stats$baseline_category %in% c("Yes", "No", "Both")])`/`r total_studies`)
+
+**Among studies that reported baseline correction information:**
+* Studies using baseline correction: **`r baseline_correction_stats %>% filter(baseline_category %in% c("Yes", "Both")) %>% summarise(total_pct = sum(percentage_within_reporting)) %>% pull(total_pct)`%** (`r sum(baseline_correction_stats$n[baseline_correction_stats$baseline_category %in% c("Yes", "Both")])`/`r sum(baseline_correction_stats$n)`)
+* Studies not using baseline correction: **`r baseline_correction_stats %>% filter(baseline_category == "No") %>% pull(percentage_within_reporting)`%** (`r baseline_correction_stats %>% filter(baseline_category == "No") %>% pull(n)`/`r sum(baseline_correction_stats$n)`)
 
 Baseline correction (`r baseline_correction_level`):
 * Pipelines using baseline correction: **`r baseline_pct`%** (`r sum(baseline_correction_stats$n[baseline_correction_stats$baseline_category %in% c("Yes", "Both")])`/`r final_sample_stats$total_studies`)
@@ -1200,6 +1260,10 @@ Baseline correction (`r baseline_correction_level`):
 ### Analysis Window Definition
 
 HEP determination method (`r hep_determination_level`):
+* Studies using averaging: **`r hep_determination_stats$percentage[hep_determination_stats$determination_category == "Averaging"]`%** (`r hep_determination_stats$n[hep_determination_stats$determination_category == "Averaging"]`/`r sum(hep_determination_stats$n)`)
+* Studies using clustering: **`r hep_determination_stats$percentage[hep_determination_stats$determination_category == "Clustering"]`%** (`r hep_determination_stats$n[hep_determination_stats$determination_category == "Clustering"]`/`r sum(hep_determination_stats$n)`)
+* Studies using both approaches: **`r hep_determination_stats$percentage[hep_determination_stats$determination_category == "Both"]`%** (`r hep_determination_stats$n[hep_determination_stats$determination_category == "Both"]`/`r sum(hep_determination_stats$n)`)
+
 * Studies with a-priori defined analysis windows: **`r hep_window_type_stats$percentage[hep_window_type_stats$window_type_category == "Primary"]`%** (`r hep_window_type_stats$n[hep_window_type_stats$window_type_category == "Primary"]`/`r sum(hep_window_type_stats$n)`)
 * Studies using two-step procedures (data-dependent window selection): **`r hep_window_type_stats$percentage[hep_window_type_stats$window_type_category == "Secondary"]`%** (`r hep_window_type_stats$n[hep_window_type_stats$window_type_category == "Secondary"]`/`r sum(hep_window_type_stats$n)`)
 
@@ -1249,6 +1313,16 @@ analysis_type_stats <- df_pipelines %>%
     pct_correlation = round(mean(is_correlation, na.rm = TRUE) * 100, 1)
   )
 
+# Participant statistics
+participants_stats <- df_pipelines %>%
+  distinct(PMID, sample_size) %>%
+  summarise(
+    participants_min = min(sample_size, na.rm = TRUE),
+    participants_max = max(sample_size, na.rm = TRUE),
+    participants_median = median(sample_size, na.rm = TRUE),
+    participants_n = sum(!is.na(sample_size))
+  )
+
 # Estimated and original # Trials per pipeline statistics
 trials_stats <- df_pipelines %>%
   filter(!is.na(trials_Mean)) %>%
@@ -1260,6 +1334,13 @@ trials_stats <- df_pipelines %>%
 
 # Check if trials are at study or pipeline level
 trials_level <- check_studies_or_pipelines(df_pipelines, "trials_Mean")
+
+#Missing HER Trials
+pct_missing_trials_original <- results_df_missing %>%
+  filter(Column == "trials_original") %>%
+  mutate(Percent = round(Metric * 100, 1)) %>%
+  pull(Percent)
+
 
 # Statistical tests split by clustering vs averaging - most common for each method
 stats_table <- df_pipelines %>%
@@ -1300,7 +1381,23 @@ hedges_data <- bind_cols(df_pipelines, hedges_column) %>%
 # not sure if this is the right way to do it
 coll_average_effect <- mean(c(0.35, 0.37, 0.49, 0.72))
 
-# Calculate percentage of pipelines that could detect the Coll et al. effect size
+# Calculate percentage of pipelines that could detect each individual Coll et al. effect size
+individual_effect_sizes <- c(0.35, 0.37, 0.49, 0.72)
+effect_size_names <- c("interoceptive_performance", "attention_to_heart", "clinical_vs_control", "arousal")
+
+# Calculate power for each individual effect size
+power_stats <- map2_dfr(individual_effect_sizes, effect_size_names, function(effect_size, name) {
+  hedges_data %>%
+    summarise(
+      effect_type = name,
+      effect_size = effect_size,
+      total_pipelines = n(),
+      pipelines_detecting = sum(hedges_g <= effect_size, na.rm = TRUE),
+      percentage_detecting = round(pipelines_detecting / total_pipelines * 100, 1)
+    )
+})
+
+# Calculate percentage of pipelines that could detect the Coll et al. average effect size
 pipelines_detect_coll <- hedges_data %>%
   summarise(
     total_pipelines = n(),
@@ -1308,14 +1405,44 @@ pipelines_detect_coll <- hedges_data %>%
     percentage_detecting_coll = round(pipelines_detecting_coll / total_pipelines * 100, 0)
   )
 
+# Calculate minimal detectable effect size statistics
+hedges_g_stats <- hedges_data %>%
+  summarise(
+    min_hedges_g = round(min(hedges_g, na.rm = TRUE), 2),
+    max_hedges_g = round(max(hedges_g, na.rm = TRUE), 2),
+    median_hedges_g = round(median(hedges_g, na.rm = TRUE), 2)
+  )
+
+# Preregistration
+pct_prereg <- df_pipelines %>%
+  distinct(PMID, Preregistration) %>%
+  summarise(
+    percentage = round(mean(Preregistration, na.rm = TRUE) * 100, 1)
+  ) %>%
+  pull(percentage)
+
+# publication bias
+non_sig_results <- df_pipelines %>%
+  group_by(PMID) %>%
+  filter(all(significant_test == 0, na.rm = TRUE)) %>%
+  distinct(PMID, .keep_all = TRUE) %>%
+  ungroup() 
+
 ```
 
-Trials (`r trials_level`):
-Minimum, maximum, and median number of trials per pipeline: **`r trials_stats$min_trials`** - **`r trials_stats$max_trials`** - **`r trials_stats$mean_trials`**
+Number of participants per pipeline: Min: **`r participants_stats$participants_min`**, Max: **`r participants_stats$participants_max`**, Median: **`r participants_stats$participants_median`**
 
 Number of groups: **`r min(df_pipelines$groups, na.rm = TRUE)`** - **`r max(df_pipelines$groups, na.rm = TRUE)`** 
 
 Number of conditions: **`r min(df_pipelines$conditions, na.rm = TRUE)`** - **`r max(df_pipelines$conditions, na.rm = TRUE)`** 
+
+Percentage of pipelines with group or condition analysis: **`r analysis_type_stats$pct_group_or_condition`%** (`r sum(grepl("group", tolower(df_pipelines$hypothesis)), na.rm = TRUE)`/`r sum(!is.na(df_pipelines$hypothesis))`)
+
+Percentage of pipelines with correlation analysis: **`r analysis_type_stats$pct_correlation`%** (`r sum(grepl("correlation", tolower(df_pipelines$hypothesis)), na.rm = TRUE)`/`r sum(!is.na(df_pipelines$hypothesis))`)
+
+Number of trials per pipeline: Min: **`r trials_stats$min_trials`**, Max: **`r trials_stats$max_trials`**, Median: **`r trials_stats$mean_trials `**
+
+Percentage of missing HEP epoch info: **`r pct_missing_trials_original`%**
 
 ### Statistical Analysis Methods
 
@@ -1334,16 +1461,22 @@ knitr::kable(stats_table,
              align = c("l", "l", "c", "c"))
 ```
 
-Percentage of pipelines with group or condition analysis: **`r analysis_type_stats$pct_group_or_condition`%** (`r sum(grepl("group", tolower(df_pipelines$hypothesis)), na.rm = TRUE)`/`r sum(!is.na(df_pipelines$hypothesis))`)
-
-Percentage of pipelines with correlation analysis: **`r analysis_type_stats$pct_correlation`%** (`r sum(grepl("correlation", tolower(df_pipelines$hypothesis)), na.rm = TRUE)`/`r sum(!is.na(df_pipelines$hypothesis))`)
-
-Number of trials per pipeline: Min: **`r trials_stats$min_trials`**, Max: **`r trials_stats$max_trials`**, Median: **`r trials_stats$mean_trials `**
-
 ### Power Analysis
 
 Only **`r pipelines_detect_coll$percentage_detecting_coll`%** of pipelines (`r pipelines_detect_coll$pipelines_detecting_coll`/`r pipelines_detect_coll$total_pipelines`) had sufficient power to detect the average effect size reported by Coll et al. (2020).
 
+The resulting minimal detectable effect sizes range from **`r hedges_g_stats$min_hedges_g`** to **`r hedges_g_stats$max_hedges_g`**, with a median of **`r hedges_g_stats$median_hedges_g`** Hedges' g.
+
+We observe that only **`r power_stats$percentage_detecting[power_stats$effect_type == "interoceptive_performance"]`%** of pipelines had enough power to detect Hedges' g of 0.35 (interoceptive performance meta-estimate), **`r power_stats$percentage_detecting[power_stats$effect_type == "attention_to_heart"]`%** of pipelines could reliably detect Hedges' g of 0.37 (attention to heart meta-estimate), **`r power_stats$percentage_detecting[power_stats$effect_type == "clinical_vs_control"]`%** of pipelines could reliably detect Hedges' g of 0.49 (clinical vs. control groups meta-estimate), and **`r power_stats$percentage_detecting[power_stats$effect_type == "arousal"]`%** of pipelines could reliably detect Hedges' g of 0.72 (arousal meta-estimate).
+
+These observations suggest that **`r 100 - max(power_stats$percentage_detecting)`%** to **`r 100 - min(power_stats$percentage_detecting)`%** of pipelines may have yielded underpowered and potentially unreliable findings.
+
+### Preregistration
+Percentage of pipelines with preregistration: **`r pct_prereg`%** 
+
+### publication bias
+
+Number and percentage of studies without significant results: **`r nrow(non_sig_results)`** studies (**`r round(nrow(non_sig_results) / total_studies * 100, 1)`%**)
 
 ### Control Analyses
 

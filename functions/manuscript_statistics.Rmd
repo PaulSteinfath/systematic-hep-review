@@ -73,7 +73,7 @@ This document provides all values mentioned in the manuscript "Heartbeat-evoked 
 
 ## Methods
 
-## Literature search
+### Literature search
 
 ```{r data-export}
 # Get the number of papers in Pubmed export
@@ -108,6 +108,15 @@ Manually added:
 * Included: **`r total_included_manual`** studies
 
 Final sample: **`r total_included_pubmed + total_included_manual`** studies
+
+### Data analysis
+
+Analysis parameters (TODO: extract to config):
+
+* Threshold for binning variables in entropy calculations: TODO
+* Power computation - power threshold: TODO
+* Power computation - significance level: TODO
+* Number of permutations for testing peak differences: TODO
 
 ## Results
 

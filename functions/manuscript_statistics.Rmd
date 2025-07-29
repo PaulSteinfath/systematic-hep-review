@@ -40,6 +40,7 @@ source(file.path(func_path, "plots", "plotting_helpers.R"))
 source(file.path(func_path, "plots", "plot_missing.R"))
 source(file.path(func_path, "plots", "plot_hedges_g.R"))
 source(file.path(func_path, "analysis", "perm_peak_stats.R"))
+source(file.path(func_path, "analysis", "screening.R"))
 source(file.path(func_path, "plots", "preprocess_controls.R"))
 
 # Helper function to determine if percentages should refer to studies or pipelines
@@ -59,18 +60,11 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
 # Create study-level and pipeline-level datasets for efficiency
 df_studies <- df_included %>% distinct(PMID, .keep_all = TRUE)
 df_pipelines <- df_included
-
-# EEG-only datasets
-eeg_studies <- df_studies %>% filter(modality == "EEG")
-eeg_pipelines <- df_pipelines %>% filter(modality == "EEG")
-
-meg_studies <- df_studies %>% filter(modality == "MEG")
-meg_pipelines <- df_pipelines %>% filter(modality == "MEG")
 ```
 
 ## Overview
 
-This document provides all values mentioned in the manuscript "Heartbeat-evoked responses in MEG/EEG: A systematic review of methods and suggestions for analysis and reporting". All sections of this document apart from this overview match the corresponding section of the manuscript. Numbers highlighted in **bold** are also present in the manuscript.
+This document provides all values mentioned in the manuscript "Heartbeat-evoked responses in MEG/EEG: A systematic review of methods with suggestions for analysis and reporting". All sections of this document apart from this overview match the corresponding section of the manuscript. Numbers highlighted in **bold** are also present in the manuscript.
 
 ### Important Distinction: Studies vs Pipelines
 
@@ -82,27 +76,16 @@ This document provides all values mentioned in the manuscript "Heartbeat-evoked 
 ## Literature search
 
 ```{r data-export}
-# Load the search data files
-exports_path <- file.path(data_path, 'exports')
-
-df_query1 <- read.csv(file.path(exports_path, '20240115_pubmed_query1.csv'))
-df_query2 <- read.csv(file.path(exports_path, '20240724_pubmed_query2.csv'))
-df_query2_rerun <- read.csv(file.path(exports_path, '20240805_pubmed_query2.csv'))
-df_query3 <- read.csv(file.path(exports_path, '20240805_pubmed_query3.csv'))
-
-df_merged <- df_query1 %>%
-  bind_rows(df_query2) %>%
-  bind_rows(df_query2_rerun) %>%
-  bind_rows(df_query3) %>%
-  distinct(PMID)
+# Get the number of papers in Pubmed export
+export_stats <- get_export_stats(file.path(data_path, 'exports'))
 ```
 
 Table 1 - number of retrieved papers:
 
-* 15.01.2024: **`r nrow(df_query1)`**
-* 24.07.2024: **`r nrow(df_query2)`** (rerun: **`r nrow(df_query2_rerun)`**)
-* 05.08.2024: **`r nrow(df_query3)`**
-* After removing duplicates: **`r nrow(df_merged)`**
+* 15.01.2024: **`r export_stats$num_query1`**
+* 24.07.2024: **`r export_stats$num_query2`** (rerun: **`r export_stats$num_query2_rerun`**)
+* 05.08.2024: **`r export_stats$num_query3`**
+* After removing duplicates: **`r export_stats$num_merged`**
 
 ```{r literature-search, results='asis'}
 screening_pubmed <- df_screening[df_screening$source == "pubmed",]
@@ -132,12 +115,12 @@ Final sample: **`r total_included_pubmed + total_included_manual`** studies
 
 ```{r literature-overview}
 # Basic counts
-total_pipelines <- nrow(df_pipelines)
 total_studies <- nrow(df_studies)
 
 # Year range (based on unique studies)
 year_range <- df_studies %>% 
-  summarise(min_year = min(Year, na.rm = TRUE), max_year = max(Year, na.rm = TRUE))
+  summarise(min_year = min(Year, na.rm = TRUE), 
+            max_year = max(Year, na.rm = TRUE))
 
 # Modality breakdown (unique studies)
 modality_counts <- df_studies %>%
@@ -309,7 +292,8 @@ major_categories <- tolower(c(
 ))
 
 # Process reference categories
-df_ref <- eeg_pipelines %>%
+df_ref <- df_pipelines %>% 
+  filter(modality == "EEG") %>%
   mutate(across(
     .cols = c(reference_online, reference_offline),
     .fns = ~ case_when(

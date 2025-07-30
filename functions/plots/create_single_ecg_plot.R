@@ -42,9 +42,12 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
         x_limits = shared_limits
       ) + 
       theme_aligned_middle + 
-      theme(plot.title = element_text(size = 11, margin = margin(b = 5)),
-            legend.position = "none")
-    
+      theme(
+        plot.title = element_text(size = 9,
+                                  margin = margin(b = 5)),
+        legend.position = "none"
+      )
+
     selected_channels <- plot_eeg_locations(df_filtered, 
                                             "hep_channels_selected", 
                                             by = "study",
@@ -57,7 +60,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   } else {
     hep_plot <- no_valid_data_stub("No valid data") + 
       ggtitle("Analyzed window") +
-      theme(plot.title = element_text(size = 11, margin = margin(b = 5)),
+      theme(plot.title = element_text(size = 9, margin = margin(b = 5)),
             legend.position = "none")
     
     selected_channels <- NULL
@@ -73,12 +76,12 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
       by = by,
       t_peak_offset = t_peak_offset,
       x_limits = shared_limits) +
-      theme(plot.title = element_text(size = 11, margin = margin(b = 5)),
+      theme(plot.title = element_text(size = 9, margin = margin(b = 5)),
         legend.position = "none")
   } else {
     baseline_plot <- no_valid_data_stub("No valid data") +
       ggtitle("Baseline window") +
-      theme(plot.title = element_text(size = 11, margin = margin(b = 5)),
+      theme(plot.title = element_text(size = 9, margin = margin(b = 5)),
         legend.position = "none")
   }
 
@@ -105,7 +108,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
       x_limits = shared_limits
     ) +
       theme_aligned_middle + 
-      theme(plot.title = element_text(size = 11, margin = margin(b = 5)))
+      theme(plot.title = element_text(size = 9, margin = margin(b = 5)))
     
     significant_channels <- plot_eeg_locations(df_filtered, 
                                                "significant_channels", 
@@ -119,7 +122,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   } else {
     significant_plot <- no_valid_data_stub("No valid data") +
       ggtitle("Significant effects") +
-      theme(plot.title = element_text(size = 11, margin = margin(b = 5)))
+      theme(plot.title = element_text(size = 9, margin = margin(b = 5)))
     
     significant_channels <- NULL
   }
@@ -135,7 +138,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   # Add R/T peak lines only if that's the current contrast
   if (identical(reference_values, c("R-peak", "T-peak"))) {
     ecg_plot <- ecg_plot +
-      annotate("text", x = 990, y = 0.4, label = "Simulated ECG", hjust = 1) + 
+      annotate("text", x = 990, y = 0.4, label = "Simulated ECG", hjust = 1, size = 3) + 
       geom_vline(aes(xintercept = r_peak_ms, color = "R-peak"), linetype = "dashed", alpha = 0.5) +
       geom_vline(aes(xintercept = t_peak_ms, color = "T-peak"), linetype = "dashed", alpha = 0.5) +
       scale_color_manual(values = r_t_peak_palette, guide = "none")
@@ -145,14 +148,10 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
 
   ecg_plot <- ecg_plot +
     labs(x = x_label_main, y = "Amplitude") +
-    theme_classic() +
     theme(
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank(),
       legend.position = "none",
-      axis.title.x = element_text(size = 10),
-      axis.title.y = element_text(size = 10),
-      axis.text.x = element_text(size = 8),
       plot.margin = plot_margin_bottom
     ) +
     scale_x_continuous(limits = shared_limits, 
@@ -163,20 +162,20 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   y_label_text <- paste("Number of", if (by == "pipeline") "Pipelines" else "studies")
   y_axis_label_grob <- ggdraw() +
     # Adjust y position to align with the center of the baseline plot ~ 0.59 from bottom
-    draw_label(y_label_text, angle = 90, fontface = 'plain', size = 10, x = 0.5, y = 0.59) +
+    draw_label(y_label_text, angle = 90, fontface = 'plain', size = 8, x = 0.5, y = 0.59) +
     theme(plot.margin = margin(0, 0, 0, 0))
 
   # --- Modify Plots for Alignment ---
 
   baseline_plot_aligned <- baseline_plot +
+  plot_theme_default +
     theme(
       legend.position = "inside",
       legend.position.inside = c(0.98, 1.5), 
       legend.justification = c("right", "top"), 
       legend.background = element_rect(fill = alpha("white", 0.5)),
-      legend.title = element_text(size = 10), 
-      legend.text = element_text(size = 9),
       legend.key.size = unit(0.8, "lines"),
+      legend.text = element_text(size = 7), 
       axis.title.x = element_blank(), 
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(), 
@@ -207,7 +206,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   )
 
   title_grob <- ggdraw() +
-    draw_label(plot_title, fontface = 'bold', x = 0.5, y = 0.5, hjust = 0.5, size = 12) +
+    draw_label(plot_title, fontface = 'bold', x = 0.5, y = 0.5, hjust = 0.5, size = 9) +
     theme(plot.margin = margin(t = 5, r = 0, b = 10, l = 5))
 
   final_plot <- plot_grid(

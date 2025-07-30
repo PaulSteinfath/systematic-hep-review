@@ -111,7 +111,7 @@ summarize_cfa_criteria <- function(df) {
   # Combine plots
   combined_plot <- ggdraw() +
     draw_plot(main_plot) +
-    draw_plot(algo_plot, x = 0.55, y = 0.45, width = 0.38, height = 0.5)
+    draw_plot(algo_plot, x = 0.55, y = 0.40, width = 0.38, height = 0.5)
 
   return(combined_plot)
 }

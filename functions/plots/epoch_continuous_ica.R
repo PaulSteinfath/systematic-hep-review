@@ -10,6 +10,6 @@ epoch_continuous_ica <- function(df) {
     col = "ica_on_epochs",
     title = "ICA Usage",
     discrete = TRUE,
-    custom_labels = c("Continuous", "Epoched")
+    custom_labels = c("0" = "Continuous", "1" = "Epoched")
   )
 }

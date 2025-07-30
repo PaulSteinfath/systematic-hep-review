@@ -62,7 +62,8 @@ plot_control_categories <- function(df, tilt_labels = FALSE) {
     title           = "Control Categories",
     fill_as_aesthetic = TRUE,  
     tilt_labels       = tilt_labels,
-    allowed           = allowed_mapping
+    allowed           = allowed_mapping,
+    decreasing         = FALSE
   ) + coord_flip()
   
   category_colors <- c()

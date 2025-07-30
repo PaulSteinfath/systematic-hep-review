@@ -6,6 +6,10 @@ ica_columns <- c(
 # CFA-specific columns
 cfa_columns <- c("rejected_cardiac_ics", "cfa_rej_approach", "cfa_rej_criteria")
 
+# Ignore columns that are optional
+opt_columns <- c("other_cfa_removal_strategy", "other_cleaning_strategy")
+
+
 is_missing <- function(x) {
   x_char <- tolower(as.character(x))
   is.na(x) | x == "" | x_char %in% c("unknown", "na")
@@ -43,7 +47,7 @@ calc_missing_for_column <- function(data, col) {
   # For reference online/offline: only count if Modality == "EEG".
   if (tolower(col) %in% c("reference online", "reference_online", 
                           "reference offline", "reference_offline")) {
-    condition <- condition & (data$Modality == "EEG")
+    condition <- condition & (data$modality == "EEG")
   }
   
   # Return TRUE for rows that are both relevant and missing.
@@ -64,7 +68,7 @@ compute_denom_papers <- function(data, col) {
     rel <- data$clustering == 1
   } else if (tolower(col) %in% c("reference online", "reference_online",
                                  "reference offline", "reference_offline")) {
-    rel <- data$Modality == "EEG"
+    rel <- data$modality == "EEG"
   } else {
     rel <- rep(TRUE, nrow(data))
   }
@@ -85,7 +89,7 @@ compute_missing_papers <- function(data, col) {
     rel <- data$clustering == 1
   } else if (tolower(col) %in% c("reference online", "reference_online",
                                  "reference offline", "reference_offline")) {
-    rel <- data$Modality == "EEG"
+    rel <- data$modality == "EEG"
   } else {
     rel <- rep(TRUE, nrow(data))
   }
@@ -116,9 +120,9 @@ plot_missing <- function(df,
                                 y_ticks = TRUE,
                                 flip = FALSE,
                                 fixed = FALSE) {
-  
+
   if (is.list(columns)) columns <- unlist(columns)
-  
+
   results_df <- purrr::map_dfr(columns, function(col) {
     denom <- compute_denom_papers(df, col)
     missing <- compute_missing_papers(df, col)
@@ -126,6 +130,13 @@ plot_missing <- function(df,
     data.frame(Column = col, Metric = metric, stringsAsFactors = FALSE)
   })
   
+  # Optional columns should not be counted as missing
+  for (col in opt_columns) {
+    if (col %in% names(df)) {
+      results_df$Metric[results_df$Column == col] <- 0
+    }
+  }
+
   results_df <- prepare_column_plot_data(results_df, 
                                          column_col = "Column", 
                                          value_col = "Metric", 
@@ -133,7 +144,7 @@ plot_missing <- function(df,
                                          column_mapping_readable = column_mapping_readable,
                                          pipeline_colors = pipeline_colors,
                                          fixed = fixed)
-  
+
   y_lab <- if (percentages) "Proportion of Studies" else "Number of Studies"
 
   my_title <- if (!show_title) {
@@ -143,7 +154,7 @@ plot_missing <- function(df,
   } else {
     paste("n =", dplyr::n_distinct(df$PMID), "studies")
   }
-  
+
   p <- ggplot(results_df, aes(x = Column, y = Metric)) +
     theme_classic(base_family = "sans") +
     labs(title = my_title, x = x_lab, y = y_lab) +
@@ -158,15 +169,19 @@ plot_missing <- function(df,
     ) +
     scale_y_continuous(labels = if (percentages) scales::percent else waiver(),
                        expand = expansion(mult = c(0, .1)))
-  
+
   if (!is.null(pipeline_colors)) {
     p <- p + geom_bar(aes(fill = Step), stat = "identity", color = "white", linewidth = 0.5) +
-      scale_fill_manual(values = pipeline_colors, guide = if (show_legend) "legend" else "none") +
+      scale_fill_manual(
+        name = "Category",
+        values = pipeline_colors,
+        guide = if (show_legend) "legend" else "none"
+      ) +
       theme(legend.position = "right", legend.justification = "center", legend.margin = margin(0, -1, 0, 0))
   } else {
     p <- p + geom_bar(stat = "identity", fill = plot_fill, color = "white", linewidth = 0.5)
   }
-  
+
   if (!x_ticks) p <- p + theme(axis.text.x = element_blank())
   if (!y_ticks) {
     p <- p +
@@ -177,6 +192,6 @@ plot_missing <- function(df,
       )
   }
   if (flip)     p <- p + coord_flip()
-  
+
   return(p)
 }

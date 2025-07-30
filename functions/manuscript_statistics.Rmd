@@ -62,6 +62,12 @@ df_studies <- df_included %>% distinct(PMID, .keep_all = TRUE)
 df_pipelines <- df_included
 ```
 
+```{r helper-functions}
+get_row <- function(df, column, value) {
+  as.list(df[df[[column]] == value,])
+}
+```
+
 ## Overview
 
 This document provides all values mentioned in the manuscript "Heartbeat-evoked responses in MEG/EEG: A systematic review of methods with suggestions for analysis and reporting". All sections of this document apart from this overview match the corresponding section of the manuscript. Numbers highlighted in **bold** are also present in the manuscript.
@@ -135,30 +141,13 @@ year_range <- df_studies %>%
 modality_counts <- df_studies %>%
   count(modality) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
-modality_eeg <- as.list(modality_counts[modality_counts$modality == "EEG",])
-modality_meg <- as.list(modality_counts[modality_counts$modality == "MEG",])
+modality_eeg <- get_row(modality_counts, "modality", "EEG")
+modality_meg <- get_row(modality_counts, "modality", "MEG")
 
 # Task vs resting state - studies that have both vs only one type
-study_types <- df_pipelines %>%
-  filter(!is.na(rsHEP)) %>%
-  group_by(PMID) %>%
-  summarise(
-    has_resting = any(rsHEP == 1),
-    has_task = any(rsHEP == 0),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    category = case_when(
-      has_resting & has_task ~ "Both",
-      has_resting & !has_task ~ "Rest", 
-      !has_resting & has_task ~ "Task",
-      TRUE ~ "Other"
-    )
-  ) %>%
-  count(category) %>%
+study_types <- df_studies %>%
+  count(study_category) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
-assert("All studies perform either task-based or resting-state analysis",
-       nrow(study_types[study_types$category == "Other",]) == 0)
 
 study_type_task <- as.list(study_types[study_types$category == "Task",])
 study_type_rest <- as.list(study_types[study_types$category == "Rest",])
@@ -183,7 +172,7 @@ eeg_stats <- modality_breakdown %>% filter(modality == "EEG")
 meg_stats <- modality_breakdown %>% filter(modality == "MEG")
 ```
 
-Total studies: **`r final_sample_stats$total_studies`** (**`r final_sample_stats$year_min`**-**`r final_sample_stats$year_max`**)
+Total studies: **`r total_studies`** (**`r year_range$min_year`**-**`r year_range$max_year`**)
 
 Modality:
 

@@ -52,8 +52,8 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
     # Apply custom labels if provided
     if (!is.null(custom_labels)) {
       counts_df[[col]] <- factor(counts_df[[col]], 
-                                levels = seq_along(custom_labels) - 1,
-                                labels = custom_labels)
+                                 levels = names(custom_labels),
+                                 labels = custom_labels)
     }
     
     # Determine x-axis mapping based on preserve_order

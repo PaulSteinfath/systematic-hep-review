@@ -118,7 +118,8 @@ missing_information <- function(df, columns) {
 
   for (col in opt_columns) {
     if (col %in% names(df)) {
-      results_df$Metric[results_df$Column == col] <- 0
+      results_df$count[results_df$Column == col] <- 0
+      results_df$percentage[results_df$Column == col] <- 0
     }
   }
   

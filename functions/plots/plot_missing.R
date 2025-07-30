@@ -47,7 +47,7 @@ calc_missing_for_column <- function(data, col) {
   # For reference online/offline: only count if Modality == "EEG".
   if (tolower(col) %in% c("reference online", "reference_online", 
                           "reference offline", "reference_offline")) {
-    condition <- condition & (data$Modality == "EEG")
+    condition <- condition & (data$modality == "EEG")
   }
   
   # Return TRUE for rows that are both relevant and missing.
@@ -68,7 +68,7 @@ compute_denom_papers <- function(data, col) {
     rel <- data$clustering == 1
   } else if (tolower(col) %in% c("reference online", "reference_online",
                                  "reference offline", "reference_offline")) {
-    rel <- data$Modality == "EEG"
+    rel <- data$modality == "EEG"
   } else {
     rel <- rep(TRUE, nrow(data))
   }
@@ -89,7 +89,7 @@ compute_missing_papers <- function(data, col) {
     rel <- data$clustering == 1
   } else if (tolower(col) %in% c("reference online", "reference_online",
                                  "reference offline", "reference_offline")) {
-    rel <- data$Modality == "EEG"
+    rel <- data$modality == "EEG"
   } else {
     rel <- rep(TRUE, nrow(data))
   }
@@ -121,13 +121,6 @@ plot_missing <- function(df,
                                 flip = FALSE,
                                 fixed = FALSE) {
 
-  # Set all columns in opt_columns to a non-missing value so they are not counted as missing
-  for (col in opt_columns) {
-    if (col %in% names(df)) {
-      df[[col]][is_missing(df[[col]])] <- "Not applicable"
-    }
-  }
-
   if (is.list(columns)) columns <- unlist(columns)
 
   results_df <- purrr::map_dfr(columns, function(col) {
@@ -136,6 +129,13 @@ plot_missing <- function(df,
     metric  <- if (percentages) missing / denom else missing
     data.frame(Column = col, Metric = metric, stringsAsFactors = FALSE)
   })
+  
+  # Optional columns should not be counted as missing
+  for (col in opt_columns) {
+    if (col %in% names(df)) {
+      results_df$Metric[results_df$Column == col] <- 0
+    }
+  }
 
   results_df <- prepare_column_plot_data(results_df, 
                                          column_col = "Column", 

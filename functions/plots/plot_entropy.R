@@ -79,18 +79,16 @@ compute_entropy <- function(data, method_columns,
                             norm = TRUE, 
                             drop_paper_duplicates = TRUE) {
   result <- list()
-  pmid <- data[["PMID"]]
+  pmid <- data$PMID
   
   for (col in method_columns) {
     x <- data[[col]]
 
     # Only use EEG studies for reference columns
-    if (tolower(col) %in% c("reference_online", "reference_offline") &&
-        "Modality" %in% names(data)) {
-      x <- x[data$Modality == "EEG"]
-      pmid <- data[["PMID"]][data$Modality == "EEG"]
-    } else {
-      pmid <- data[["PMID"]]
+    pmid <- data$PMID
+    if (tolower(col) %in% c("reference_online", "reference_offline")) {
+      x <- x[data$modality == "EEG"]
+      pmid <- data$PMID[data$modality == "EEG"]
     }
 
     if (drop_paper_duplicates){

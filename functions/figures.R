@@ -361,7 +361,7 @@ make_figures <- function(df, save_path, ext = "svg") {
   ggsave(
     filename = file.path(save_path, paste0("pipelines_overview.", ext)),
     plot = pipelines_overview,
-    width = 11,
+    width = 10,
     height = 11,
     units = "in",
     dpi = 300,

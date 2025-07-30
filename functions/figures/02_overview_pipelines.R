@@ -25,28 +25,55 @@ figure_overview_pipelines <- function(df, save_path, ext = 'svg') {
   
   # Final fixed order to reuse
   ordered_columns <- levels(entropy_df$Column)
+  entropy_df$Column <- factor(entropy_df$Column, 
+                              levels = ordered_columns) 
+  levels(entropy_df$Column) <- make_readable(levels(entropy_df$Column))
+  
+  # Multiple choices
+  multiple_df <- multiple_choices(df, target_columns)
+  multiple_df$Step <- sapply(multiple_df$Column, function(var_name) {
+    get_pipeline_step(var_name)
+  })
+  multiple_df$Column <- factor(multiple_df$Column, 
+                               levels = ordered_columns) 
+  levels(multiple_df$Column) <- make_readable(levels(multiple_df$Column))
+  
+  # Missing information
+  missing_df <- missing_information(df, target_columns)
+  missing_df$Step <- sapply(missing_df$Column, function(var_name) {
+    get_pipeline_step(var_name)
+  })
+  missing_df$Column <- factor(missing_df$Column, 
+                              levels = ordered_columns)
+  levels(missing_df$Column) <- make_readable(levels(missing_df$Column))
   
   # Build all three plots with unified config
-  p1 <- plot_entropy(entropy_df = entropy_df,
-                     column_mapping_readable = column_mapping_readable_default,
-                     pipeline_steps = pipeline_steps,
-                     pipeline_colors = pipeline_colors,
-                     fixed = TRUE,
-                     flip = TRUE,
-                     show_title = TRUE,
-                     show_wordy_title = TRUE)
+  p1 <- bar_panel(entropy_df,
+                  value_col = "Entropy",
+                  flip = T,
+                  pipeline_colors = pipeline_colors,
+                  title = "Entropy",
+                  y_lab = "Entropy")
   
-  p2 <- plot_multiple_choices(df,
-                              variables = ordered_columns,
-                              column_mapping_readable = column_mapping_readable_default,
-                              pipeline_steps = pipeline_steps,
-                              pipeline_colors = pipeline_colors,
-                              fixed = TRUE,
-                              flip = TRUE,
-                              y_ticks = FALSE,
-                              show_title = TRUE,
-                              show_wordy_title = TRUE,
-                              x_lab = "")
+  p2 <- bar_panel(multiple_df,
+                  value_col = "percentage",
+                  percentages = T,
+                  flip = T,
+                  pipeline_colors = pipeline_colors,
+                  title = "Multiple Choices",
+                  x_lab = "",
+                  y_lab = "Proportion of Studies",
+                  y_ticks = F)
+  
+  p3 <- bar_panel(missing_df,
+                  value_col = "percentage",
+                  percentages = T,
+                  flip = T,
+                  pipeline_colors = pipeline_colors,
+                  title = "Missing Information",
+                  x_lab = "",
+                  y_lab = "Proportion of Studies",
+                  y_ticks = F)
 
   p3 <- plot_missing(df,
                      columns = ordered_columns,
@@ -61,6 +88,7 @@ figure_overview_pipelines <- function(df, save_path, ext = 'svg') {
                      x_lab = "", 
                      show_legend = TRUE)
   
+  # Combine plots
   fig <- plot_grid(p1, NULL, p2, NULL, p3,
                    ncol = 5,
                    align = "h",

@@ -3,12 +3,13 @@ library(ggplot2)
 
 plot_theme_default <- theme_classic(base_family = "sans") +
   theme(panel.grid = element_blank(),
-        plot.title = element_text(size = 9),
-        axis.text.x = element_text(size = 8),
-        axis.text.y = element_text(size = 8),
-        legend.text = element_text(size = 8), 
-        axis.title.x = element_text(size = 9, margin = margin(t = 4)),
-        axis.title.y = element_text(size = 9))
+        plot.title = element_text(size = 10),
+        plot.subtitle = element_text(size = 9),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7),
+        legend.text = element_text(size = 7), 
+        axis.title.x = element_text(size = 8, margin = margin(t = 4)),
+        axis.title.y = element_text(size = 8))
 
 plot_fill_default_single <- "#696969"
 
@@ -241,7 +242,7 @@ prepare_column_plot_data <- function(df,
 
 custom_theme <- function() {
   theme(
-    plot.title = element_text(size = 11), 
-    plot.subtitle = element_text(size = 9)
+    plot.title = element_text(size = 8), 
+    plot.subtitle = element_text(size = 7)
   )
 }

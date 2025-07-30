@@ -108,16 +108,14 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
   }
   
   p <- p +
+    plot_theme_default +
     theme(
-      axis.text.x = element_text(size = 8, 
-                                 angle = if (tilt_labels) 45 else 0, 
+      axis.text.x = element_text(angle = if (tilt_labels) 45 else 0, 
                                  hjust = if (tilt_labels) 1 else 0.5),
-      axis.text.y = element_text(size = 8),
-      axis.title.x = element_text(size = 9, 
-                                  margin = margin(t = 4)),  # Adjust this value to move label closer
-      axis.title.y = element_text(size = 9)
-    ) +
-    custom_theme()
+      axis.text.y = element_text(),
+      axis.title.x = element_text(margin = margin(t = 4)),  # Adjust this value to move label closer
+      axis.title.y = element_text()
+    )
   
   if (!is.null(x.label)) {
     p <- p + xlab(x.label)

@@ -17,11 +17,5 @@ create_simple_ica_plot <- function(df) {
        y = "Proportion of pipelines",
        title = "ICA Usage",
        subtitle = paste("n =", sum(ica_counts$n), "pipelines")) +
-    plot_theme_default +
-    custom_theme() +
-    theme(
-      axis.text = element_text(size = 8),
-      axis.title = element_text(size = 9)
-    ) +
-    custom_theme()
+    plot_theme_default
 }

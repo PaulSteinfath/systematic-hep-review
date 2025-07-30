@@ -207,7 +207,7 @@ eeg_acq_prep <- function(df) {
     align = "hv",
     axis = "tblr",
     labels = c("B", "C"),
-    rel_widths = c(1.4, 0.6)
+    rel_widths = c(1.2, 0.8)
   )
 
   # Combine plots
@@ -558,22 +558,21 @@ make_figures <- function(df, save_path, ext = "svg") {
   ggsave(
     filename = file.path(save_path, paste0("studies_overview.", ext)),
     plot = fig1BCD_studies,
-    width = 10,
-    height = 3,
-    units = "in",
+    width = 190,
+    height = 76.2,
+    units = "mm",
     dpi = 300,
     device = ext,
     bg = "white"
   )
-  
-  eeg_acq_prep_plot <- eeg_acq_prep(df)
 
+  eeg_acq_prep_plot <- eeg_acq_prep(df)
   ggsave(
     filename = file.path(save_path, paste0("eeg_acq_prep_plot.", ext)),
     plot = eeg_acq_prep_plot,
-    width = 10,
-    height = 11,
-    units = "in",
+    width = 190,
+    height = 279.4,
+    units = "mm",
     dpi = 300,
     device = ext,
     bg = "white"

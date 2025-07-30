@@ -20,95 +20,94 @@ eeg_columns <- c(
 )
 
 
-is_missing <- function(x) {
+is_missing <- function(df, col) {
+  # Process the default case
+  x <- df[[col]]
   x_char <- tolower(as.character(x))
-  is.na(x) | x == "" | x_char %in% c("unknown", "na")
+  missing <- is.na(x) | x == "" | x_char %in% c("unknown", "na")
+  
+  # For trials: also count as missing if the text starts with "[est" (ignoring case).
+  if (tolower(col) == "trials") {
+    extra_missing <- grepl("^\\[est", df[[col]], ignore.case = TRUE)
+    missing <- missing | extra_missing
+  }
+  
+  missing
 }
 
-# This function uses extra conditions (ICA, clustering, Modality, trials) as needed.
-calc_missing_for_column <- function(data, col) {
-  # 'data' is expected to be a subset corresponding to a single paper.
-  missing_values <- is_missing(data[[col]])
+
+is_relevant <- function(df, col) {
+  relevant <- rep(T, nrow(df))
   
-  # For ica_columns: only count missing if ICA == 1.
+  # For ica_columns: only count missing if ICA == 1
   if (col %in% ica_columns) {
-    condition <- data$ICA == 1
+    relevant <- relevant & df$ICA == 1
     
     # For CFA-specific columns check that CFA is among rejected components
     if (col %in% cfa_columns) {
-      cfa_mentioned <- grepl("CFA", data$rejected_components, ignore.case = TRUE)
-      condition <- condition & cfa_mentioned
+      cfa_mentioned <- grepl("CFA", df$rejected_components, ignore.case = TRUE)
+      relevant <- relevant & cfa_mentioned
     }
-  } else {
-    condition <- rep(TRUE, nrow(data))
   }
   
   # For columns with "perm": only count if clustering == 1.
   if (grepl("perm", col, ignore.case = TRUE)) {
-    condition <- condition & (data$clustering == 1)
+    relevant <- relevant & (df$clustering == 1)
   }
   
-  # For trials: also count as missing if the text starts with "[est" (ignoring case).
-  if (tolower(col) == "trials") {
-    extra_missing <- grepl("^\\[est", data[[col]], ignore.case = TRUE)
-    missing_values <- missing_values | extra_missing
-  }
-  
-  # For reference online/offline: only count if Modality == "EEG".
+  # For reference/channel columns: only count if modality == "EEG".
   if (tolower(col) %in% eeg_columns) {
-    condition <- condition & (data$modality == "EEG")
+    relevant <- relevant & (df$modality == "EEG")
   }
   
-  # Return TRUE for rows that are both relevant and missing.
-  missing_values & condition
+  relevant
 }
+
 
 # Compute denominator at paper level: count unique PMIDs among rows that are relevant.
-compute_denom_papers <- function(data, col) {
-  if (col %in% ica_columns) {
-    rel <- data$ICA == 1
-    
-    # For CFA-specific columns: check that CFA is among rejected components
-    if (col %in% cfa_columns) {
-      cfa_mentioned <- grepl("CFA", data$rejected_components, ignore.case = TRUE)
-      rel <- rel & cfa_mentioned
-    }
-  } else if (grepl("perm", col, ignore.case = TRUE)) {
-    rel <- data$clustering == 1
-  } else if (tolower(col) %in% eeg_columns) {
-    rel <- data$modality == "EEG"
+compute_denom_papers <- function(df, col, by = "study") {
+  relevant <- is_relevant(df, col)
+  
+  if (by == "pipeline") {
+    sum(relevant)
+  } else if (by == "study") {
+    length(unique(df$PMID[relevant]))
   } else {
-    rel <- rep(TRUE, nrow(data))
+    stop("either by study or by pipeline")
   }
-  length(unique(data$PMID[rel]))
 }
 
-# Compute number of papers missing info for a given column.
-compute_missing_papers <- function(data, col) {
-  if (col %in% ica_columns) {
-    rel <- data$ICA == 1
-    
-    # For CFA-specific columns: check that CFA is among rejected components
-    if (col %in% cfa_columns) {
-      cfa_mentioned <- grepl("CFA", data$rejected_components, ignore.case = TRUE)
-      rel <- rel & cfa_mentioned
-    }
-  } else if (grepl("perm", col, ignore.case = TRUE)) {
-    rel <- data$clustering == 1
-  } else if (tolower(col) %in% eeg_columns) {
-    rel <- data$modality == "EEG"
+
+decide_missing <- function(missing_pipelines, criterion = "any") {
+  if (criterion == "any") {
+    # A paper is missing if ANY row in that paper meets the missing condition.
+    any(missing_pipelines)
+  } else if (criterion == "all") {
+    # A paper is missing if ALL rows in that paper meet the missing condition.
+    all(missing_pipelines)
   } else {
-    rel <- rep(TRUE, nrow(data))
+    stop("bad criterion - any and all are supported")
   }
-  data_rel <- data[rel, , drop = FALSE]
-  if(nrow(data_rel) == 0) return(0)
-  # Split by paper.
-  papers <- split(data_rel, data_rel$PMID)
-  # A paper is missing if any row in that paper meets the missing condition.
-  missing_indicator <- sapply(papers, function(paper) {
-    any(calc_missing_for_column(paper, col))
-  })
-  sum(missing_indicator)
+}
+
+
+# Compute number of papers missing info for a given column.
+compute_missing_papers <- function(df, col, by = "study", criterion = "any") {
+  relevant <- is_relevant(df, col)
+  if (sum(relevant) == 0) return(0)
+  
+  missing <- is_missing(df, col) & relevant
+  
+  if (by == "pipeline") {
+    sum(missing)
+  } else if (by == "study") {
+    # Split by paper, decide according to the criterion
+    papers <- split(missing, df$PMID)
+    missing_paper <- sapply(papers, criterion)
+    sum(missing_paper)
+  } else {
+    stop("either by study or by pipeline")
+  }
 }
 
 

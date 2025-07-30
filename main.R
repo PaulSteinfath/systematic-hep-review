@@ -14,6 +14,7 @@ library(purrr)
 library(pwr)
 library(scales)
 library(stringr)
+library(testit)
 library(tidyr)
 library(viridis)
 library(zeallot)
@@ -43,10 +44,24 @@ source("config.R")
 df_full <- load_data(pubmed_path, manual_path)
 c(df_screening, df_included) %<-% preprocess(df_full)
 errors <- validate_preprocessed(df_included)
-generate_prisma(df_screening, prisma_template_path,
-                derivatives_path, results_path, ext = 'png')
 
-figure_ecg_summary(df_included, results_path, ext = 'png')
-figure_stats(df_included, results_path, ext = 'png')
-figure_controls(df_included, results_path, ext = 'png')
-make_figures(df_included, results_path, ext = 'png')
+# Generate all figures
+ext = 'png'
+generate_prisma(df_screening, prisma_template_path,
+                derivatives_path, results_path, ext = ext)
+figure_overview_studies(df_included, results_path, ext = ext)
+figure_ecg_summary(df_included, results_path, ext = ext)
+figure_hep_estimation_summary(df_included, results_path, ext = ext)
+figure_stats(df_included, results_path, ext = ext)
+figure_controls(df_included, results_path, ext = ext)
+make_figures(df_included, results_path, ext = ext)
+
+# Save the results
+write.csv(df_included, file.path(derivatives_path, 'included.csv'), row.names = F)
+write.csv(df_screening, file.path(derivatives_path, 'screening.csv'), row.names = F)
+
+# R Markdown report with data from global environment
+rmarkdown::render(file.path(func_path, 'manuscript_statistics.Rmd'), 
+                  knit_root_dir = getwd(),
+                  output_format = 'html_document',
+                  output_dir = results_path)

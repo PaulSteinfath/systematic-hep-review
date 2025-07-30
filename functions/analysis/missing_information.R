@@ -1,6 +1,9 @@
 ica_columns <- c(
-  "ica_on_epochs", "rejected_components", 
-  "rejected_cardiac_ics", "cfa_rej_approach", "cfa_rej_criteria"
+  "ica_on_epochs", 
+  "rejected_components", 
+  "rejected_cardiac_ics", 
+  "cfa_rej_approach", 
+  "cfa_rej_criteria"
 )
 
 # CFA-specific columns
@@ -8,6 +11,13 @@ cfa_columns <- c("rejected_cardiac_ics", "cfa_rej_approach", "cfa_rej_criteria")
 
 # Ignore columns that are optional
 opt_columns <- c("other_cfa_removal_strategy", "other_cleaning_strategy")
+
+# Columns that should be filled only if EEG was used
+eeg_columns <- c(
+  "reference_online",
+  "reference_offline",
+  "hep_channels_selected"
+)
 
 
 is_missing <- function(x) {
@@ -45,8 +55,7 @@ calc_missing_for_column <- function(data, col) {
   }
   
   # For reference online/offline: only count if Modality == "EEG".
-  if (tolower(col) %in% c("reference online", "reference_online", 
-                          "reference offline", "reference_offline")) {
+  if (tolower(col) %in% eeg_columns) {
     condition <- condition & (data$modality == "EEG")
   }
   
@@ -66,8 +75,7 @@ compute_denom_papers <- function(data, col) {
     }
   } else if (grepl("perm", col, ignore.case = TRUE)) {
     rel <- data$clustering == 1
-  } else if (tolower(col) %in% c("reference online", "reference_online",
-                                 "reference offline", "reference_offline")) {
+  } else if (tolower(col) %in% eeg_columns) {
     rel <- data$modality == "EEG"
   } else {
     rel <- rep(TRUE, nrow(data))
@@ -87,8 +95,7 @@ compute_missing_papers <- function(data, col) {
     }
   } else if (grepl("perm", col, ignore.case = TRUE)) {
     rel <- data$clustering == 1
-  } else if (tolower(col) %in% c("reference online", "reference_online",
-                                 "reference offline", "reference_offline")) {
+  } else if (tolower(col) %in% eeg_columns) {
     rel <- data$modality == "EEG"
   } else {
     rel <- rep(TRUE, nrow(data))
@@ -112,6 +119,7 @@ missing_information <- function(df, columns) {
     percentage <- missing / denom
     data.frame(Column = col, 
                count = missing,
+               total = denom,
                percentage = percentage,
                stringsAsFactors = FALSE)
   })

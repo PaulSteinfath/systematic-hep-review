@@ -9,24 +9,7 @@ date: "`r Sys.Date()`"
 ---
 
 ```{r setup, include=FALSE}
-library(cowplot)
-library(dplyr)
-library(eegUtils)
-library(grid)
-library(gridExtra)
-library(gridGraphics)
-library(ggimage)
-library(ggplot2)
-library(ggtext)
-library(magick)
-library(PRISMA2020)
-library(purrr)
-library(scales)
-library(stringr)
-library(testit)
-library(tidyr)
-library(viridis)
-library(zeallot)
+source("init_workspace.R")
 
 # Paths
 data_path <- file.path(getwd(), 'data')
@@ -34,14 +17,6 @@ func_path <- file.path(getwd(), 'functions')
 derivatives_path <- file.path(data_path, 'derivatives')
 df_included <- read.csv(file.path(derivatives_path, 'included.csv'))
 df_screening <- read.csv(file.path(derivatives_path, 'screening.csv'))
-
-# Load necessary functions
-source(file.path(func_path, "plots", "plotting_helpers.R"))
-source(file.path(func_path, "plots", "plot_missing.R"))
-source(file.path(func_path, "plots", "plot_hedges_g.R"))
-source(file.path(func_path, "analysis", "perm_peak_stats.R"))
-source(file.path(func_path, "analysis", "screening.R"))
-source(file.path(func_path, "plots", "preprocess_controls.R"))
 
 # Helper function to determine if percentages should refer to studies or pipelines
 check_studies_or_pipelines <- function(df, variable_column, group_col = "PMID") {
@@ -117,9 +92,9 @@ Final sample: **`r total_included_pubmed + total_included_manual`** studies
 
 ### 2.3. Data analysis
 
-Analysis parameters (TODO: extract to config):
+Analysis parameters:
 
-* Threshold for binning variables in entropy calculations: TODO
+* Entropy - binning continuous variables if at least **`r params$entropy_unique_threshold`** unique values are present
 * Power computation - power threshold: TODO
 * Power computation - significance level: TODO
 * Number of permutations for testing peak differences: TODO
@@ -169,83 +144,55 @@ Study type distribution:
  
 ### 3.2. Overview of methodological choices
 
-```{r variations}
+```{r multiple-choices}
 total_pipelines <- nrow(df_pipelines)
 
 # Get target columns from pipeline steps
 target_columns <- unlist(pipeline_steps, use.names = FALSE)
 
 # Calculate percentage of studies with multiple choices for each method
-results_df <- purrr::map_dfr(target_columns, function(var) {
-  df_pipelines %>%
-    group_by(PMID) %>%
-    summarise(Unique_Choices = n_distinct(.data[[var]]), .groups = "drop") %>%
-    summarise(Multiple_Choices = sum(Unique_Choices > 1)) %>%
-    mutate(Column = var,
-           Metric = Multiple_Choices / total_studies,
-           n = Multiple_Choices)
-})
-prcent_multi <- results_df %>%
-  arrange(desc(Metric)) %>%
-  mutate(percent = round(Metric * 100, 1)) %>%
-  select(Column, percent, n)
+multiple_df <- multiple_choices(df_pipelines, target_columns) %>%
+  mutate(percentage = round(percentage * 100, 0))
 
-pct_varies_either <- prcent_multi[prcent_multi$Column == "hep_start",]$percent
-pct_varies_n <- prcent_multi[prcent_multi$Column == "hep_start",]$n
-
-# Pipelines where CFA-related ICs info is missing
-cfa_ics <- df_pipelines %>%
-  distinct(PMID, rejected_components, .keep_all = TRUE) %>%
-  filter(grepl("CFA", rejected_components))
-
-missing_cfa_ics <- cfa_ics %>%
-    filter(is.na(rejected_cardiac_ics))
-
-pct_missing_cfa_ics <- round(nrow(missing_cfa_ics) / nrow(cfa_ics) * 100, 1)
-
-# Missing ECG Ground info
-ecg_gnd <- df_pipelines %>%
-  distinct(PMID, ecg_ground, .keep_all = TRUE)
-
-pct_gnd_unknown <- round(sum(tolower(ecg_gnd$ecg_ground) == "unknown") / nrow(ecg_gnd) * 100, 1)
-
-# Variables with >40% missing info
-results_df_missing <- purrr::map_dfr(target_columns, function(col) {
-  denom <- compute_denom_papers(df_pipelines, col)
-  missing <- compute_missing_papers(df_pipelines, col)
-  metric <- missing / denom
-  data.frame(Column = col, Metric = metric, stringsAsFactors = FALSE)
-})
-
-results_df_high_missing <- results_df_missing %>% 
-  filter(Metric >= 0.4) %>%
-  mutate(Percent = round(Metric * 100, 1)) %>%
-  select(Column, Percent)
-
-# Extract specific missing ECG location percentage
-ecg_locations_missing_pct <- results_df_missing %>%
-  filter(Column == "ecg_locations") %>%
-  mutate(Percent = round(Metric * 100, 1)) %>%
-  pull(Percent)
+multiple_stats <- get_row(multiple_df, "Column", "statistics")
+multiple_hep_start <- get_row(multiple_df, "Column", "hep_start")  # pick as maximum among start and end
 ```
 
 Total pipelines: **`r total_pipelines`** 
 
-Studies using multiple statistical tests: **`r prcent_multi$percent[prcent_multi$Column == "statistics"]`%** (`r prcent_multi$n[prcent_multi$Column == "statistics"]`/`r total_studies`)
+Studies using multiple choices for:
 
-Studies varying HER window start or end times: **`r pct_varies_either`%** (`r pct_varies_n`/`r final_sample_stats$total_studies`)
+* Statistical tests: **`r multiple_stats$percentage`%** (**`r multiple_stats$count`** / **`r multiple_stats$total`**)
 
-### Missing Information
+* HER window start or end times: **`r multiple_hep_start$percentage`%** (**`r multiple_hep_start$count`** / **`r multiple_hep_start$total`**)
 
-Studies missing cardiac IC rejection information (among those using CFA removal): **`r pct_missing_cfa_ics`%** (`r nrow(missing_cfa_ics)`/`r nrow(cfa_ics)`)
+```{r missing-info}
+# Variables with >40% missing info
+missing_df <- missing_information(df_pipelines, target_columns) %>%
+  mutate(percentage = round(percentage * 100, 0))
 
-Studies with unknown ECG ground location: **`r pct_gnd_unknown`%** (`r sum(tolower(ecg_gnd$ecg_ground) == "unknown")`/`r nrow(ecg_gnd)`)
+missing_cfa_ics <- get_row(missing_df, "Column", "rejected_cardiac_ics")
+missing_ecg_ground <- get_row(missing_df, "Column", "ecg_ground")
+missing_ecg_locations <- get_row(missing_df, "Column", "ecg_locations")
 
-Studies missing ECG electrode locations: **`r ecg_locations_missing_pct`%** (`r results_df_missing$Metric[results_df_missing$Column == "ecg_locations"] * compute_denom_papers(df_pipelines, "ecg_locations")`/`r compute_denom_papers(df_pipelines, "ecg_locations")`)
+missing_df_top <- missing_df %>% 
+  filter(percentage >= 40) %>%
+  arrange(-percentage) %>%
+  select(Column, percentage)
+```
+
+
+Missing information:
+
+* cardiac IC rejection information (among those using CFA removal): **`r missing_cfa_ics$percentage`%** (**`r missing_cfa_ics$count`** / **`r missing_cfa_ics$total`**)
+
+* unknown ECG ground location: **`r missing_ecg_ground$percentage`%** (**`r missing_ecg_ground$count`** / **`r missing_ecg_ground$total`**)
+
+* ECG electrode locations: **`r missing_ecg_locations$percentage`%** (**`r missing_ecg_locations$count`** / **`r missing_ecg_locations$total`**)
 
 ```{r high-missing-table, results='asis'}
-knitr::kable(results_df_high_missing, 
-             caption = "Variables with >40% missing values across pipelines",
+knitr::kable(missing_df_top, 
+             caption = "Variables with >40% missing values across studies",
              col.names = c("Variable", "Missing (%)"))
 ```
 
@@ -1179,7 +1126,7 @@ HEP reference events (`r hep_reference_level`):
 * Studies not using baseline correction: **`r baseline_correction_stats %>% filter(baseline_category == "No") %>% pull(percentage_within_reporting)`%** (`r baseline_correction_stats %>% filter(baseline_category == "No") %>% pull(n)`/`r sum(baseline_correction_stats$n)`)
 
 Baseline correction (`r baseline_correction_level`):
-* Pipelines using baseline correction: **`r baseline_pct`%** (`r sum(baseline_correction_stats$n[baseline_correction_stats$baseline_category %in% c("Yes", "Both")])`/`r final_sample_stats$total_studies`)
+* Pipelines using baseline correction: **`r baseline_pct`%** (`r sum(baseline_correction_stats$n[baseline_correction_stats$baseline_category %in% c("Yes", "Both")])`/`r total_studies`)
 
 ### T-wave Baseline Correction
 

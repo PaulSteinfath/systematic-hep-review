@@ -321,57 +321,11 @@ figure_ecg_summary <- function(df, save_path, ext = 'png') {
 }
 
 
-studies_overview <- function(df) {
-  p_year <- hist_panel(df, "Year", force.numeric = T, 
-                       title = "Publication year", 
-                       x.label = "Year", 
-                       binwidth = 2, use_proportion = F)
-  
-  p_modality <- hist_panel(df, "modality", discrete = T,
-                           title = "Imaging modality")
-
-  df_study_categories <- df %>%
-  group_by(PMID) %>%
-  summarise(
-    has_resting = any(rsHEP == 1),
-    has_task = any(rsHEP == 0),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    study_category = case_when(
-      has_resting & has_task ~ "Task &\n Resting-state",
-      has_resting & !has_task ~ "Resting-state\nonly", 
-      !has_resting & has_task ~ "Task only"
-    )
-    )
-  
-p_condition <- hist_panel(df_study_categories, "study_category", 
-                         discrete = T,
-                         title = "Experimental setting")
-  
-  fig <- plot_grid(p_year, p_modality, p_condition,
-                  nrow = 1, labels = c("B", "C", "D"), align = "h",
-                  axis = "bt")
-  
-  fig
-}
 
 
 # Here we generate all figures
 make_figures <- function(df, save_path, ext = "svg") {
 
-  fig1BCD_studies <- studies_overview(df)
-  ggsave(
-    filename = file.path(save_path, paste0("studies_overview.", ext)),
-    plot = fig1BCD_studies,
-    width = 10,
-    height = 3,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  
   eeg_acq_prep_plot <- eeg_acq_prep(df)
 
   ggsave(

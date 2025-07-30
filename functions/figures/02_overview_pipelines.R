@@ -25,27 +25,21 @@ figure_overview_pipelines <- function(df, save_path, ext = 'svg') {
   
   # Final fixed order to reuse
   ordered_columns <- levels(entropy_df$Column)
-  entropy_df$Column <- factor(entropy_df$Column, 
-                              levels = ordered_columns) 
-  levels(entropy_df$Column) <- make_readable(levels(entropy_df$Column))
+  entropy_df <- set_column_order(entropy_df, ordered_columns)
   
   # Multiple choices
   multiple_df <- multiple_choices(df, target_columns)
   multiple_df$Step <- sapply(multiple_df$Column, function(var_name) {
     get_pipeline_step(var_name)
   })
-  multiple_df$Column <- factor(multiple_df$Column, 
-                               levels = ordered_columns) 
-  levels(multiple_df$Column) <- make_readable(levels(multiple_df$Column))
+  multiple_df <- set_column_order(multiple_df, ordered_columns)
   
   # Missing information
   missing_df <- missing_information(df, target_columns)
   missing_df$Step <- sapply(missing_df$Column, function(var_name) {
     get_pipeline_step(var_name)
   })
-  missing_df$Column <- factor(missing_df$Column, 
-                              levels = ordered_columns)
-  levels(missing_df$Column) <- make_readable(levels(missing_df$Column))
+  missing_df <- set_column_order(missing_df, ordered_columns)
   
   # Build all three plots with unified config
   p1 <- bar_panel(entropy_df,

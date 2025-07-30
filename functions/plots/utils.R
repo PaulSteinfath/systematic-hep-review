@@ -85,3 +85,12 @@ calculate_cumulative_counts <- function(df,
   
   return(counts) 
 }
+
+
+set_column_order <- function(df, column_order) {
+  df$Column <- factor(df$Column, 
+                      levels = column_order) 
+  levels(df$Column) <- make_readable(levels(df$Column))
+  
+  df
+}

@@ -107,9 +107,10 @@ time windows, or statistical approaches).</li>
 </div>
 <div id="data-analysis" class="section level3">
 <h3>2.3. Data analysis</h3>
-<p>Analysis parameters (TODO: extract to config):</p>
+<p>Analysis parameters:</p>
 <ul>
-<li>Threshold for binning variables in entropy calculations: TODO</li>
+<li>Entropy - binning continuous variables if at least
+<strong>10</strong> unique values are present</li>
 <li>Power computation - power threshold: TODO</li>
 <li>Power computation - significance level: TODO</li>
 <li>Number of permutations for testing peak differences: TODO</li>
@@ -139,22 +140,25 @@ time windows, or statistical approaches).</li>
 <div id="overview-of-methodological-choices" class="section level3">
 <h3>3.2. Overview of methodological choices</h3>
 <p>Total pipelines: <strong>410</strong></p>
-<p>Studies using multiple statistical tests: <strong>56.1%</strong>
-(74/132)</p>
-<p>Studies varying HER window start or end times: <strong>44.7%</strong>
-(59/132)</p>
-</div>
-<div id="missing-information" class="section level3">
-<h3>Missing Information</h3>
-<p>Studies missing cardiac IC rejection information (among those using
-CFA removal): <strong>71.4%</strong> (50/70)</p>
-<p>Studies with unknown ECG ground location: <strong>79.5%</strong>
-(105/132)</p>
-<p>Studies missing ECG electrode locations: <strong>28%</strong>
-(37/132)</p>
+<p>Studies using multiple choices for:</p>
+<ul>
+<li><p>Statistical tests: <strong>56%</strong> (<strong>74</strong> /
+<strong>132</strong>)</p></li>
+<li><p>HER window start or end times: <strong>45%</strong>
+(<strong>59</strong> / <strong>132</strong>)</p></li>
+</ul>
+<p>Missing information:</p>
+<ul>
+<li><p>cardiac IC rejection information (among those using CFA removal):
+<strong>71%</strong> (<strong>49</strong> /
+<strong>69</strong>)</p></li>
+<li><p>unknown ECG ground location: <strong>80%</strong>
+(<strong>105</strong> / <strong>132</strong>)</p></li>
+<li><p>ECG electrode locations: <strong>28%</strong>
+(<strong>37</strong> / <strong>132</strong>)</p></li>
+</ul>
 <table>
-<caption>Variables with &gt;40% missing values across
-pipelines</caption>
+<caption>Variables with &gt;40% missing values across studies</caption>
 <thead>
 <tr class="header">
 <th align="left">Variable</th>
@@ -164,31 +168,27 @@ pipelines</caption>
 <tbody>
 <tr class="odd">
 <td align="left">ecg_ground</td>
-<td align="right">79.5</td>
-</tr>
-<tr class="even">
-<td align="left">length_min</td>
-<td align="right">59.1</td>
-</tr>
-<tr class="odd">
-<td align="left">trials_original</td>
-<td align="right">55.3</td>
+<td align="right">80</td>
 </tr>
 <tr class="even">
 <td align="left">rejected_cardiac_ics</td>
-<td align="right">71.0</td>
+<td align="right">71</td>
 </tr>
 <tr class="odd">
-<td align="left">other_cfa_removal_strategy</td>
-<td align="right">52.3</td>
+<td align="left">length_min</td>
+<td align="right">59</td>
 </tr>
 <tr class="even">
-<td align="left">baseline_start_ms</td>
-<td align="right">43.9</td>
+<td align="left">trials_original</td>
+<td align="right">55</td>
 </tr>
 <tr class="odd">
 <td align="left">baseline_end_ms</td>
-<td align="right">44.7</td>
+<td align="right">45</td>
+</tr>
+<tr class="even">
+<td align="left">baseline_start_ms</td>
+<td align="right">44</td>
 </tr>
 </tbody>
 </table>

@@ -85,3 +85,22 @@ calculate_cumulative_counts <- function(df,
   
   return(counts) 
 }
+
+
+prepare_column_plot_data <- function(df, 
+                                     column_order, 
+                                     pipeline_steps, 
+                                     pipeline_colors) {
+  if (!("Step" %in% names(df))) {
+    df$Step <- sapply(df$Column, function(var_name) {
+      get_pipeline_step(var_name)
+    })
+  }
+  df$Step <- factor(df$Step, levels = names(pipeline_colors))
+  
+  df$Column <- factor(df$Column, 
+                      levels = column_order) 
+  levels(df$Column) <- make_readable(levels(df$Column))
+  
+  df
+}

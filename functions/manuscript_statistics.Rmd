@@ -40,6 +40,7 @@ source(file.path(func_path, "plots", "plotting_helpers.R"))
 source(file.path(func_path, "plots", "plot_missing.R"))
 source(file.path(func_path, "plots", "plot_hedges_g.R"))
 source(file.path(func_path, "analysis", "perm_peak_stats.R"))
+source(file.path(func_path, "analysis", "screening.R"))
 source(file.path(func_path, "plots", "preprocess_controls.R"))
 
 # Helper function to determine if percentages should refer to studies or pipelines
@@ -59,50 +60,38 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
 # Create study-level and pipeline-level datasets for efficiency
 df_studies <- df_included %>% distinct(PMID, .keep_all = TRUE)
 df_pipelines <- df_included
+```
 
-# EEG-only datasets
-eeg_studies <- df_studies %>% filter(modality == "EEG")
-eeg_pipelines <- df_pipelines %>% filter(modality == "EEG")
-
-meg_studies <- df_studies %>% filter(modality == "MEG")
-meg_pipelines <- df_pipelines %>% filter(modality == "MEG")
+```{r helper-functions}
+get_row <- function(df, column, value) {
+  as.list(df[df[[column]] == value,])
+}
 ```
 
 ## Overview
 
-This document provides all values mentioned in the manuscript "Heartbeat-evoked responses in MEG/EEG: A systematic review of methods and suggestions for analysis and reporting". All sections of this document apart from this overview match the corresponding section of the manuscript. Numbers highlighted in **bold** are also present in the manuscript.
+This document provides all values mentioned in the manuscript "Heartbeat-evoked responses in MEG/EEG: A systematic review of methods with suggestions for analysis and reporting". All sections of this document apart from this overview match the corresponding section of the manuscript. Numbers highlighted in **bold** are also present in the manuscript.
 
 ### Important Distinction: Studies vs Pipelines
 
 - **Studies**: Unique publications (identified by PMID). Each study represents one research paper.
 - **Pipelines**: Individual analysis approaches within studies. Some studies report multiple analysis pipelines (e.g. different time windows, or statistical approaches).
 
-## Methods
+## 2. Methods
 
-## Literature search
+### 2.1. Literature search
 
 ```{r data-export}
-# Load the search data files
-exports_path <- file.path(data_path, 'exports')
-
-df_query1 <- read.csv(file.path(exports_path, '20240115_pubmed_query1.csv'))
-df_query2 <- read.csv(file.path(exports_path, '20240724_pubmed_query2.csv'))
-df_query2_rerun <- read.csv(file.path(exports_path, '20240805_pubmed_query2.csv'))
-df_query3 <- read.csv(file.path(exports_path, '20240805_pubmed_query3.csv'))
-
-df_merged <- df_query1 %>%
-  bind_rows(df_query2) %>%
-  bind_rows(df_query2_rerun) %>%
-  bind_rows(df_query3) %>%
-  distinct(PMID)
+# Get the number of papers in Pubmed export
+export_stats <- get_export_stats(file.path(data_path, 'exports'))
 ```
 
 Table 1 - number of retrieved papers:
 
-* 15.01.2024: **`r nrow(df_query1)`**
-* 24.07.2024: **`r nrow(df_query2)`** (rerun: **`r nrow(df_query2_rerun)`**)
-* 05.08.2024: **`r nrow(df_query3)`**
-* After removing duplicates: **`r nrow(df_merged)`**
+* 15.01.2024: **`r export_stats$num_query1`**
+* 24.07.2024: **`r export_stats$num_query2`** (rerun: **`r export_stats$num_query2_rerun`**)
+* 05.08.2024: **`r export_stats$num_query3`**
+* After removing duplicates: **`r export_stats$num_merged`**
 
 ```{r literature-search, results='asis'}
 screening_pubmed <- df_screening[df_screening$source == "pubmed",]
@@ -126,77 +115,51 @@ Manually added:
 
 Final sample: **`r total_included_pubmed + total_included_manual`** studies
 
-## Results
+### 2.3. Data analysis
 
-### Overview of the included studies
+Analysis parameters (TODO: extract to config):
+
+* Threshold for binning variables in entropy calculations: TODO
+* Power computation - power threshold: TODO
+* Power computation - significance level: TODO
+* Number of permutations for testing peak differences: TODO
+
+## 3. Results
+
+### 3.1. Overview of the included studies
 
 ```{r literature-overview}
 # Basic counts
-total_pipelines <- nrow(df_pipelines)
 total_studies <- nrow(df_studies)
 
 # Year range (based on unique studies)
 year_range <- df_studies %>% 
-  summarise(min_year = min(Year, na.rm = TRUE), max_year = max(Year, na.rm = TRUE))
+  summarise(min_year = min(Year, na.rm = TRUE), 
+            max_year = max(Year, na.rm = TRUE))
 
 # Modality breakdown (unique studies)
 modality_counts <- df_studies %>%
   count(modality) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
-modality_eeg <- as.list(modality_counts[modality_counts$modality == "EEG",])
-modality_meg <- as.list(modality_counts[modality_counts$modality == "MEG",])
+modality_eeg <- get_row(modality_counts, "modality", "EEG")
+modality_meg <- get_row(modality_counts, "modality", "MEG")
 
 # Task vs resting state - studies that have both vs only one type
-study_types <- df_pipelines %>%
-  filter(!is.na(rsHEP)) %>%
-  group_by(PMID) %>%
-  summarise(
-    has_resting = any(rsHEP == 1),
-    has_task = any(rsHEP == 0),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    category = case_when(
-      has_resting & has_task ~ "Both",
-      has_resting & !has_task ~ "Rest", 
-      !has_resting & has_task ~ "Task",
-      TRUE ~ "Other"
-    )
-  ) %>%
-  count(category) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1))
-assert("All studies perform either task-based or resting-state analysis",
-       nrow(study_types[study_types$category == "Other",]) == 0)
-
-study_type_task <- as.list(study_types[study_types$category == "Task",])
-study_type_rest <- as.list(study_types[study_types$category == "Rest",])
-study_type_both <- as.list(study_types[study_types$category == "Both",])
-```
-
-```{r overview-stats}
-# Calculate final sample stats
-final_sample_stats <- df_studies %>%
-  summarise(
-    total_studies = n(),
-    year_min = min(Year, na.rm = TRUE),
-    year_max = max(Year, na.rm = TRUE)
-  )
-
-# Modality breakdown
-modality_breakdown <- df_studies %>%
-  count(modality) %>%
+study_types <- df_studies %>%
+  count(study_category) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
 
-eeg_stats <- modality_breakdown %>% filter(modality == "EEG")
-meg_stats <- modality_breakdown %>% filter(modality == "MEG")
+study_type_task <- get_row(study_types, "study_category", "Task")
+study_type_rest <- get_row(study_types, "study_category", "Rest")
+study_type_both <- get_row(study_types, "study_category", "Both")
 ```
 
-Total studies: **`r final_sample_stats$total_studies`** (**`r final_sample_stats$year_min`**-**`r final_sample_stats$year_max`**)
+Total studies: **`r total_studies`** (**`r year_range$min_year`**-**`r year_range$max_year`**)
 
 Modality:
 
-* EEG: **`r eeg_stats$n`** studies (**`r eeg_stats$percentage`%**)
-* MEG: **`r meg_stats$n`** studies (**`r meg_stats$percentage`%**)
+* EEG: **`r modality_eeg$n`** studies (**`r modality_eeg$percentage`%**)
+* MEG: **`r modality_meg$n`** studies (**`r modality_meg$percentage`%**)
 
 Study type distribution:
 
@@ -204,9 +167,11 @@ Study type distribution:
 * Resting-state: **`r study_type_rest$n`** studies (**`r study_type_rest$percentage`%**)
 * Both: **`r study_type_both$n`** studies (**`r study_type_both$percentage`%**)
  
-### Overview of methodological choices & methodological variability
+### 3.2. Overview of methodological choices
 
 ```{r variations}
+total_pipelines <- nrow(df_pipelines)
+
 # Get target columns from pipeline steps
 target_columns <- unlist(pipeline_steps, use.names = FALSE)
 
@@ -264,6 +229,8 @@ ecg_locations_missing_pct <- results_df_missing %>%
   pull(Percent)
 ```
 
+Total pipelines: **`r total_pipelines`** 
+
 Studies using multiple statistical tests: **`r prcent_multi$percent[prcent_multi$Column == "statistics"]`%** (`r prcent_multi$n[prcent_multi$Column == "statistics"]`/`r total_studies`)
 
 Studies varying HER window start or end times: **`r pct_varies_either`%** (`r pct_varies_n`/`r final_sample_stats$total_studies`)
@@ -309,7 +276,8 @@ major_categories <- tolower(c(
 ))
 
 # Process reference categories
-df_ref <- eeg_pipelines %>%
+df_ref <- df_pipelines %>% 
+  filter(modality == "EEG") %>%
   mutate(across(
     .cols = c(reference_online, reference_offline),
     .fns = ~ case_when(

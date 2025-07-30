@@ -9,6 +9,9 @@ figure_overview_studies <- function(df, save_path, ext = "svg") {
   
   p_condition <- hist_panel(df, "study_category", 
                             discrete = T,
+                            custom_labels = c("Task" = "Task only", 
+                                              "Rest" = "Resting-state\nonly",
+                                              "Both" = "Task &\nresting-state"),
                             title = "Experimental setting")
   
   fig <- plot_grid(p_year, p_modality, p_condition,

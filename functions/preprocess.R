@@ -121,7 +121,7 @@ preprocess_screening <- function(df_screening) {
 
 
 preprocess_studies <- function(df) {
-  study_category <- df %>%
+  df_category <- df %>%
     group_by(PMID) %>%
     summarise(
       has_resting = any(rsHEP == 1),
@@ -130,13 +130,19 @@ preprocess_studies <- function(df) {
     ) %>%
     mutate(
       study_category = case_when(
-        has_resting & has_task ~ "Task &\nresting-state",
-        has_resting & !has_task ~ "Resting-state\nonly", 
-        !has_resting & has_task ~ "Task only"
+        has_resting & has_task ~ "Both",
+        has_resting & !has_task ~ "Rest", 
+        !has_resting & has_task ~ "Task",
+        TRUE ~ "Other"
       )
     )
+  assert("All studies perform either task-based or resting-state analysis",
+         nrow(df_category[df_category$study_category == "Other",]) == 0)
   
-  df <- merge(df, study_category, by = "PMID", sort = F)
+  df_category$study_category <- factor(df_category$study_category,
+                                       levels = c("Task", "Rest", "Both"))
+  
+  df <- merge(df, df_category, by = "PMID", sort = F)
   df
 }
 
@@ -313,11 +319,11 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
     df_included <- adjust_data_type(df_included, convert_to_numeric, convert_to_factors)
   }
   
-  df_included <- df_included %>%
-    preprocess_studies() %>%
-    preprocess_ecg() %>%
-    preprocess_channels() %>%
-    preprocess_hep_significant()
+  # NOTE: apply steps one by one to get adequate messages in case of errors
+  df_included <- preprocess_studies(df_included)
+  df_included <- preprocess_ecg(df_included)
+  df_included <- preprocess_channels(df_included)
+  df_included <- preprocess_hep_significant(df_included)
   
   # transform included IC data
   df_included$rejected_cardiac_ics <- sapply(df_included$rejected_cardiac_ics, clean_cardiac_ics)

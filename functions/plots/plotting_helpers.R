@@ -124,37 +124,6 @@ create_year_group_columns <- function(df, years) {
   return(as.data.frame(new_columns, stringsAsFactors = FALSE))
 }
 
-# Add pipeline step categorization - correctly categorizing all variables
-pipeline_steps <- list(
-  "Acquisition" = c(
-    "meeg_num_electrodes", "ecg_num_electrodes", "ecg_lead", "ecg_locations", 
-    "ecg_ground", "reference_online", "modality"
-  ),
-  "Experiment" = c(
-    "groups", "conditions", "length_min", "rsHEP", "sample_size", "trials_original"
-  ),
-  "Preprocessing" = c(
-    "reference_offline", "high_pass", "low_pass", "ICA", 
-    "ica_on_epochs", "rejected_components", "rejected_cardiac_ics",
-    "cfa_rej_approach", "cfa_rej_criteria", "other_cleaning_strategy", "other_cfa_removal_strategy"
-  ),
-  "HER Estimation" = c(
-    "hep_relative_to", "hep_start", "hep_end",
-    "baseline_start_ms", "baseline_end_ms", "value", "hep_channels_selected",
-    "averaging_channels", "averaging_time", "hep_window_type"
-  ),
-  "Statistics" = c(
-    "clustering", "statistics", "permutations", "hypothesis"
-  )
-)
-pipeline_colors <- c(
-  "Experiment"     = "#2E2E2E",
-  "Acquisition"    = "#5A5A5A",
-  "Preprocessing"  = "#808080",
-  "HER Estimation" = "#A8A8A8",
-  "Statistics"     = "#D0D0D0" 
-)
-
 # Enhanced function to ensure we always get a valid pipeline step
 get_pipeline_step <- function(var) {
   # Return "Other" for any invalid inputs

@@ -172,7 +172,11 @@ plot_missing <- function(df,
 
   if (!is.null(pipeline_colors)) {
     p <- p + geom_bar(aes(fill = Step), stat = "identity", color = "white", linewidth = 0.5) +
-      scale_fill_manual(values = pipeline_colors, guide = if (show_legend) "legend" else "none") +
+      scale_fill_manual(
+        name = "Category",
+        values = pipeline_colors,
+        guide = if (show_legend) "legend" else "none"
+      ) +
       theme(legend.position = "right", legend.justification = "center", legend.margin = margin(0, -1, 0, 0))
   } else {
     p <- p + geom_bar(stat = "identity", fill = plot_fill, color = "white", linewidth = 0.5)

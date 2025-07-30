@@ -135,8 +135,8 @@ create_combined_plot <- function(
     labs(title = "Filter Cutoffs", subtitle = paste("n =", nrow(df), "studies")) + 
     plot_theme_default +
     theme(
-      plot.title = element_text(hjust = 0.2, margin = margin(b = 4)),
-      plot.subtitle = element_text(hjust = 0.2)
+      plot.title = element_text(hjust = 0.175, margin = margin(b = 4)),
+      plot.subtitle = element_text(hjust = 0.175)
     )
 
   return(combined_plot)

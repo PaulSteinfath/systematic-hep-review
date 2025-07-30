@@ -100,6 +100,7 @@ compute_entropy <- function(data, method_columns,
     
     # If no values remain, set result as NA.
     if (length(x) == 0) {
+      warning("No values remain after preprocessing for ", col)
       result[[col]] <- NA
       next
     }

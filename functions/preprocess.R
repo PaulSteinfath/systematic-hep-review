@@ -130,7 +130,7 @@ preprocess_studies <- function(df) {
     ) %>%
     mutate(
       study_category = case_when(
-        has_resting & has_task ~ "Task &\n Resting-state",
+        has_resting & has_task ~ "Task &\nresting-state",
         has_resting & !has_task ~ "Resting-state\nonly", 
         !has_resting & has_task ~ "Task only"
       )

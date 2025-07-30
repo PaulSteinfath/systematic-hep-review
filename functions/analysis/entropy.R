@@ -65,7 +65,7 @@ compute_entropy <- function(data, method_columns,
                             norm = TRUE, 
                             drop_paper_duplicates = TRUE) {
   result <- list()
-  pmid <- data[["PMID"]]
+  pmid <- data$PMID
   
   for (col in method_columns) {
     x <- data[[col]]

@@ -25,21 +25,18 @@ figure_overview_pipelines <- function(df, save_path, ext = 'svg') {
   
   # Final fixed order to reuse
   ordered_columns <- levels(entropy_df$Column)
-  entropy_df <- set_column_order(entropy_df, ordered_columns)
+  entropy_df <- prepare_column_plot_data(entropy_df, ordered_columns,
+                                         pipeline_steps, pipeline_colors)
   
   # Multiple choices
   multiple_df <- multiple_choices(df, target_columns)
-  multiple_df$Step <- sapply(multiple_df$Column, function(var_name) {
-    get_pipeline_step(var_name)
-  })
-  multiple_df <- set_column_order(multiple_df, ordered_columns)
+  multiple_df <- prepare_column_plot_data(multiple_df, ordered_columns,
+                                          pipeline_steps, pipeline_colors)
   
   # Missing information
   missing_df <- missing_information(df, target_columns)
-  missing_df$Step <- sapply(missing_df$Column, function(var_name) {
-    get_pipeline_step(var_name)
-  })
-  missing_df <- set_column_order(missing_df, ordered_columns)
+  missing_df <- prepare_column_plot_data(missing_df, ordered_columns,
+                                         pipeline_steps, pipeline_colors)
   
   # Build all three plots with unified config
   p1 <- bar_panel(entropy_df,
@@ -67,20 +64,8 @@ figure_overview_pipelines <- function(df, save_path, ext = 'svg') {
                   title = "Missing Information",
                   x_lab = "",
                   y_lab = "Proportion of Studies",
-                  y_ticks = F)
-
-  p3 <- plot_missing(df,
-                     columns = ordered_columns,
-                     column_mapping_readable = column_mapping_readable_default,
-                     pipeline_steps = pipeline_steps,
-                     pipeline_colors = pipeline_colors,
-                     fixed = TRUE,
-                     flip = TRUE,
-                     y_ticks = FALSE,
-                     show_title = TRUE,
-                     show_wordy_title = TRUE,
-                     x_lab = "", 
-                     show_legend = TRUE)
+                  y_ticks = F,
+                  show_legend = T)
   
   # Combine plots
   fig <- plot_grid(p1, NULL, p2, NULL, p3,

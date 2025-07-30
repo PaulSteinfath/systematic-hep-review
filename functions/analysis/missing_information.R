@@ -121,4 +121,6 @@ missing_information <- function(df, columns) {
       results_df$Metric[results_df$Column == col] <- 0
     }
   }
+  
+  results_df
 }

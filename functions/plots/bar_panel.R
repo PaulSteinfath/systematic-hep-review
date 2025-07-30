@@ -20,8 +20,11 @@ bar_panel <- function(df,
   if (!is.null(pipeline_colors)) {
     p <- p + 
       geom_bar(aes(fill = Step), stat = "identity", color = "white", linewidth = 0.5) +
-      scale_fill_manual(values = pipeline_colors, 
-                        guide = if (show_legend) "legend" else "none")
+      scale_fill_manual(
+        name = "Category",
+        values = pipeline_colors, 
+        guide = if (show_legend) "legend" else "none"
+      )
   } else {
     p <- p + 
       geom_bar(stat = "identity", fill = plot_fill, color = "white", linewidth = 0.5)

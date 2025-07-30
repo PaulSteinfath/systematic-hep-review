@@ -59,7 +59,7 @@ column_mapping <- c(
 columns_to_drop <- c("Other.notes..unclassified.", "Motivation", "DOI", "Link", "Analyst", "Include", "Comment", "Citation", "ECG.Description", "Multiple.Comparisons")
 convert_to_numeric <- c("Year", "sample_size", "meeg_num_electrodes", "length_min", "high_pass", "low_pass", "groups", "conditions", "hep_start", "hep_end", 
                         "baseline_start_ms", "baseline_end_ms", "permutations", "significant_start_ms", "significant_end_ms")
-convert_to_factors <- c("rsHEP", "Modality", "ICA", "ica_on_epochs", "hep_relative_to", "averaging_channels", "averaging_time", "clustering", "significant_test", 
+convert_to_factors <- c("rsHEP", "modality", "ICA", "ica_on_epochs", "hep_relative_to", "averaging_channels", "averaging_time", "clustering", "significant_test", 
                         "significant_relative_to")
 
 load_data <- function(pubmed.path, manual.path) {
@@ -120,6 +120,26 @@ preprocess_screening <- function(df_screening) {
 }
 
 
+preprocess_studies <- function(df) {
+  study_category <- df %>%
+    group_by(PMID) %>%
+    summarise(
+      has_resting = any(rsHEP == 1),
+      has_task = any(rsHEP == 0),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      study_category = case_when(
+        has_resting & has_task ~ "Task &\nresting-state",
+        has_resting & !has_task ~ "Resting-state\nonly", 
+        !has_resting & has_task ~ "Task only"
+      )
+    )
+  
+  df <- merge(df, study_category, by = "PMID", sort = F)
+  df
+}
+
 preprocess_ecg <- function(df) {
   df %>%
     mutate(ecg_lead = recode(ecg_lead,
@@ -129,6 +149,27 @@ preprocess_ecg <- function(df) {
                              "Unclassified" = "N/C",
                              "unknown" = "N/M"))
 }
+
+
+preprocess_hep_significant <- function(df) {
+  df$hep_approach <- factor(case_when(
+    (df$averaging_time == 1) & (df$clustering == 0) ~ "Averaging", 
+    (df$clustering == 1) & (df$averaging_time == 0) ~ "Clustering"
+  ))
+  
+  # Fill in significant channels and time points for pipelines with averaging
+  # TODO: move the time window logic here, for now handling channels only
+  df %>%
+    mutate(
+      significant_channels = if_else(
+        df$hep_approach == "Averaging" & df$significant_test == 1, 
+        df$hep_channels_selected,
+        df$significant_channels,
+        missing = df$significant_channels
+      )
+    )
+}
+
 
 # Clean cardiac IC rejection data
 clean_cardiac_ics <- function(x) {
@@ -273,8 +314,10 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   }
   
   df_included <- df_included %>%
+    preprocess_studies() %>%
     preprocess_ecg() %>%
-    preprocess_channels()
+    preprocess_channels() %>%
+    preprocess_hep_significant()
   
   # transform included IC data
   df_included$rejected_cardiac_ics <- sapply(df_included$rejected_cardiac_ics, clean_cardiac_ics)

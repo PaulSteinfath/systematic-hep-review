@@ -62,7 +62,7 @@ column_mapping_readable_default <- c(
   "Other Cleaning Strategy" = "other_cleaning_strategy",
   "Number of Groups" = "groups",
   "Number of Conditions" = "conditions",
-  "HER Relative To" = "hep_relative_to",
+  "HER Relative To R/T-Peak" = "hep_relative_to",
   "Baseline Start (ms)" = "baseline_start_ms",
   "Baseline End (ms)" = "baseline_end_ms",
   "HER Value" = "value",

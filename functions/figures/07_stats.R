@@ -12,12 +12,13 @@ figure_stats <- function(df, save_path, ext = 'png') {
   d <- hist_panel(df = df, col = "conditions", title = "Conditions", x.label = "Number of Conditions", binwidth = 1, use_proportion = T)  
   e <- hist_panel(df = df, col = "trials_Mean", title = "Averaged Epochs", force.numeric = T, x.label = "Number of Averaged Epochs", use_proportion = T)
   
-  f <- hist_panel(df = df, 
+f <- hist_panel(df = df, 
                   col = "statistics", 
                   title = "Statistical Tests",
                   x.label = "", 
                   discrete = T, 
                   tilt_labels = F,
+                  decreasing = F,
                   allowed = c("t-test" = "t-test",
                               "Correlation" = "Correlation",
                               "Regression" = "Regression", 

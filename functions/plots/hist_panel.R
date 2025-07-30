@@ -4,7 +4,7 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
                        fill_as_aesthetic = F,
                        modality_filter = NULL, binwidth = NULL, bins = NULL, tilt_labels = F,
                        use_proportion = TRUE, y_limits = NULL, custom_labels = NULL,
-                       preserve_order = FALSE) { 
+                       preserve_order = FALSE, decreasing = TRUE) { 
   
   # Filter for EEG modality if specified
   if (!is.null(modality_filter)) {
@@ -48,7 +48,7 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
       count(!!sym(col)) %>%
       arrange(desc(n)) %>%  # Sort by frequency
       mutate(prop = n / sum(n))  # Calculate proportions
-    
+
     # Apply custom labels if provided
     if (!is.null(custom_labels)) {
       counts_df[[col]] <- factor(counts_df[[col]], 
@@ -62,7 +62,7 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
                                  y = if(use_proportion) prop else n))
     } else {
       # Default - reorder by frequency
-      p <- ggplot(counts_df, aes(x = reorder(!!sym(col), n, decreasing = TRUE), 
+      p <- ggplot(counts_df, aes(x = reorder(!!sym(col), n, decreasing = decreasing), 
                                  y = if(use_proportion) prop else n))
     }
     

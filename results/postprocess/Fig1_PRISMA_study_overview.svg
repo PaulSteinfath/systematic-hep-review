@@ -270,13 +270,13 @@
      inkscape:document-units="pt"
      showgrid="false"
      showguides="false"
-     inkscape:zoom="0.84382978"
-     inkscape:cx="735.93042"
-     inkscape:cy="676.67676"
-     inkscape:window-width="1920"
-     inkscape:window-height="1029"
+     inkscape:zoom="0.29833888"
+     inkscape:cx="925.12246"
+     inkscape:cy="583.22938"
+     inkscape:window-width="1366"
+     inkscape:window-height="713"
      inkscape:window-x="0"
-     inkscape:window-y="27"
+     inkscape:window-y="31"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg1514" />
   <polygon
@@ -1511,7 +1511,7 @@
        style="font-size:8px;font-family:Arial;white-space:pre;fill:#4d4d4d"
        textLength="51.400002"
        lengthAdjust="spacingAndGlyphs"
-       id="text5877"> Resting-state</text>
+       id="text5877"> resting-state</text>
     <text
        transform="rotate(-90,301.16,-190.75)"
        text-anchor="middle"
@@ -1548,5 +1548,8 @@
      textLength="9.4099998"
      lengthAdjust="spacingAndGlyphs"
      id="text5747-5-3"
-     transform="matrix(1.6312495,0,0,1.6312495,-0.15126026,-4.6212014)">A</text>
+     transform="matrix(1.6312495,0,0,1.6312495,-0.15126026,-4.6212014)"
+     inkscape:export-filename="Fig1_PRISMA_study_overview.png"
+     inkscape:export-xdpi="300"
+     inkscape:export-ydpi="300">A</text>
 </svg>

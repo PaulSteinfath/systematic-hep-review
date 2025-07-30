@@ -149,35 +149,17 @@ study_types <- df_studies %>%
   count(study_category) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
 
-study_type_task <- as.list(study_types[study_types$category == "Task",])
-study_type_rest <- as.list(study_types[study_types$category == "Rest",])
-study_type_both <- as.list(study_types[study_types$category == "Both",])
-```
-
-```{r overview-stats}
-# Calculate final sample stats
-final_sample_stats <- df_studies %>%
-  summarise(
-    total_studies = n(),
-    year_min = min(Year, na.rm = TRUE),
-    year_max = max(Year, na.rm = TRUE)
-  )
-
-# Modality breakdown
-modality_breakdown <- df_studies %>%
-  count(modality) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1))
-
-eeg_stats <- modality_breakdown %>% filter(modality == "EEG")
-meg_stats <- modality_breakdown %>% filter(modality == "MEG")
+study_type_task <- get_row(study_types, "study_category", "Task")
+study_type_rest <- get_row(study_types, "study_category", "Rest")
+study_type_both <- get_row(study_types, "study_category", "Both")
 ```
 
 Total studies: **`r total_studies`** (**`r year_range$min_year`**-**`r year_range$max_year`**)
 
 Modality:
 
-* EEG: **`r eeg_stats$n`** studies (**`r eeg_stats$percentage`%**)
-* MEG: **`r meg_stats$n`** studies (**`r meg_stats$percentage`%**)
+* EEG: **`r modality_eeg$n`** studies (**`r modality_eeg$percentage`%**)
+* MEG: **`r modality_meg$n`** studies (**`r modality_meg$percentage`%**)
 
 Study type distribution:
 
@@ -188,6 +170,8 @@ Study type distribution:
 ### Overview of methodological choices & methodological variability
 
 ```{r variations}
+total_pipelines <- nrow(df_pipelines)
+
 # Get target columns from pipeline steps
 target_columns <- unlist(pipeline_steps, use.names = FALSE)
 
@@ -244,6 +228,8 @@ ecg_locations_missing_pct <- results_df_missing %>%
   mutate(Percent = round(Metric * 100, 1)) %>%
   pull(Percent)
 ```
+
+Total pipelines: **`r total_pipelines`** 
 
 Studies using multiple statistical tests: **`r prcent_multi$percent[prcent_multi$Column == "statistics"]`%** (`r prcent_multi$n[prcent_multi$Column == "statistics"]`/`r total_studies`)
 

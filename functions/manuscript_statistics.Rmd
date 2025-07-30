@@ -77,9 +77,9 @@ This document provides all values mentioned in the manuscript "Heartbeat-evoked 
 - **Studies**: Unique publications (identified by PMID). Each study represents one research paper.
 - **Pipelines**: Individual analysis approaches within studies. Some studies report multiple analysis pipelines (e.g. different time windows, or statistical approaches).
 
-## Methods
+## 2. Methods
 
-### Literature search
+### 2.1. Literature search
 
 ```{r data-export}
 # Get the number of papers in Pubmed export
@@ -115,7 +115,7 @@ Manually added:
 
 Final sample: **`r total_included_pubmed + total_included_manual`** studies
 
-### Data analysis
+### 2.3. Data analysis
 
 Analysis parameters (TODO: extract to config):
 
@@ -124,9 +124,9 @@ Analysis parameters (TODO: extract to config):
 * Power computation - significance level: TODO
 * Number of permutations for testing peak differences: TODO
 
-## Results
+## 3. Results
 
-### Overview of the included studies
+### 3.1. Overview of the included studies
 
 ```{r literature-overview}
 # Basic counts
@@ -167,7 +167,7 @@ Study type distribution:
 * Resting-state: **`r study_type_rest$n`** studies (**`r study_type_rest$percentage`%**)
 * Both: **`r study_type_both$n`** studies (**`r study_type_both$percentage`%**)
  
-### Overview of methodological choices & methodological variability
+### 3.2. Overview of methodological choices
 
 ```{r variations}
 total_pipelines <- nrow(df_pipelines)

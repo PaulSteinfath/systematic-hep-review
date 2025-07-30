@@ -57,6 +57,7 @@ plot_ecg_controls <- function(df, tilt_labels = FALSE) {
     title           = "ECG and Heartbeat-Related Controls",
     fill_as_aesthetic = FALSE,       
     tilt_labels       = tilt_labels,
+    decreasing        = FALSE,
     allowed           = c("ECG" = "ECG",
                          "HEP-ECG Correlation" = "HEP-ECG\nCorrelation",
                          "Surrogate Heartbeats" = "Surrogate\nHeartbeats",

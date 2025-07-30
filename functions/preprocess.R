@@ -120,6 +120,26 @@ preprocess_screening <- function(df_screening) {
 }
 
 
+preprocess_studies <- function(df) {
+  study_category <- df %>%
+    group_by(PMID) %>%
+    summarise(
+      has_resting = any(rsHEP == 1),
+      has_task = any(rsHEP == 0),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      study_category = case_when(
+        has_resting & has_task ~ "Task &\nresting-state",
+        has_resting & !has_task ~ "Resting-state\nonly", 
+        !has_resting & has_task ~ "Task only"
+      )
+    )
+  
+  df <- merge(df, study_category, by = "PMID", sort = F)
+  df
+}
+
 preprocess_ecg <- function(df) {
   df %>%
     mutate(ecg_lead = recode(ecg_lead,
@@ -294,6 +314,7 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   }
   
   df_included <- df_included %>%
+    preprocess_studies() %>%
     preprocess_ecg() %>%
     preprocess_channels() %>%
     preprocess_hep_significant()

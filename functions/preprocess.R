@@ -62,6 +62,31 @@ convert_to_numeric <- c("Year", "sample_size", "meeg_num_electrodes", "length_mi
 convert_to_factors <- c("rsHEP", "modality", "ICA", "ica_on_epochs", "hep_relative_to", "averaging_channels", "averaging_time", "clustering", "significant_test", 
                         "significant_relative_to")
 
+ref_mapping <- c(
+  "Common average" = "CAR",
+  "Linked mastoids" = "LM",
+  "Linked earlobes" = "LE",
+  "Cz" = "Cz",
+  "FCz" = "FCz",
+  "Fpz" = "Fpz",
+  "CMS" = "CMS",
+  "Nose" = "Nose",
+  "Laplacian reference" = "LAP",
+  "REST" = "REST",
+  "Other" = "Other",
+  "na" = "N/A",
+  "unknown" = "N/M"
+)
+online_ref_categories <- c(
+  "Common average", "Linked mastoids", "Cz", "FCz",
+  "Fpz", "CMS", "Nose", "Linked earlobes", "Other", "unknown"
+)
+offline_ref_categories <- c(
+  "Common average", "Linked mastoids", "Linked earlobes",
+  "Laplacian reference", "unknown", "Other"
+)
+
+
 load_data <- function(pubmed.path, manual.path) {
   # Load the data
   df_pubmed <- read.csv(pubmed.path, skip = 1)
@@ -144,6 +169,24 @@ preprocess_studies <- function(df) {
   
   df <- merge(df, df_category, by = "PMID", sort = F)
   df
+}
+
+preprocess_reference <- function(df) {
+  df %>%
+    mutate(
+      # online
+      reference_online = tolower(reference_online),
+      reference_online = case_when(
+        reference_online %in% tolower(online_ref_categories) ~ reference_online,
+        TRUE ~ "Other"
+      ),
+      # offline
+      reference_offline = tolower(reference_offline),
+      reference_offline = case_when(
+        reference_offline %in% tolower(offline_ref_categories) ~ reference_offline,
+        TRUE ~ "Other"
+      )
+    )
 }
 
 preprocess_ecg <- function(df) {
@@ -321,6 +364,7 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   
   # NOTE: apply steps one by one to get adequate messages in case of errors
   df_included <- preprocess_studies(df_included)
+  df_included <- preprocess_reference(df_included)
   df_included <- preprocess_ecg(df_included)
   df_included <- preprocess_channels(df_included)
   df_included <- preprocess_hep_significant(df_included)

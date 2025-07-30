@@ -1,4 +1,4 @@
-create_combined_plot <- function(
+plot_segments <- function(
   df,
   start_var,
   end_var,
@@ -63,7 +63,8 @@ create_combined_plot <- function(
   # Density calculation
   n_bins <- 160 #n_bins defines resolution of density plot
   frequency_range <- exp(seq(log(min(df[[start_var]], na.rm = TRUE)),
-                           log(max(df[[end_var]], na.rm = TRUE)), length.out = n_bins))
+                             log(max(df[[end_var]], na.rm = TRUE)), 
+                             length.out = n_bins))
   
   frequency_matrix <- matrix(0, nrow = nrow(df), ncol = length(frequency_range))
   for (i in 1:nrow(df)) {
@@ -127,7 +128,6 @@ create_combined_plot <- function(
     align = "v",
     axis = "lr",
     rel_heights = c(7.3, 1.2)
-    
   )
 
   # add title and subtitle  

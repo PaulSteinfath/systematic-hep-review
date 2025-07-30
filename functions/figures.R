@@ -2,11 +2,11 @@
 source(file.path(func_path, "plots", "plotting_helpers.R"))
 source(file.path(func_path, "plots", "utils.R"))
 source(file.path(func_path, "plots", "preprocess_controls.R"))
-source(file.path(func_path, "plots", "create_combined_plot.R"))
+source(file.path(func_path, "plots", "plot_segments.R"))
 source(file.path(func_path, "plots", "bar_panel.R"))
 source(file.path(func_path, "plots", "hist_panel.R"))
 source(file.path(func_path, "plots", "create_ica_usage_plot.R"))
-source(file.path(func_path, "plots", "create_ica_rej.R"))
+source(file.path(func_path, "plots", "plot_rejected_components.R"))
 source(file.path(func_path, "plots", "create_simple_ica_plot.R"))
 source(file.path(func_path, "plots", "summarize_cfa_criteria.R"))
 source(file.path(func_path, "plots", "rr_intervals_plot.R"))
@@ -54,21 +54,6 @@ create_epoch_simulation_plot <- function(df){
   
 }
 
-
-# Create filter cutoff plots
-create_filter_plots <- function(df) {
-  filter_plot <- create_combined_plot(
-    df = df,
-    start_var = "high_pass",
-    end_var = "low_pass",
-    x_scale = "log",
-    custom_breaks = c(0.01, 0.1, 0.5, 1, 20, 40, 80),
-    x_label = "Filter Cutoff (Hz)",
-    y_label = "Individual Studies",
-    show_legend = TRUE 
-  )
-  return(filter_plot)
-}
 
 # CFA Removal
 cfa_removal <- function(df) {

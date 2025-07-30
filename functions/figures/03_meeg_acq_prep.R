@@ -1,64 +1,39 @@
 figure_meeg_acq_prep <- function(df, save_path, ext = 'png') {
-  # Define major reference categories once
-  major_categories <- tolower(c(
-    "Cz", "Nose", "Linked earlobes", "Linked mastoids",
-    "FCz", "Common average", "Fpz", "CMS", "CMS and DRL",
-    "unknown", "Laplacian reference", "REST"
-  ))
-  
-  # Process reference categories
-  df_ref <- df %>%
-    mutate(across(
-      .cols = c(reference_online, reference_offline),
-      .fns = ~ case_when(
-        tolower(.) %in% major_categories ~ tolower(.),
-        TRUE ~ "Other"
-      )
-    ))
-  
-  # Common reference category mapping
-  ref_categories <- c(
-    "Common average" = "CAR",
-    "Linked mastoids" = "LM",
-    "Linked earlobes" = "LE",
-    "Cz" = "Cz",
-    "FCz" = "FCz",
-    "Fpz" = "Fpz",
-    "CMS" = "CMS",
-    "CMS and DRL" = "CMS",
-    "Nose" = "Nose",
-    "Laplacian reference" = "LAP",
-    "REST" = "REST",
-    "Other" = "Other",
-    "unknown" = "N/M"
-  )
-  
+
   # Create individual histogtams for online / offline references
-  ref_online <- hist_panel(df_ref, "reference_online",
+  ref_online <- hist_panel(df, "reference_online",
                            title = "Reference (online)",
                            discrete = TRUE, tilt_labels = F,
                            modality_filter = "EEG",
-                           allowed = ref_categories[c(
-                             "Common average", "Linked mastoids", "Cz", "FCz",
-                             "Fpz", "CMS and DRL", "CMS", "Nose",
-                             "Linked earlobes", "Other", "unknown"
-                           )]
+                           allowed = ref_mapping[online_ref_categories]
   )
   
-  ref_offline <- hist_panel(df_ref, "reference_offline",
+  ref_offline <- hist_panel(df, "reference_offline",
                             title = "Reference (offline)",
                             discrete = TRUE, tilt_labels = F,
                             modality_filter = "EEG",
-                            allowed = ref_categories[c(
-                              "Common average", "Linked mastoids", "Linked earlobes",
-                              "Laplacian reference", "unknown", "Other"
-                            )]
+                            allowed = ref_mapping[offline_ref_categories]
   )
   
   # Create plots for filtering cutoffs, ICA rejection, and ICA usage
-  filter_plot <- create_filter_plots(df)
-  ica_rej_plot <- create_ica_rej(df)
-  ica_simple_plot <- create_simple_ica_plot(df)
+  filter_plot <- plot_segments(
+    df = df,
+    start_var = "high_pass",
+    end_var = "low_pass",
+    x_scale = "log",
+    custom_breaks = c(0.01, 0.1, 0.5, 1, 20, 40, 80),
+    x_label = "Filter cutoff (Hz)",
+    y_label = "Individual studies",
+    show_legend = TRUE 
+  )
+  
+  ica_rej_plot <- plot_rejected_components(df)
+  ica_simple_plot <- hist_panel(df, "ICA", 
+                                x.label = "",
+                                title = "ICA usage",
+                                discrete = T,
+                                custom_labels = c("0" = "No ICA",
+                                                  "1" = "ICA"))
   
   plot_BC <- plot_grid( 
     ref_offline,

@@ -1,4 +1,4 @@
-create_ica_rej <- function(df) {
+plot_rejected_components <- function(df) {
   # Filter for ICA=1 and get distinct PMIDs with their rejected components
   df_ica <- df %>%
     filter(ICA == 1) %>%

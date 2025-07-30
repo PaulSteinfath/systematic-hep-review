@@ -5,15 +5,13 @@ figure_meeg_acq_prep <- function(df, save_path, ext = 'png') {
                            title = "Reference (online)",
                            discrete = TRUE, tilt_labels = F,
                            modality_filter = "EEG",
-                           allowed = ref_mapping[online_ref_categories]
-  )
+                           allowed = ref_mapping[online_ref_categories])
   
   ref_offline <- hist_panel(df, "reference_offline",
                             title = "Reference (offline)",
                             discrete = TRUE, tilt_labels = F,
                             modality_filter = "EEG",
-                            allowed = ref_mapping[offline_ref_categories]
-  )
+                            allowed = ref_mapping[offline_ref_categories])
   
   # Create plots for filtering cutoffs, ICA rejection, and ICA usage
   filter_plot <- plot_segments(

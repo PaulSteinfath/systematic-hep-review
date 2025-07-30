@@ -196,94 +196,35 @@ knitr::kable(missing_df_top,
              col.names = c("Variable", "Missing (%)"))
 ```
 
-## M/EEG Acquisition & Preprocessing
+### 3.3. M/EEG Acquisition & Preprocessing
 
-### Sensor Information
-
-```{r channels}
-#Sensor statistics
-sensor_stats <- df_pipelines %>%
-distinct(PMID, meeg_num_electrodes) %>%
-  summarise(
-    min_channels = min(meeg_num_electrodes),
-    max_channels = max(meeg_num_electrodes),
-    median_channels = median(meeg_num_electrodes),
-    n_studies = n()
-  )
-```
-
-### Reference Schemes
-
-```{r references}
-# Reference processing
-major_categories <- tolower(c(
-  "Cz", "Nose", "Linked earlobes", "Linked mastoids",
-  "FCz", "Common average", "Fpz", "CMS", "CMS and DRL",
-  "unknown", "Laplacian reference", "REST"
-))
-
-# Process reference categories
-df_ref <- df_pipelines %>% 
-  filter(modality == "EEG") %>%
-  mutate(across(
-    .cols = c(reference_online, reference_offline),
-    .fns = ~ case_when(
-      tolower(.) %in% major_categories ~ tolower(.),
-      TRUE ~ "Other"
-    )
-  ))
-
-# Common reference category mapping 
-ref_categories <- c(
-  "common average" = "CAR",
-  "linked mastoids" = "LM", 
-  "linked earlobes" = "LE",
-  "cz" = "Cz",
-  "fcz" = "FCz",
-  "fpz" = "Fpz",
-  "cms" = "CMS",
-  "cms and drl" = "CMS",
-  "nose" = "Nose",
-  "laplacian reference" = "LAP",
-  "rest" = "REST",
-  "other" = "Other",
-  "unknown" = "N/M"
-)
-
+```{r online-reference}
 # Online reference distribution
-online_ref_counts <- df_ref %>% 
-  distinct(PMID, reference_online) %>%
-  count(reference_online) %>%
-  filter(reference_online %in% names(ref_categories)) %>%
-  mutate(
-    display_name = ref_categories[reference_online],
-    percentage = round(n / sum(n) * 100, 1)
-  ) %>%
-  arrange(desc(n))
+online_ref_counts <- hist_discrete(df_pipelines, "reference_online",
+                                   modality_filter = "EEG",
+                                   allowed = ref_mapping[online_ref_categories])
 
-# Check if online references are at study or pipeline level
-online_ref_level <- check_studies_or_pipelines(df_ref, "reference_online")
-
-# Offline reference distribution
-offline_ref_counts <- df_ref %>% 
-  distinct(PMID, reference_offline)%>%
-  count(reference_offline) %>%
-  filter(reference_offline %in% names(ref_categories)) %>%
-  mutate(
-    display_name = ref_categories[reference_offline],
-    percentage = round(n / sum(n) * 100, 1)
-  ) %>%
-  arrange(desc(n))
-
-# Check if offline references are at study or pipeline level
-offline_ref_level <- check_studies_or_pipelines(df_ref, "reference_offline")
+online_ref_lm <- get_row(online_ref_counts, "reference_online", "LM")
+online_ref_cz <- get_row(online_ref_counts, "reference_online", "Cz")
 ```
 
-Online reference: Linked mastoids (**`r online_ref_counts$percentage[online_ref_counts$display_name == "LM"]`%** (`r online_ref_counts$n[online_ref_counts$display_name == "LM"]`/`r sum(online_ref_counts$n)`) `r online_ref_level`), Cz (**`r online_ref_counts$percentage[online_ref_counts$display_name == "Cz"]`%** (`r online_ref_counts$n[online_ref_counts$display_name == "Cz"]`/`r sum(online_ref_counts$n)`) `r online_ref_level`)
+Online reference: 
 
-Offline reference: Common Average Reference (**`r offline_ref_counts$percentage[offline_ref_counts$display_name == "CAR"]`%** (`r offline_ref_counts$n[offline_ref_counts$display_name == "CAR"]`/`r sum(offline_ref_counts$n)`) `r offline_ref_level`))
+* Linked mastoids: **`r online_ref_lm$percentage`%** (**`r online_ref_lm$n`** / **`r online_ref_lm$total`**) `r online_ref_lm$level`
+* Cz: **`r online_ref_cz$percentage`%** (**`r online_ref_cz$n`** / **`r online_ref_cz$total`**) `r online_ref_cz$level`
 
-### Artifact Removal
+```{r offline-reference}
+# Offline reference distribution
+offline_ref_counts <- hist_discrete(df_pipelines, "reference_offline",
+                                    modality_filter = "EEG",
+                                    allowed = ref_mapping[offline_ref_categories])
+
+offline_ref_car <- get_row(offline_ref_counts, "reference_offline", "CAR")
+```
+
+Offline reference: 
+
+* Common average: **`r offline_ref_car$percentage`%** (**`r offline_ref_car$n`** / **`r offline_ref_car$total`**) `r offline_ref_car$level`
 
 ```{r artifacts}
 # Artifact removal statistics
@@ -320,7 +261,16 @@ ica_studies <- df_pipelines %>%
     total_studies = n(),
     ica_study_pct = round(mean(uses_ica) * 100, 1)
   )
+```
 
+Artifact removal:
+
+* Noisy epochs: **`r artifact_stats$noisy_epochs_pct`%** (`r sum(grepl("noisy epoch", df_studies$other_cleaning_strategy, ignore.case = TRUE), na.rm = TRUE)`/`r nrow(df_studies)`) `r noisy_epochs_level`
+* Bad channels: **`r artifact_stats$bad_channels_pct`%** (`r sum(grepl("bad channels", df_studies$other_cleaning_strategy, ignore.case = TRUE), na.rm = TRUE)`/`r nrow(df_studies)`) `r bad_channels_level`
+* ICA usage: **`r ica_studies$ica_study_pct`%** (`r ica_studies$n_ica_studies`/`r ica_studies$total_studies`) studies
+* ICA for CFA: **`r ica_for_cfa_studies$ica_cfa_study_pct`%** (`r ica_for_cfa_studies$n_ica_cfa_studies`/`r ica_for_cfa_studies$total_studies`) studies
+
+```{r rejected-components}
 # Studies using ICA specifically for cfa removal
 ica_for_cfa_studies <- df_pipelines %>%
   group_by(PMID) %>%
@@ -386,14 +336,6 @@ component_types <- component_types_expanded %>%
   arrange(desc(count)) %>%
   mutate(percentage = round(count / total_ica_pipelines * 100, 1))  
 ```
-
-
-Artifact removal:
-
-* Noisy epochs: **`r artifact_stats$noisy_epochs_pct`%** (`r sum(grepl("noisy epoch", df_studies$other_cleaning_strategy, ignore.case = TRUE), na.rm = TRUE)`/`r nrow(df_studies)`) `r noisy_epochs_level`
-* Bad channels: **`r artifact_stats$bad_channels_pct`%** (`r sum(grepl("bad channels", df_studies$other_cleaning_strategy, ignore.case = TRUE), na.rm = TRUE)`/`r nrow(df_studies)`) `r bad_channels_level`
-* ICA usage: **`r ica_studies$ica_study_pct`%** (`r ica_studies$n_ica_studies`/`r ica_studies$total_studies`) studies
-* ICA for CFA: **`r ica_for_cfa_studies$ica_cfa_study_pct`%** (`r ica_for_cfa_studies$n_ica_cfa_studies`/`r ica_for_cfa_studies$total_studies`) studies
 
 ICA component types removed:
 
@@ -1251,10 +1193,10 @@ trials_stats <- df_pipelines %>%
 trials_level <- check_studies_or_pipelines(df_pipelines, "trials_Mean")
 
 #Missing HER Trials
-pct_missing_trials_original <- results_df_missing %>%
+pct_missing_trials_original <- missing_df %>%
   filter(Column == "trials_original") %>%
-  mutate(Percent = round(Metric * 100, 1)) %>%
-  pull(Percent)
+  mutate(percentage = round(percentage * 100, 1)) %>%
+  pull(percentage)
 
 
 # Statistical tests split by clustering vs averaging - most common for each method

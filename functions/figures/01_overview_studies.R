@@ -1,4 +1,4 @@
-studies_overview <- function(df, save_path, ext = "svg") {
+figure_studies_overview <- function(df, save_path, ext = "svg") {
   p_year <- hist_panel(df, "Year", force.numeric = T, 
                        title = "Publication year", 
                        x.label = "Year", 
@@ -7,7 +7,7 @@ studies_overview <- function(df, save_path, ext = "svg") {
   p_modality <- hist_panel(df, "modality", discrete = T,
                            title = "Imaging modality")
   
-  p_condition <- hist_panel(df_study_categories, "study_category", 
+  p_condition <- hist_panel(df, "study_category", 
                             discrete = T,
                             title = "Experimental setting")
   
@@ -17,7 +17,7 @@ studies_overview <- function(df, save_path, ext = "svg") {
   
   ggsave(
     filename = file.path(save_path, paste0("studies_overview.", ext)),
-    plot = fig1BCD_studies,
+    plot = fig,
     width = 10,
     height = 3,
     units = "in",

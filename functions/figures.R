@@ -29,6 +29,7 @@ source(file.path(func_path, "plots", "plot_hedges_g_adjusted_for_noise.R"))
 source(file.path(func_path, "plots", "plot_simulated_effects.R"))
 
 source(file.path(func_path, 'figures', '01_overview_studies.R'))
+source(file.path(func_path, 'figures', '02_overview_pipelines.R'))
 source(file.path(func_path, 'figures', '06_hep_estimation.R'))
 source(file.path(func_path, 'figures', '07_stats.R'))
 source(file.path(func_path, 'figures', '08_controls.R'))
@@ -54,75 +55,6 @@ create_epoch_simulation_plot <- function(df){
   
 }
 
-create_combined_plot_for_columns <- function(df) {
-  
-  target_columns <- unlist(pipeline_steps, use.names = FALSE)
-
-  # Use entropy to determine column order
-  entropy_df <- compute_entropy(df, 
-                                method_columns = target_columns,
-                                drop_paper_duplicates = TRUE)
-  entropy_df$Step <- sapply(entropy_df$Column, function(var_name) {
-    get_pipeline_step(var_name)
-  })
-  entropy_df$Step <- factor(entropy_df$Step, levels = names(pipeline_colors))
-  
-  #Sort by entropy within each step
-  step_order <- c("Statistics", "HER Estimation", "Preprocessing", "Acquisition", "Experiment")
-  entropy_df$Step <- factor(entropy_df$Step, levels = step_order)
-    entropy_df <- entropy_df %>%
-    dplyr::arrange(Step, Entropy) %>%
-    dplyr::mutate(Column = factor(Column, levels = unique(Column)))
-  
-  # Final fixed order to reuse
-  ordered_columns_original <- levels(entropy_df$Column)
-  
-  # Build all three plots with unified config
-  p1 <- plot_entropy(entropy_df = entropy_df,
-                            column_mapping_readable = column_mapping_readable_default,
-                            pipeline_steps = pipeline_steps,
-                            pipeline_colors = pipeline_colors,
-                            fixed = TRUE,
-                            flip = TRUE,
-                            show_title = TRUE,
-                            show_wordy_title = TRUE)
-        
-
-  p2 <- plot_multiple_choices(df,
-                                     variables = ordered_columns_original,
-                                     column_mapping_readable = column_mapping_readable_default,
-                                     pipeline_steps = pipeline_steps,
-                                     pipeline_colors = pipeline_colors,
-                                     fixed = TRUE,
-                                     flip = TRUE,
-                                     y_ticks = FALSE,
-                                     show_title = TRUE,
-                                     show_wordy_title = TRUE,
-                                     x_lab = "")
-  p3 <- plot_missing(df,
-                            columns = ordered_columns_original,
-                            column_mapping_readable = column_mapping_readable_default,
-                            pipeline_steps = pipeline_steps,
-                            pipeline_colors = pipeline_colors,
-                            fixed = TRUE,
-                            flip = TRUE,
-                            y_ticks = FALSE,
-                            show_title = TRUE,
-                            show_wordy_title = TRUE,
-                            x_lab = "", 
-                            show_legend = TRUE)
-
-  figABC <- plot_grid(p1, NULL, p2, NULL, p3,
-                      ncol = 5,
-                      align = "h",
-                      axis = "l",
-                      labels = c("A", "", "B", "", "C"),
-                      label_x = c(0.35, NA, -0.13, NA, -0.1), 
-                      label_y = c(1, NA, 1, NA, 1),  
-                      rel_widths = c(1, 0.025, 0.7, 0.025, 1))
-
-  return(figABC)
-}
 
 # Create filter cutoff plots
 create_filter_plots <- function(df) {
@@ -355,20 +287,6 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(cfa_removal_plot)
-
-  pipelines_overview <- create_combined_plot_for_columns(df)
-
-  ggsave(
-    filename = file.path(save_path, paste0("pipelines_overview.", ext)),
-    plot = pipelines_overview,
-    width = 11,
-    height = 11,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  show(pipelines_overview)
 
   control_vars_plot <- create_control_variables_plot(df)
 

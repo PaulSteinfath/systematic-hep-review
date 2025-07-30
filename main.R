@@ -50,6 +50,7 @@ ext = 'png'
 generate_prisma(df_screening, prisma_template_path,
                 derivatives_path, results_path, ext = ext)
 figure_overview_studies(df_included, results_path, ext = ext)
+figure_overview_pipelines(df_included, results_path, ext = ext)
 figure_ecg_summary(df_included, results_path, ext = ext)
 figure_hep_estimation_summary(df_included, results_path, ext = ext)
 figure_stats(df_included, results_path, ext = ext)

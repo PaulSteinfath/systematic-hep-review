@@ -1,5 +1,5 @@
 plot_multiple_choices <- function(df,
-                                  variables = NULL,
+                                  variables,
                                   percentages = TRUE,
                                   column_mapping_readable = column_mapping_readable_default,
                                   pipeline_steps = NULL,
@@ -15,22 +15,12 @@ plot_multiple_choices <- function(df,
                                   flip = FALSE,
                                   fixed = FALSE) {
   
-  if (is.list(variables)) variables <- unlist(variables)
-  
   total_studies <- dplyr::n_distinct(df$PMID)
-  
-  results_df <- purrr::map_dfr(variables, function(var) {
-    df %>%
-      dplyr::group_by(PMID) %>%
-      dplyr::summarise(Unique_Choices = dplyr::n_distinct(.data[[var]]), .groups = "drop") %>%
-      dplyr::summarise(Multiple_Choices = sum(Unique_Choices > 1)) %>%
-      dplyr::mutate(Column = var,
-                    Metric = if (percentages) Multiple_Choices / total_studies else Multiple_Choices)
-  })
-  
+  results_df <- multiple_choices(df, unlist(variables))
+  results_df$Metric <- if (percentages) results_df$percentage else results_df$count
   results_df <- prepare_column_plot_data(results_df, 
-                                         column_col = "Column", 
-                                         value_col = "Metric", 
+                                         column_col = "Column",
+                                         value_col = "Metric",
                                          method_columns = variables,
                                          column_mapping_readable = column_mapping_readable,
                                          pipeline_colors = pipeline_colors,

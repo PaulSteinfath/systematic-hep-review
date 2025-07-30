@@ -49,3 +49,17 @@ pipeline_steps <- list(
     "hypothesis"
   )
 )
+
+
+# Reverse mapping: get pipeline step for a column
+get_pipeline_step <- function(var) {
+  # Check each pipeline step category
+  for (step in names(pipeline_steps)) {
+    if (var %in% pipeline_steps[[step]]) {
+      return(step)
+    }
+  }
+  
+  stop("Could not find pipeline step for ", var)
+}
+

@@ -124,36 +124,6 @@ create_year_group_columns <- function(df, years) {
   return(as.data.frame(new_columns, stringsAsFactors = FALSE))
 }
 
-# Enhanced function to ensure we always get a valid pipeline step
-get_pipeline_step <- function(var) {
-  # Return "Other" for any invalid inputs
-  if (length(var) == 0 || 
-      all(is.null(var)) || 
-      all(is.na(var)) || 
-      all(var == "")) {
-    return("Other")
-  }
-  
-  # Check each pipeline step category
-  for (step in names(pipeline_steps)) {
-    if (var %in% pipeline_steps[[step]]) {
-      return(step)
-    }
-  }
-  
-  # If not found directly, try case-insensitive match
-  var_lower <- tolower(var)
-  for (step in names(pipeline_steps)) {
-    for (entry in pipeline_steps[[step]]) {
-      if (var_lower == tolower(entry)) {
-        return(step)
-      }
-    }
-  }
-  
-  return("Other")
-}
-
 # Map the readable names back to their variable names for pipeline categorization
 get_variable_name <- function(readable_name, mapping) {
   var_name <- names(mapping)[which(mapping == readable_name)]

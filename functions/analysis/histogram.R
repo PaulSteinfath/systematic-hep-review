@@ -1,3 +1,0 @@
-hist_df <- function() {
-  
-}

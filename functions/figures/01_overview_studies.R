@@ -1,4 +1,4 @@
-figure_studies_overview <- function(df, save_path, ext = "svg") {
+figure_overview_studies <- function(df, save_path, ext = "svg") {
   p_year <- hist_panel(df, "Year", force.numeric = T, 
                        title = "Publication year", 
                        x.label = "Year", 
@@ -16,7 +16,7 @@ figure_studies_overview <- function(df, save_path, ext = "svg") {
                    axis = "bt")
   
   ggsave(
-    filename = file.path(save_path, paste0("studies_overview.", ext)),
+    filename = file.path(save_path, paste0("fig1_overview_studies.", ext)),
     plot = fig,
     width = 10,
     height = 3,

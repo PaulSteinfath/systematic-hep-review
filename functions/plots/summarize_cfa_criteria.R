@@ -1,9 +1,9 @@
 summarize_cfa_criteria <- function(df) {
   
   category_mapping <- c(
-    "time course" = "Time Course",
+    "time course" = "Time\nCourse",
     "topography" = "Topography",
-    "power spectrum" = "Power Spectrum",
+    "power spectrum" = "Power\nSpectrum",
     "phase consistency" = "Phase\nConsistency",
     "iclabel" = "Algorithm",
     "corrmap" = "Algorithm",
@@ -49,7 +49,6 @@ summarize_cfa_criteria <- function(df) {
     aes(x = reorder(cfa_rej_criteria, count, decreasing = TRUE), y = prop)) +
     geom_bar(stat = "identity", fill = "#696969", color = "white", linewidth = 0.5) +
     plot_theme_default +
-    custom_theme() +
     scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, .1))) +
     labs(
       x = "",
@@ -58,11 +57,8 @@ summarize_cfa_criteria <- function(df) {
       subtitle = paste("n =", total_pipelines, "pipelines")
     ) +
     theme(
-      title = element_text(size = 9),
-      axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
-      axis.text.y = element_text(size = 8),
-      axis.title.x = element_text(size = 9, margin = margin(t = 4)),
-      axis.title.y = element_text(size = 9)
+      axis.text.x = element_text(angle = 0, hjust = 0.5),
+      axis.title.x = element_text(margin = margin(t = 4))
     )
 
   # Create algorithm inset data using pipeline IDs
@@ -107,17 +103,15 @@ summarize_cfa_criteria <- function(df) {
     plot_theme_default +
     theme(
       panel.grid = element_blank(),
-      axis.text.x = element_text(angle = 45, hjust = 1, size = 9),
       axis.title.x = element_text(margin = margin(t = 2, b = 2)),
       axis.title.y = element_text(margin = margin(r = 2, l = 2)),
-      plot.background = element_rect(fill = alpha("white", 0), color = NA),
-      panel.border = element_rect(color = "black", fill = NA)
+      plot.background = element_rect(fill = alpha("white", 0), color = NA)
     )
 
   # Combine plots
   combined_plot <- ggdraw() +
     draw_plot(main_plot) +
-    draw_plot(algo_plot, x = 0.65, y = 0.45, width = 0.3, height = 0.5)
+    draw_plot(algo_plot, x = 0.55, y = 0.45, width = 0.38, height = 0.5)
 
   return(combined_plot)
 }

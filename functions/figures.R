@@ -77,6 +77,7 @@ create_combined_plot_for_columns <- function(df) {
   # Final fixed order to reuse
   ordered_columns_original <- levels(entropy_df$Column)
   
+
   # Build all three plots with unified config
   p1 <- plot_entropy(entropy_df = entropy_df,
                             column_mapping_readable = column_mapping_readable_default,
@@ -119,7 +120,7 @@ create_combined_plot_for_columns <- function(df) {
                       labels = c("A", "", "B", "", "C"),
                       label_x = c(0.35, NA, -0.13, NA, -0.1), 
                       label_y = c(1, NA, 1, NA, 1),  
-                      rel_widths = c(1, 0.025, 0.7, 0.025, 1))
+                      rel_widths = c(1.2, 0.025, 0.7, 0.025, 0.7))
 
   return(figABC)
 }
@@ -262,7 +263,7 @@ cfa_removal <- function(df) {
     cardiac_ics_plot,
     other_strategies_plot,
     ncol = 2, labels = c("C", "D"),
-    align = "hv", rel_widths = c(0.4, 0.6)
+    align = "hv", rel_widths = c(0.3, 0.7)
   )
 
   bottom_row <- plot_grid(
@@ -354,13 +355,12 @@ make_figures <- function(df, save_path, ext = "svg") {
 
 
   cfa_removal_plot <- cfa_removal(df)
-
   ggsave(
     filename = file.path(save_path, paste0("cfa_removal_plot.", ext)),
     plot = cfa_removal_plot,
-    width = 10,
-    height = 11,
-    units = "in",
+    width =  190,
+    height = 279.4,
+    units = "mm",
     dpi = 300,
     device = ext,
     bg = "white"
@@ -372,9 +372,9 @@ make_figures <- function(df, save_path, ext = "svg") {
   ggsave(
     filename = file.path(save_path, paste0("pipelines_overview.", ext)),
     plot = pipelines_overview,
-    width = 10,
-    height = 11,
-    units = "in",
+    width = 190,
+    height = 279.4,
+    units = "mm",
     dpi = 300,
     device = ext,
     bg = "white"

@@ -46,13 +46,10 @@ rr_intervals_plot <- function(df) {
         ) +
     scale_x_continuous(breaks = unique(sort(c(seq(0, x_max, by = 250), x_max)))) +
     plot_theme_default +
-    custom_theme() +
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
-          #panel.grid.major.x = element_line(color = "gray90", linetype = "solid"),
           panel.grid.major.y = element_blank(),
           panel.grid.minor = element_blank(),
-          title = element_text(hjust = 0, size = 9), 
           plot.caption = element_text(hjust = 0.5, size = 9, margin = margin(t = 10)),
           axis.title.x = element_text(hjust = 0.5))
 }

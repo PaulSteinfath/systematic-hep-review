@@ -177,7 +177,12 @@ plot_missing <- function(df,
         values = pipeline_colors,
         guide = if (show_legend) "legend" else "none"
       ) +
-      theme(legend.position = "right", legend.justification = "center", legend.margin = margin(0, -1, 0, 0))
+      theme(
+        legend.position = c(0.35, 0.35), # move legend well inside plot area
+        legend.justification = c("left", "center"),
+        legend.margin = margin(0, 0, 0, 0),
+        legend.box.margin = margin(0, 0, 0, 0)
+      )
   } else {
     p <- p + geom_bar(stat = "identity", fill = plot_fill, color = "white", linewidth = 0.5)
   }

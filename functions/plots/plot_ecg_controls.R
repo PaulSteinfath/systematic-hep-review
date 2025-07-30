@@ -59,13 +59,13 @@ plot_ecg_controls <- function(df, tilt_labels = FALSE) {
     tilt_labels       = tilt_labels,
     decreasing        = FALSE,
     allowed           = c("ECG" = "ECG",
-                         "HEP-ECG Correlation" = "HEP-ECG\nCorrelation",
-                         "Surrogate Heartbeats" = "Surrogate\nHeartbeats",
-                         "RR Interval" = "RR Interval",
-                         "Number of Heartbeats" = "Number of\nHeartbeats",
-                         "QT Interval" = "QT Interval",
-                         "Control interval" = "Control interval",
-                         "T-Wave Latency" = "T-Wave Latency")
+                          "HEP-ECG Correlation" = "HER-ECG\nCorrelation",
+                          "Surrogate Heartbeats" = "Surrogate\nHeartbeats",
+                          "RR Interval" = "RR Interval",
+                          "Number of Heartbeats" = "Number of\nHeartbeats",
+                          "QT Interval" = "QT Interval",
+                          "Control interval" = "Control interval",
+                          "T-Wave Latency" = "T-Wave Latency")
   ) + coord_flip()
   
   # Override the default fill color to match "Other Controls" category

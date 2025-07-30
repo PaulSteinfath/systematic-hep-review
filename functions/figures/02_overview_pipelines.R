@@ -68,7 +68,7 @@ figure_overview_pipelines <- function(df, save_path, ext = 'svg') {
   ggsave(
     filename = file.path(save_path, paste0("fig2_pipelines_overview.", ext)),
     plot = fig,
-    width = 11,
+    width = 10,
     height = 11,
     units = "in",
     dpi = 300,

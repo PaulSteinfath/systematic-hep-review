@@ -6,6 +6,10 @@ ica_columns <- c(
 # CFA-specific columns
 cfa_columns <- c("rejected_cardiac_ics", "cfa_rej_approach", "cfa_rej_criteria")
 
+# Ignore columns that are optional
+opt_columns <- c("other_cfa_removal_strategy", "other_cleaning_strategy")
+
+
 is_missing <- function(x) {
   x_char <- tolower(as.character(x))
   is.na(x) | x == "" | x_char %in% c("unknown", "na")
@@ -43,7 +47,7 @@ calc_missing_for_column <- function(data, col) {
   # For reference online/offline: only count if Modality == "EEG".
   if (tolower(col) %in% c("reference online", "reference_online", 
                           "reference offline", "reference_offline")) {
-    condition <- condition & (data$Modality == "EEG")
+    condition <- condition & (data$modality == "EEG")
   }
   
   # Return TRUE for rows that are both relevant and missing.
@@ -64,7 +68,7 @@ compute_denom_papers <- function(data, col) {
     rel <- data$clustering == 1
   } else if (tolower(col) %in% c("reference online", "reference_online",
                                  "reference offline", "reference_offline")) {
-    rel <- data$Modality == "EEG"
+    rel <- data$modality == "EEG"
   } else {
     rel <- rep(TRUE, nrow(data))
   }
@@ -85,7 +89,7 @@ compute_missing_papers <- function(data, col) {
     rel <- data$clustering == 1
   } else if (tolower(col) %in% c("reference online", "reference_online",
                                  "reference offline", "reference_offline")) {
-    rel <- data$Modality == "EEG"
+    rel <- data$modality == "EEG"
   } else {
     rel <- rep(TRUE, nrow(data))
   }
@@ -111,4 +115,10 @@ missing_information <- function(df, columns) {
                percentage = percentage,
                stringsAsFactors = FALSE)
   })
+
+  for (col in opt_columns) {
+    if (col %in% names(df)) {
+      results_df$Metric[results_df$Column == col] <- 0
+    }
+  }
 }

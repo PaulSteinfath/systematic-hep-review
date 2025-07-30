@@ -70,6 +70,13 @@ compute_entropy <- function(data, method_columns,
   for (col in method_columns) {
     x <- data[[col]]
     
+    # Only use EEG studies for reference columns
+    pmid <- data$PMID
+    if (tolower(col) %in% c("reference_online", "reference_offline")) {
+      x <- x[data$modality == "EEG"]
+      pmid <- data$PMID[data$modality == "EEG"]
+    }
+    
     if (drop_paper_duplicates){
       x <- reduce_by_pmid(x, pmid)
     }
@@ -79,6 +86,7 @@ compute_entropy <- function(data, method_columns,
     
     # If no values remain, set result as NA.
     if (length(x) == 0) {
+      warning("No values remain after preprocessing for ", col)
       result[[col]] <- NA
       next
     }

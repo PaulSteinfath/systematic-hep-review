@@ -18,6 +18,7 @@ figure_stats <- function(df, save_path, ext = 'png') {
                   x.label = "", 
                   discrete = T, 
                   tilt_labels = F,
+                  decreasing = F,
                   allowed = c("t-test" = "t-test",
                               "Correlation" = "Correlation",
                               "Regression" = "Regression", 

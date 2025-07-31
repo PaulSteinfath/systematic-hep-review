@@ -42,11 +42,12 @@ get_row <- function(df, column, value) {
   as.list(df[df[[column]] == value,])
 }
 
-get_summary <- function(df, column) {
+get_summary <- function(df, column, 
+                        digits_min = 0, digits_max = 0, digits_median = 1) {
   list(
-    min = min(df[[column]], na.rm = TRUE),
-    max = max(df[[column]], na.rm = TRUE),
-    median = round(median(df[[column]], na.rm = TRUE), 1)
+    min = round(min(df[[column]], na.rm = TRUE), digits = digits_min),
+    max = round(max(df[[column]], na.rm = TRUE), digits = digits_max),
+    median = round(median(df[[column]], na.rm = TRUE), digits = digits_median)
   )
 }
 ```
@@ -1287,37 +1288,8 @@ stats_table <- df_pipelines %>%
   )
 
 
-# Calculate minimum detectable effect sizes (Hedges' g) for each pipeline
-hedges_column <- compute_effect_columns(df_pipelines, 
-                                        test_type_col = statistics, 
-                                        sample_size_col = sample_size, 
-                                        groups_col = groups, 
-                                        conditions_col = conditions)
-
-# Combine with original data
-hedges_data <- bind_cols(df_pipelines, hedges_column) %>%
-              distinct(PMID, hedges_g, .keep_all = TRUE) %>%
-              filter(clustering ==0)
-
-# Average of Coll et al. (2020) reported average effect size
-# not sure if this is the right way to do it
-coll_average_effect <- mean(c(0.35, 0.37, 0.49, 0.72))
-
-# Calculate percentage of pipelines that could detect each individual Coll et al. effect size
-individual_effect_sizes <- c(0.35, 0.37, 0.49, 0.72)
-effect_size_names <- c("interoceptive_performance", "attention_to_heart", "clinical_vs_control", "arousal")
-
 # Calculate power for each individual effect size
-power_stats <- map2_dfr(individual_effect_sizes, effect_size_names, function(effect_size, name) {
-  hedges_data %>%
-    summarise(
-      effect_type = name,
-      effect_size = effect_size,
-      total_pipelines = n(),
-      pipelines_detecting = sum(hedges_g <= effect_size, na.rm = TRUE),
-      percentage_detecting = round(pipelines_detecting / total_pipelines * 100, 1)
-    )
-})
+
 
 # Calculate percentage of pipelines that could detect the Coll et al. average effect size
 pipelines_detect_coll <- hedges_data %>%
@@ -1325,14 +1297,6 @@ pipelines_detect_coll <- hedges_data %>%
     total_pipelines = n(),
     pipelines_detecting_coll = sum(hedges_g <= coll_average_effect, na.rm = TRUE),
     percentage_detecting_coll = round(pipelines_detecting_coll / total_pipelines * 100, 0)
-  )
-
-# Calculate minimal detectable effect size statistics
-hedges_g_stats <- hedges_data %>%
-  summarise(
-    min_hedges_g = round(min(hedges_g, na.rm = TRUE), 2),
-    max_hedges_g = round(max(hedges_g, na.rm = TRUE), 2),
-    median_hedges_g = round(median(hedges_g, na.rm = TRUE), 2)
   )
 
 # Preregistration
@@ -1369,18 +1333,70 @@ knitr::kable(stats_table,
              align = c("l", "l", "c", "c"))
 ```
 
-### Power Analysis
+```{r effect-size}
+# Calculate minimum detectable effect sizes (Hedges' g) for each pipeline
+hedges_column <- compute_effect_columns(df_pipelines, 
+                                        test_type_col = statistics, 
+                                        sample_size_col = sample_size, 
+                                        groups_col = groups, 
+                                        conditions_col = conditions)
 
-Only **`r pipelines_detect_coll$percentage_detecting_coll`%** of pipelines (`r pipelines_detect_coll$pipelines_detecting_coll`/`r pipelines_detect_coll$total_pipelines`) had sufficient power to detect the average effect size reported by Coll et al. (2020).
+# Combine with original data
+hedges_df <- bind_cols(df_pipelines, hedges_column) %>%
+               filter(clustering == 0,
+                      statistics != "Regression") %>%
+               distinct(PMID, hedges_g, .keep_all = TRUE) %>%
+               drop_na(hedges_g)
 
-The resulting minimal detectable effect sizes range from **`r hedges_g_stats$min_hedges_g`** to **`r hedges_g_stats$max_hedges_g`**, with a median of **`r hedges_g_stats$median_hedges_g`** Hedges' g.
+hedges_summary <- get_summary(hedges_df, "hedges_g",
+                              digits_min = 2, digits_max = 2, digits_median = 2)
+```
 
-- **`r power_stats$percentage_detecting[power_stats$effect_type == "interoceptive_performance"]`%** of pipelines had enough power to detect Hedges' g of 0.35 (interoceptive performance meta-estimate)
-- **`r power_stats$percentage_detecting[power_stats$effect_type == "attention_to_heart"]`%** of pipelines could reliably detect Hedges' g of 0.37 (attention to heart meta-estimate)
-- **`r power_stats$percentage_detecting[power_stats$effect_type == "clinical_vs_control"]`%** of pipelines could reliably detect Hedges' g of 0.49 (clinical vs. control groups meta-estimate)
-- **`r power_stats$percentage_detecting[power_stats$effect_type == "arousal"]`%** of pipelines could reliably detect Hedges' g of 0.72 (arousal meta-estimate).
+Power analysis:
 
-These observations suggest that **`r 100 - max(power_stats$percentage_detecting)`%** to **`r 100 - min(power_stats$percentage_detecting)`%** of pipelines may have yielded underpowered and potentially unreliable findings.
+* Estimated minimal detectable effect sizes: **`r hedges_summary$min`**-**`r hedges_summary$max`**, median = **`r hedges_summary$median`**
+
+```{r detect-coll}
+detect_effect <- function(effect_size, name) {
+  hedges_df %>%
+    summarise(
+      name = name,
+      effect_size = effect_size,
+      total = n(),
+      count = sum(hedges_g <= effect_size, na.rm = TRUE),
+      percentage = round(count / total * 100, 1)
+    )
+}
+
+detecting_df <- map2_dfr(effect_sizes_Coll2020$value, 
+                         effect_sizes_Coll2020$kind,
+                         detect_effect) %>%
+  arrange(percentage)
+detecting_df$missing <- detecting_df$total - detecting_df$count
+detecting_df$missing_percent <- 100 - detecting_df$percentage
+
+# First row has the worst power, last row - the best
+underpowered_min <- detecting_df[nrow(detecting_df), ]
+underpowered_max <- detecting_df[1, ]
+```
+
+* Percent of pipelines detecting effects from Coll et al. (2020):
+
+```{r detect-coll-results, results='asis'}
+for (i in 1:nrow(detecting_df)) {
+  row <- detecting_df[i, ]
+  cat(
+    paste0(
+      '  * ', row$name, 
+      ' (**', row$effect_size, '**): ',
+      '**', row$percentage, '%**', 
+      ' (**', row$count, '** / **', row$total, '** pipelines)\n'
+    )
+  )
+}
+```
+
+* Underpowered and potentially unreliable findings: **`r underpowered_min$missing_percent`%** (**`r underpowered_min$missing`** / **`r underpowered_min$total`**) to **`r underpowered_max$missing_percent`%** (**`r underpowered_max$missing`** / **`r underpowered_max$total`**) of pipelines.
 
 ### Preregistration
 Percentage of pipelines with preregistration: **`r pct_prereg`%** 

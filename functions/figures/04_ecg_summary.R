@@ -32,7 +32,7 @@ figure_ecg_summary <- function(df, save_path, ext = 'png') {
   )
   
   ggsave(
-    filename = file.path(save_path, paste0("ecg_summary_plot.", ext)),
+    filename = file.path(save_path, paste0("fig4_ecg_summary.", ext)),
     plot = fig,
     width = 10,
     height = 4,

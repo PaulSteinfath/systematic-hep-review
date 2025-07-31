@@ -9,24 +9,7 @@ date: "`r Sys.Date()`"
 ---
 
 ```{r setup, include=FALSE}
-library(cowplot)
-library(dplyr)
-library(eegUtils)
-library(grid)
-library(gridExtra)
-library(gridGraphics)
-library(ggimage)
-library(ggplot2)
-library(ggtext)
-library(magick)
-library(PRISMA2020)
-library(purrr)
-library(scales)
-library(stringr)
-library(testit)
-library(tidyr)
-library(viridis)
-library(zeallot)
+source("init_workspace.R")
 
 # Paths
 data_path <- file.path(getwd(), 'data')
@@ -34,13 +17,6 @@ func_path <- file.path(getwd(), 'functions')
 derivatives_path <- file.path(data_path, 'derivatives')
 df_included <- read.csv(file.path(derivatives_path, 'included.csv'))
 df_screening <- read.csv(file.path(derivatives_path, 'screening.csv'))
-
-# Load necessary functions
-source(file.path(func_path, "plots", "plotting_helpers.R"))
-source(file.path(func_path, "plots", "plot_missing.R"))
-source(file.path(func_path, "plots", "plot_hedges_g.R"))
-source(file.path(func_path, "analysis", "perm_peak_stats.R"))
-source(file.path(func_path, "plots", "preprocess_controls.R"))
 
 # Helper function to determine if percentages should refer to studies or pipelines
 check_studies_or_pipelines <- function(df, variable_column, group_col = "PMID") {
@@ -59,50 +35,47 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
 # Create study-level and pipeline-level datasets for efficiency
 df_studies <- df_included %>% distinct(PMID, .keep_all = TRUE)
 df_pipelines <- df_included
+```
 
-# EEG-only datasets
-eeg_studies <- df_studies %>% filter(modality == "EEG")
-eeg_pipelines <- df_pipelines %>% filter(modality == "EEG")
+```{r helper-functions}
+get_row <- function(df, column, value) {
+  as.list(df[df[[column]] == value,])
+}
 
-meg_studies <- df_studies %>% filter(modality == "MEG")
-meg_pipelines <- df_pipelines %>% filter(modality == "MEG")
+get_summary <- function(df, column, 
+                        digits_min = 0, digits_max = 0, digits_median = 1) {
+  list(
+    min = round(min(df[[column]], na.rm = TRUE), digits = digits_min),
+    max = round(max(df[[column]], na.rm = TRUE), digits = digits_max),
+    median = round(median(df[[column]], na.rm = TRUE), digits = digits_median)
+  )
+}
 ```
 
 ## Overview
 
-This document provides all values mentioned in the manuscript "Heartbeat-evoked responses in MEG/EEG: A systematic review of methods and suggestions for analysis and reporting". All sections of this document apart from this overview match the corresponding section of the manuscript. Numbers highlighted in **bold** are also present in the manuscript.
+This document provides all values mentioned in the manuscript "Heartbeat-evoked responses in MEG/EEG: A systematic review of methods with suggestions for analysis and reporting". All sections of this document apart from this overview match the corresponding section of the manuscript. Numbers highlighted in **bold** are also present in the manuscript.
 
 ### Important Distinction: Studies vs Pipelines
 
 - **Studies**: Unique publications (identified by PMID). Each study represents one research paper.
 - **Pipelines**: Individual analysis approaches within studies. Some studies report multiple analysis pipelines (e.g. different time windows, or statistical approaches).
 
-## Methods
+## 2. Methods
 
-## Literature search
+### 2.1. Literature search
 
 ```{r data-export}
-# Load the search data files
-exports_path <- file.path(data_path, 'exports')
-
-df_query1 <- read.csv(file.path(exports_path, '20240115_pubmed_query1.csv'))
-df_query2 <- read.csv(file.path(exports_path, '20240724_pubmed_query2.csv'))
-df_query2_rerun <- read.csv(file.path(exports_path, '20240805_pubmed_query2.csv'))
-df_query3 <- read.csv(file.path(exports_path, '20240805_pubmed_query3.csv'))
-
-df_merged <- df_query1 %>%
-  bind_rows(df_query2) %>%
-  bind_rows(df_query2_rerun) %>%
-  bind_rows(df_query3) %>%
-  distinct(PMID)
+# Get the number of papers in Pubmed export
+export_stats <- get_export_stats(file.path(data_path, 'exports'))
 ```
 
 Table 1 - number of retrieved papers:
 
-* 15.01.2024: **`r nrow(df_query1)`**
-* 24.07.2024: **`r nrow(df_query2)`** (rerun: **`r nrow(df_query2_rerun)`**)
-* 05.08.2024: **`r nrow(df_query3)`**
-* After removing duplicates: **`r nrow(df_merged)`**
+* 15.01.2024: **`r export_stats$num_query1`**
+* 24.07.2024: **`r export_stats$num_query2`** (rerun: **`r export_stats$num_query2_rerun`**)
+* 05.08.2024: **`r export_stats$num_query3`**
+* After removing duplicates: **`r export_stats$num_merged`**
 
 ```{r literature-search, results='asis'}
 screening_pubmed <- df_screening[df_screening$source == "pubmed",]
@@ -126,77 +99,51 @@ Manually added:
 
 Final sample: **`r total_included_pubmed + total_included_manual`** studies
 
-## Results
+### 2.3. Data analysis
 
-### Overview of the included studies
+Analysis parameters:
+
+* Entropy - binning continuous variables if at least **`r params$entropy_unique_threshold`** unique values are present
+* Power computation - significance level: **`r params$hedges_sig_level * 100`%**
+* Power computation - power threshold: **`r params$hedges_power_level * 100`%**
+* Number of permutations for testing peak differences: TODO
+
+## 3. Results
+
+### 3.1. Overview of the included studies
 
 ```{r literature-overview}
 # Basic counts
-total_pipelines <- nrow(df_pipelines)
 total_studies <- nrow(df_studies)
 
 # Year range (based on unique studies)
 year_range <- df_studies %>% 
-  summarise(min_year = min(Year, na.rm = TRUE), max_year = max(Year, na.rm = TRUE))
+  summarise(min_year = min(Year, na.rm = TRUE), 
+            max_year = max(Year, na.rm = TRUE))
 
 # Modality breakdown (unique studies)
 modality_counts <- df_studies %>%
   count(modality) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
-modality_eeg <- as.list(modality_counts[modality_counts$modality == "EEG",])
-modality_meg <- as.list(modality_counts[modality_counts$modality == "MEG",])
+modality_eeg <- get_row(modality_counts, "modality", "EEG")
+modality_meg <- get_row(modality_counts, "modality", "MEG")
 
 # Task vs resting state - studies that have both vs only one type
-study_types <- df_pipelines %>%
-  filter(!is.na(rsHEP)) %>%
-  group_by(PMID) %>%
-  summarise(
-    has_resting = any(rsHEP == 1),
-    has_task = any(rsHEP == 0),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    category = case_when(
-      has_resting & has_task ~ "Both",
-      has_resting & !has_task ~ "Rest", 
-      !has_resting & has_task ~ "Task",
-      TRUE ~ "Other"
-    )
-  ) %>%
-  count(category) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1))
-assert("All studies perform either task-based or resting-state analysis",
-       nrow(study_types[study_types$category == "Other",]) == 0)
-
-study_type_task <- as.list(study_types[study_types$category == "Task",])
-study_type_rest <- as.list(study_types[study_types$category == "Rest",])
-study_type_both <- as.list(study_types[study_types$category == "Both",])
-```
-
-```{r overview-stats}
-# Calculate final sample stats
-final_sample_stats <- df_studies %>%
-  summarise(
-    total_studies = n(),
-    year_min = min(Year, na.rm = TRUE),
-    year_max = max(Year, na.rm = TRUE)
-  )
-
-# Modality breakdown
-modality_breakdown <- df_studies %>%
-  count(modality) %>%
+study_types <- df_studies %>%
+  count(study_category) %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
 
-eeg_stats <- modality_breakdown %>% filter(modality == "EEG")
-meg_stats <- modality_breakdown %>% filter(modality == "MEG")
+study_type_task <- get_row(study_types, "study_category", "Task")
+study_type_rest <- get_row(study_types, "study_category", "Rest")
+study_type_both <- get_row(study_types, "study_category", "Both")
 ```
 
-Total studies: **`r final_sample_stats$total_studies`** (**`r final_sample_stats$year_min`**-**`r final_sample_stats$year_max`**)
+Total studies: **`r total_studies`** (**`r year_range$min_year`**-**`r year_range$max_year`**)
 
 Modality:
 
-* EEG: **`r eeg_stats$n`** studies (**`r eeg_stats$percentage`%**)
-* MEG: **`r meg_stats$n`** studies (**`r meg_stats$percentage`%**)
+* EEG: **`r modality_eeg$n`** studies (**`r modality_eeg$percentage`%**)
+* MEG: **`r modality_meg$n`** studies (**`r modality_meg$percentage`%**)
 
 Study type distribution:
 
@@ -204,81 +151,57 @@ Study type distribution:
 * Resting-state: **`r study_type_rest$n`** studies (**`r study_type_rest$percentage`%**)
 * Both: **`r study_type_both$n`** studies (**`r study_type_both$percentage`%**)
  
-### Overview of methodological choices & methodological variability
+### 3.2. Overview of methodological choices
 
-```{r variations}
+```{r multiple-choices}
+total_pipelines <- nrow(df_pipelines)
+
 # Get target columns from pipeline steps
 target_columns <- unlist(pipeline_steps, use.names = FALSE)
 
 # Calculate percentage of studies with multiple choices for each method
-results_df <- purrr::map_dfr(target_columns, function(var) {
-  df_pipelines %>%
-    group_by(PMID) %>%
-    summarise(Unique_Choices = n_distinct(.data[[var]]), .groups = "drop") %>%
-    summarise(Multiple_Choices = sum(Unique_Choices > 1)) %>%
-    mutate(Column = var,
-           Metric = Multiple_Choices / total_studies,
-           n = Multiple_Choices)
-})
-prcent_multi <- results_df %>%
-  arrange(desc(Metric)) %>%
-  mutate(percent = round(Metric * 100, 1)) %>%
-  select(Column, percent, n)
+multiple_df <- multiple_choices(df_pipelines, target_columns) %>%
+  mutate(percentage = round(percentage * 100, 0))
 
-pct_varies_either <- prcent_multi[prcent_multi$Column == "hep_start",]$percent
-pct_varies_n <- prcent_multi[prcent_multi$Column == "hep_start",]$n
-
-# Pipelines where CFA-related ICs info is missing
-cfa_ics <- df_pipelines %>%
-  distinct(PMID, rejected_components, .keep_all = TRUE) %>%
-  filter(grepl("CFA", rejected_components))
-
-missing_cfa_ics <- cfa_ics %>%
-    filter(is.na(rejected_cardiac_ics))
-
-pct_missing_cfa_ics <- round(nrow(missing_cfa_ics) / nrow(cfa_ics) * 100, 1)
-
-# Missing ECG Ground info
-ecg_gnd <- df_pipelines %>%
-  distinct(PMID, ecg_ground, .keep_all = TRUE)
-
-pct_gnd_unknown <- round(sum(tolower(ecg_gnd$ecg_ground) == "unknown") / nrow(ecg_gnd) * 100, 1)
-
-# Variables with >40% missing info
-results_df_missing <- purrr::map_dfr(target_columns, function(col) {
-  denom <- compute_denom_papers(df_pipelines, col)
-  missing <- compute_missing_papers(df_pipelines, col)
-  metric <- missing / denom
-  data.frame(Column = col, Metric = metric, stringsAsFactors = FALSE)
-})
-
-results_df_high_missing <- results_df_missing %>% 
-  filter(Metric >= 0.4) %>%
-  mutate(Percent = round(Metric * 100, 1)) %>%
-  select(Column, Percent)
-
-# Extract specific missing ECG location percentage
-ecg_locations_missing_pct <- results_df_missing %>%
-  filter(Column == "ecg_locations") %>%
-  mutate(Percent = round(Metric * 100, 1)) %>%
-  pull(Percent)
+multiple_stats <- get_row(multiple_df, "Column", "statistics")
+multiple_hep_start <- get_row(multiple_df, "Column", "hep_start")  # pick as maximum among start and end
 ```
 
-Studies using multiple statistical tests: **`r prcent_multi$percent[prcent_multi$Column == "statistics"]`%** (`r prcent_multi$n[prcent_multi$Column == "statistics"]`/`r total_studies`)
+Total pipelines: **`r total_pipelines`** 
 
-Studies varying HER window start or end times: **`r pct_varies_either`%** (`r pct_varies_n`/`r final_sample_stats$total_studies`)
+Studies using multiple choices for:
 
-### Missing Information
+* Statistical tests: **`r multiple_stats$percentage`%** (**`r multiple_stats$count`** / **`r multiple_stats$total`**)
 
-Studies missing cardiac IC rejection information (among those using CFA removal): **`r pct_missing_cfa_ics`%** (`r nrow(missing_cfa_ics)`/`r nrow(cfa_ics)`)
+* HER window start or end times: **`r multiple_hep_start$percentage`%** (**`r multiple_hep_start$count`** / **`r multiple_hep_start$total`**)
 
-Studies with unknown ECG ground location: **`r pct_gnd_unknown`%** (`r sum(tolower(ecg_gnd$ecg_ground) == "unknown")`/`r nrow(ecg_gnd)`)
+```{r missing-info}
+# Variables with >40% missing info
+missing_df <- missing_information(df_pipelines, target_columns) %>%
+  mutate(percentage = round(percentage * 100, 0))
 
-Studies missing ECG electrode locations: **`r ecg_locations_missing_pct`%** (`r results_df_missing$Metric[results_df_missing$Column == "ecg_locations"] * compute_denom_papers(df_pipelines, "ecg_locations")`/`r compute_denom_papers(df_pipelines, "ecg_locations")`)
+missing_cfa_ics <- get_row(missing_df, "Column", "rejected_cardiac_ics")
+missing_ecg_ground <- get_row(missing_df, "Column", "ecg_ground")
+missing_ecg_locations <- get_row(missing_df, "Column", "ecg_locations")
+
+missing_df_top <- missing_df %>% 
+  filter(percentage >= 40) %>%
+  arrange(-percentage) %>%
+  select(Column, percentage)
+```
+
+
+Missing information:
+
+* cardiac IC rejection information (among those using CFA removal): **`r missing_cfa_ics$percentage`%** (**`r missing_cfa_ics$count`** / **`r missing_cfa_ics$total`**)
+
+* unknown ECG ground location: **`r missing_ecg_ground$percentage`%** (**`r missing_ecg_ground$count`** / **`r missing_ecg_ground$total`**)
+
+* ECG electrode locations: **`r missing_ecg_locations$percentage`%** (**`r missing_ecg_locations$count`** / **`r missing_ecg_locations$total`**)
 
 ```{r high-missing-table, results='asis'}
-knitr::kable(results_df_high_missing, 
-             caption = "Variables with >40% missing values across pipelines",
+knitr::kable(missing_df_top, 
+             caption = "Variables with >40% missing values across studies",
              col.names = c("Variable", "Missing (%)"))
 ```
 
@@ -309,7 +232,8 @@ major_categories <- tolower(c(
 ))
 
 # Process reference categories
-df_ref <- eeg_pipelines %>%
+df_ref <- df_pipelines %>% 
+  filter(modality == "EEG") %>%
   mutate(across(
     .cols = c(reference_online, reference_offline),
     .fns = ~ case_when(
@@ -520,42 +444,37 @@ Filter settings: **`r common_highpass$high_pass[1]`**-**`r common_lowpass$low_pa
 
 High-pass cutoffs: **`r paste(common_highpass$high_pass, collapse = ", ")` Hz**
 
-### ECG Acquisition
+### 3.4. ECG Acquisition
+
+Studies that use ECG as a control variable: **TODO**
 
 ```{r ecg_num_electrodes}
-two_ecg_electrodes <- df_included %>%
-  distinct(PMID, ecg_num_electrodes) %>%
-  group_by(ecg_num_electrodes) %>%
-  filter(ecg_num_electrodes == 2) %>%
-  summarize(count = n()) %>%
-  mutate(freq = count / total_studies * 100)
-two_ecg_electrodes_count <- two_ecg_electrodes$count
-two_ecg_electrodes_freq <- round(two_ecg_electrodes$freq, 1)
+# Map "unknown" to 9 so that it isn't lost during conversion to numeric
+df_pipelines <- df_pipelines %>%
+  mutate(ecg_num_electrodes = replace(ecg_num_electrodes,
+                                      ecg_num_electrodes == "unknown", 9))
+
+ecg_electrodes_df <- hist_continuous(df_pipelines, "ecg_num_electrodes",
+                                     binwidth = 1, force.numeric = T)
+two_ecg_electrodes <- get_row(ecg_electrodes_df, "ecg_num_electrodes", 2)
 ```
 
-Studies that use 2 ECG electrodes: `r two_ecg_electrodes_count` (**`r two_ecg_electrodes_freq`**%)
+Studies that use 2 ECG electrodes: **`r two_ecg_electrodes$percentage`**% (**`r two_ecg_electrodes$count`** / **`r two_ecg_electrodes$total`**) `r two_ecg_electrodes$level`
 
 ```{r ecg_num_leads}
-ecg_leads <- df_included %>%
-  distinct(PMID, ecg_lead) %>%
-  group_by(ecg_lead) %>%
-  summarize(count = n()) %>%
-  mutate(freq = round(count / total_studies * 100, 1))
-lead_i <- ecg_leads[ecg_leads$ecg_lead == "Lead I", ]
-lead_ii <- ecg_leads[ecg_leads$ecg_lead == "Lead II", ]
-lead_iii <- ecg_leads[ecg_leads$ecg_lead == "Lead III", ]
-lead_unclassified <- ecg_leads[ecg_leads$ecg_lead == "N/C", ]
-
-# Check if ECG leads are at study or pipeline level
-ecg_lead_level <- check_studies_or_pipelines(df_included, "ecg_lead")
+leads_df <- hist_discrete(df_pipelines, "ecg_lead")
+ecg_lead_i <- get_row(leads_df, "ecg_lead", "Lead I")
+ecg_lead_ii <- get_row(leads_df, "ecg_lead", "Lead II")
+ecg_lead_iii <- get_row(leads_df, "ecg_lead", "Lead III")
+ecg_lead_nc <- get_row(leads_df, "ecg_lead", "N/C")
 ```
 
 Number of studies that use different ECG leads:
 
-* Lead II: `r lead_ii$count` (**`r lead_ii$freq`**%) `r ecg_lead_level`
-* Lead I: `r lead_i$count` (**`r lead_i$freq`**%) `r ecg_lead_level`
-* Lead III: `r lead_iii$count` (**`r lead_iii$freq`**%) `r ecg_lead_level`
-* Unclassified: `r lead_unclassified$count` (**`r lead_unclassified$freq`**%) `r ecg_lead_level`
+* Lead II: **`r ecg_lead_ii$percentage`%** (**`r ecg_lead_ii$n`** / **`r ecg_lead_ii$total`** `r ecg_lead_ii$level`)
+* Lead I: **`r ecg_lead_i$percentage`%** (**`r ecg_lead_i$n`** / **`r ecg_lead_i$total`** `r ecg_lead_i$level`)
+* Lead III: **`r ecg_lead_iii$percentage`%** (**`r ecg_lead_iii$n`** / **`r ecg_lead_iii$total`** `r ecg_lead_iii$level`)
+* Unclassified: **`r ecg_lead_nc$percentage`%** (**`r ecg_lead_nc$n`** / **`r ecg_lead_nc$total`** `r ecg_lead_nc$level`)
 
 ### Dealing with cardiac field artifacts
 
@@ -1211,7 +1130,7 @@ HEP reference events (`r hep_reference_level`):
 * Studies not using baseline correction: **`r baseline_correction_stats %>% filter(baseline_category == "No") %>% pull(percentage_within_reporting)`%** (`r baseline_correction_stats %>% filter(baseline_category == "No") %>% pull(n)`/`r sum(baseline_correction_stats$n)`)
 
 Baseline correction (`r baseline_correction_level`):
-* Pipelines using baseline correction: **`r baseline_pct`%** (`r sum(baseline_correction_stats$n[baseline_correction_stats$baseline_category %in% c("Yes", "Both")])`/`r final_sample_stats$total_studies`)
+* Pipelines using baseline correction: **`r baseline_pct`%** (`r sum(baseline_correction_stats$n[baseline_correction_stats$baseline_category %in% c("Yes", "Both")])`/`r total_studies`)
 
 ### T-wave Baseline Correction
 
@@ -1287,84 +1206,74 @@ HEP values (`r hep_value_level`):
 * Other measures: **`r sum(hep_value_studies$n[4:nrow(hep_value_studies)])`** studies (**`r sum(hep_value_studies$percentage[4:nrow(hep_value_studies)])`%**)
 
 
-## Statistical Analysis and power considerations
+### 3.8. Statistical analysis and power considerations
+
+Overview of numbers presented in Fig. 7:
+
+```{r participants-groups-conditions}
+participants_summary <- get_summary(df_pipelines,
+                                    "sample_size")
+groups_summary <- get_summary(df_pipelines,
+                              "groups")
+conditions_summary <- get_summary(df_pipelines,
+                                  "conditions")
+```
+
+* Number of participants: **`r participants_summary$min`** - **`r participants_summary$max`**, median = **`r participants_summary$median`**
+
+* Number of groups: **`r groups_summary$min`** - **`r groups_summary$max`**, median = `r groups_summary$median`
+
+* Number of conditions: **`r conditions_summary$min`** - **`r conditions_summary$max`**, median = `r conditions_summary$median`
+
+```{r hypothesis}
+hypothesis_df <- hist_discrete(df_pipelines,
+                               "hypothesis",
+                               group_col = NULL)
+hypothesis_diff <- get_row(hypothesis_df,
+                           "hypothesis",
+                           "Group/Condition Differences")
+hypothesis_corr <- get_row(hypothesis_df,
+                           "hypothesis",
+                           "Correlation")
+```
+
+* Percentage of pipelines with group or condition analysis: **`r hypothesis_diff$percentage`%** (**`r hypothesis_diff$n`** / **`r hypothesis_diff$total`**)
+
+* Percentage of pipelines with correlation analysis: **`r hypothesis_corr$percentage`%** (**`r hypothesis_corr$n`** / **`r hypothesis_corr$total`**)
+
+```{r trials-summary}
+missing_trials_original <- get_row(missing_df, "Column", "trials_original")
+
+trials_summary <- get_summary(df_pipelines,
+                              "trials_Mean")
+```
+
+* Percentage of missing HEP epoch info: **`r missing_trials_original$percentage`%** (**`r missing_trials_original$count`** / **`r missing_trials_original$total`** studies)
+
+* Number of trials per pipeline: **`r trials_summary$min`**-**`r trials_summary$max`**, median = **`r trials_summary$median`**
 
 ```{r stats}
+statistics_df <- hist_discrete(df_pipelines, "statistics",
+                               allowed = stats_allowed) %>%
+  arrange(-percentage)
+```
 
-# Calculate percentages for statistical test families
-statistical_test_stats <- df_pipelines %>%
-  distinct(PMID, statistics) %>%
-  filter(statistics != "unknown" & statistics != "none") %>% 
-  count(statistics) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1)) %>%
-  arrange(desc(percentage))
+* Most common statistical tests (top 3):
 
-# Check if statistical tests are at study or pipeline level
-statistics_level <- check_studies_or_pipelines(df_pipelines, "statistics")
-
-# Calculate percentages for analysis type
-analysis_type_stats <- df_pipelines %>%
-  mutate(
-    is_group_or_condition = if_else(grepl("group", tolower(hypothesis)), TRUE, FALSE),
-    is_correlation = if_else(grepl("correlation", tolower(hypothesis)), TRUE, FALSE)
-  ) %>%
-  summarise(
-    pct_group_or_condition = round(mean(is_group_or_condition, na.rm = TRUE) * 100, 1),
-    pct_correlation = round(mean(is_correlation, na.rm = TRUE) * 100, 1)
+```{r statistics-results, results='asis'}
+for (i in 1:3) {
+  row <- statistics_df[i, ]
+  cat(
+    paste0(
+      '  * ', row$statistics, ': ',
+      '**', row$percentage, '%**', 
+      ' (**', row$n, '** / **', row$total, '** ', row$level, ')\n'
+    )
   )
+}
+```
 
-# Participant statistics
-participants_stats <- df_pipelines %>%
-  distinct(PMID, sample_size) %>%
-  summarise(
-    participants_min = min(sample_size, na.rm = TRUE),
-    participants_max = max(sample_size, na.rm = TRUE),
-    participants_median = median(sample_size, na.rm = TRUE),
-    participants_n = sum(!is.na(sample_size))
-  )
-
-# Estimated and original # Trials per pipeline statistics
-trials_stats <- df_pipelines %>%
-  filter(!is.na(trials_Mean)) %>%
-  summarise(
-    min_trials = min(trials_Mean, na.rm = TRUE),
-    max_trials = max(trials_Mean, na.rm = TRUE),
-    mean_trials = round(median(trials_Mean, na.rm = TRUE), 1)
-  )
-
-# Check if trials are at study or pipeline level
-trials_level <- check_studies_or_pipelines(df_pipelines, "trials_Mean")
-
-#Missing HER Trials
-pct_missing_trials_original <- results_df_missing %>%
-  filter(Column == "trials_original") %>%
-  mutate(Percent = round(Metric * 100, 1)) %>%
-  pull(Percent)
-
-
-# Statistical tests split by clustering vs averaging - most common for each method
-stats_table <- df_pipelines %>%
-  filter(statistics != "unknown" & statistics != "none" & 
-         method_category %in% c("Averaging", "Clustering")) %>%
-  distinct(PMID, statistics, method_category) %>%
-  count(method_category, statistics) %>%
-  group_by(method_category) %>%
-  mutate(
-    total_in_category = sum(n),
-    percentage = round(n / total_in_category * 100, 1)
-  ) %>%
-  arrange(method_category, desc(percentage)) %>%
-  slice_head(n = 3) %>%
-  ungroup() %>%
-  select(method_category, statistics, n, percentage) %>%
-  rename(
-    "Analysis Method" = method_category,
-    "Statistical Test" = statistics,
-    "Studies (n)" = n,
-    "Percentage (%)" = percentage
-  )
-
-
+```{r effect-size}
 # Calculate minimum detectable effect sizes (Hedges' g) for each pipeline
 hedges_column <- compute_effect_columns(df_pipelines, 
                                         test_type_col = statistics, 
@@ -1373,115 +1282,82 @@ hedges_column <- compute_effect_columns(df_pipelines,
                                         conditions_col = conditions)
 
 # Combine with original data
-hedges_data <- bind_cols(df_pipelines, hedges_column) %>%
-              distinct(PMID, hedges_g, .keep_all = TRUE) %>%
-              filter(clustering ==0)
+hedges_df <- bind_cols(df_pipelines, hedges_column) %>%
+               filter(clustering == 0,
+                      statistics != "Regression") %>%
+               distinct(PMID, hedges_g, .keep_all = TRUE) %>%
+               drop_na(hedges_g)
 
-# Average of Coll et al. (2020) reported average effect size
-# not sure if this is the right way to do it
-coll_average_effect <- mean(c(0.35, 0.37, 0.49, 0.72))
+hedges_summary <- get_summary(hedges_df, "hedges_g",
+                              digits_min = 2, digits_max = 2, digits_median = 2)
+```
 
-# Calculate percentage of pipelines that could detect each individual Coll et al. effect size
-individual_effect_sizes <- c(0.35, 0.37, 0.49, 0.72)
-effect_size_names <- c("interoceptive_performance", "attention_to_heart", "clinical_vs_control", "arousal")
+Power analysis:
 
-# Calculate power for each individual effect size
-power_stats <- map2_dfr(individual_effect_sizes, effect_size_names, function(effect_size, name) {
-  hedges_data %>%
+* Estimated minimal detectable effect sizes: **`r hedges_summary$min`**-**`r hedges_summary$max`**, median = **`r hedges_summary$median`**
+
+```{r detect-coll}
+detect_effect <- function(effect_size, name) {
+  hedges_df %>%
     summarise(
-      effect_type = name,
+      name = name,
       effect_size = effect_size,
-      total_pipelines = n(),
-      pipelines_detecting = sum(hedges_g <= effect_size, na.rm = TRUE),
-      percentage_detecting = round(pipelines_detecting / total_pipelines * 100, 1)
+      total = n(),
+      count = sum(hedges_g <= effect_size, na.rm = TRUE),
+      percentage = round(count / total * 100, 1)
     )
-})
+}
 
-# Calculate percentage of pipelines that could detect the Coll et al. average effect size
-pipelines_detect_coll <- hedges_data %>%
-  summarise(
-    total_pipelines = n(),
-    pipelines_detecting_coll = sum(hedges_g <= coll_average_effect, na.rm = TRUE),
-    percentage_detecting_coll = round(pipelines_detecting_coll / total_pipelines * 100, 0)
+detecting_df <- map2_dfr(effect_sizes_Coll2020$value, 
+                         effect_sizes_Coll2020$kind,
+                         detect_effect) %>%
+  arrange(percentage)
+detecting_df$missing <- detecting_df$total - detecting_df$count
+detecting_df$missing_percent <- 100 - detecting_df$percentage
+
+# First row has the worst power, last row - the best
+underpowered_min <- detecting_df[nrow(detecting_df), ]
+underpowered_max <- detecting_df[1, ]
+```
+
+* Percent of pipelines detecting effects from Coll et al. (2020):
+
+```{r detect-coll-results, results='asis'}
+for (i in 1:nrow(detecting_df)) {
+  row <- detecting_df[i, ]
+  cat(
+    paste0(
+      '  * ', row$name, 
+      ' (**', row$effect_size, '**): ',
+      '**', row$percentage, '%**', 
+      ' (**', row$count, '** / **', row$total, '** pipelines)\n'
+    )
   )
+}
+```
 
-# Calculate minimal detectable effect size statistics
-hedges_g_stats <- hedges_data %>%
-  summarise(
-    min_hedges_g = round(min(hedges_g, na.rm = TRUE), 2),
-    max_hedges_g = round(max(hedges_g, na.rm = TRUE), 2),
-    median_hedges_g = round(median(hedges_g, na.rm = TRUE), 2)
-  )
+* Underpowered and potentially unreliable findings: **`r underpowered_min$missing_percent`%** (**`r underpowered_min$missing`** / **`r underpowered_min$total`**) to **`r underpowered_max$missing_percent`%** (**`r underpowered_max$missing`** / **`r underpowered_max$total`**) of pipelines.
 
-# Preregistration
-pct_prereg <- df_pipelines %>%
-  distinct(PMID, Preregistration) %>%
-  summarise(
-    percentage = round(mean(Preregistration, na.rm = TRUE) * 100, 1)
-  ) %>%
-  pull(percentage)
+```{r preregistation}
+prereg_df <- hist_discrete(df_pipelines, "Preregistration")
+have_prereg <- get_row(prereg_df, "Preregistration", 1)
 
-# publication bias
 non_sig_results <- df_pipelines %>%
   group_by(PMID) %>%
   filter(all(significant_test == 0, na.rm = TRUE)) %>%
   distinct(PMID, .keep_all = TRUE) %>%
-  ungroup() 
-
+  ungroup()
+non_sig_count <- nrow(non_sig_results)
+non_sig_percent <- round(non_sig_count / total_studies * 100, 1)
 ```
 
-Number of participants per pipeline: Min: **`r participants_stats$participants_min`**, Max: **`r participants_stats$participants_max`**, Median: **`r participants_stats$participants_median`**
+Preregistrations & publication bias:
 
-Number of groups: **`r min(df_pipelines$groups, na.rm = TRUE)`** - **`r max(df_pipelines$groups, na.rm = TRUE)`** 
+* Percentage of pipelines with preregistration: **`r have_prereg$percentage`%** (**`r have_prereg$n`** / **`r have_prereg$total`** **`r have_prereg$level`**) 
 
-Number of conditions: **`r min(df_pipelines$conditions, na.rm = TRUE)`** - **`r max(df_pipelines$conditions, na.rm = TRUE)`** 
+* Number and percentage of studies without significant results: **`r non_sig_percent`%** (**`r non_sig_count`** / **`r total_studies`** studies)
 
-Percentage of pipelines with group or condition analysis: **`r analysis_type_stats$pct_group_or_condition`%** (`r sum(grepl("group", tolower(df_pipelines$hypothesis)), na.rm = TRUE)`/`r sum(!is.na(df_pipelines$hypothesis))`)
-
-Percentage of pipelines with correlation analysis: **`r analysis_type_stats$pct_correlation`%** (`r sum(grepl("correlation", tolower(df_pipelines$hypothesis)), na.rm = TRUE)`/`r sum(!is.na(df_pipelines$hypothesis))`)
-
-Number of trials per pipeline: Min: **`r trials_stats$min_trials`**, Max: **`r trials_stats$max_trials`**, Median: **`r trials_stats$mean_trials `**
-
-Percentage of missing HEP epoch info: **`r pct_missing_trials_original`%**
-
-### Statistical Analysis Methods
-
-Statistical test families (`r statistics_level`):
-
-* **`r statistical_test_stats$statistics[1]`**: **`r statistical_test_stats$percentage[1]`%** (`r statistical_test_stats$n[1]` studies)
-* **`r statistical_test_stats$statistics[2]`**: **`r statistical_test_stats$percentage[2]`%** (`r statistical_test_stats$n[2]` studies)  
-* **`r statistical_test_stats$statistics[3]`**: **`r statistical_test_stats$percentage[3]`%** (`r statistical_test_stats$n[3]` studies)
-* **`r statistical_test_stats$statistics[4]`**: **`r statistical_test_stats$percentage[4]`%** (`r statistical_test_stats$n[4]` studies)
-
-#### Statistical Tests by Analysis Method
-
-```{r stats-by-method-table, results='asis'}
-knitr::kable(stats_table, 
-             caption = "Most common statistical test families by analysis method (Averaging vs Clustering)",
-             align = c("l", "l", "c", "c"))
-```
-
-### Power Analysis
-
-Only **`r pipelines_detect_coll$percentage_detecting_coll`%** of pipelines (`r pipelines_detect_coll$pipelines_detecting_coll`/`r pipelines_detect_coll$total_pipelines`) had sufficient power to detect the average effect size reported by Coll et al. (2020).
-
-The resulting minimal detectable effect sizes range from **`r hedges_g_stats$min_hedges_g`** to **`r hedges_g_stats$max_hedges_g`**, with a median of **`r hedges_g_stats$median_hedges_g`** Hedges' g.
-
-- **`r power_stats$percentage_detecting[power_stats$effect_type == "interoceptive_performance"]`%** of pipelines had enough power to detect Hedges' g of 0.35 (interoceptive performance meta-estimate)
-- **`r power_stats$percentage_detecting[power_stats$effect_type == "attention_to_heart"]`%** of pipelines could reliably detect Hedges' g of 0.37 (attention to heart meta-estimate)
-- **`r power_stats$percentage_detecting[power_stats$effect_type == "clinical_vs_control"]`%** of pipelines could reliably detect Hedges' g of 0.49 (clinical vs. control groups meta-estimate)
-- **`r power_stats$percentage_detecting[power_stats$effect_type == "arousal"]`%** of pipelines could reliably detect Hedges' g of 0.72 (arousal meta-estimate).
-
-These observations suggest that **`r 100 - max(power_stats$percentage_detecting)`%** to **`r 100 - min(power_stats$percentage_detecting)`%** of pipelines may have yielded underpowered and potentially unreliable findings.
-
-### Preregistration
-Percentage of pipelines with preregistration: **`r pct_prereg`%** 
-
-### publication bias
-
-Number and percentage of studies without significant results: **`r nrow(non_sig_results)`** studies (**`r round(nrow(non_sig_results) / total_studies * 100, 1)`%**)
-
-### Control Analyses
+### 3.9 Control Analyses
 
 ```{r control analyses}
 

@@ -6,26 +6,39 @@ figure_stats <- function(df, save_path, ext = 'png') {
                   force.numeric = F, 
                   use_proportion = T, 
                   discrete = T, 
-                  custom_labels = c("No","Yes"))
-  b <- hist_panel(df = df, col = "sample_size", title = "Sample Size", x.label = "Number of\nSubjects", use_proportion = T)
-  c <- hist_panel(df = df, col = "groups", title = "Groups", x.label = "Number of\nGroups", binwidth = 1, use_proportion = T)  
-  d <- hist_panel(df = df, col = "conditions", title = "Conditions", x.label = "Number of\nConditions", binwidth = 1, use_proportion = T)  
-  e <- hist_panel(df = df, col = "trials_Mean", title = "Averaged Epochs", force.numeric = T, x.label = "Number of\nAveraged Epochs", use_proportion = T)
+                  custom_labels = c("0" = "No", "1" = "Yes"))
+  b <- hist_panel(df = df, 
+                  col = "sample_size", 
+                  title = "Sample size", 
+                  x.label = "Number of\nSubjects", 
+                  use_proportion = T)
+  c <- hist_panel(df = df, 
+                  col = "groups", 
+                  title = "Groups", 
+                  x.label = "Number of\nGroups", 
+                  binwidth = 1, 
+                  use_proportion = T)  
+  d <- hist_panel(df = df,
+                  col = "conditions", 
+                  title = "Conditions", 
+                  x.label = "Number of\nConditions", 
+                  binwidth = 1, 
+                  use_proportion = T)  
+  e <- hist_panel(df = df, 
+                  col = "trials_Mean", 
+                  title = "Averaged epochs", 
+                  force.numeric = T, 
+                  x.label = "Number of\nAveraged Epochs", 
+                  use_proportion = T)
   
-f <- hist_panel(df = df, 
+  f <- hist_panel(df = df, 
                   col = "statistics", 
-                  title = "Statistical Tests",
+                  title = "Statistical tests",
                   x.label = "", 
                   discrete = T, 
                   tilt_labels = F,
                   decreasing = F,
-                  allowed = c("t-test" = "t-test",
-                              "Correlation" = "Correlation",
-                              "Regression" = "Regression", 
-                              "ANOVA" = "ANOVA",
-                              "Non-parametric comparison" = "Non-parametric\ncomparison",
-                              "Classification" = "Classification",
-                              "F-test" = "F-test")) + coord_flip()
+                  allowed = stats_allowed) + coord_flip()
   g <- plot_hedges_g(df = df)
   
   first_row <- plot_grid(

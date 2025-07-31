@@ -3,6 +3,7 @@ source(file.path(func_path, "plots", "plotting_helpers.R"))
 source(file.path(func_path, "plots", "utils.R"))
 source(file.path(func_path, "plots", "preprocess_controls.R"))
 source(file.path(func_path, "plots", "create_combined_plot.R"))
+source(file.path(func_path, "plots", "bar_panel.R"))
 source(file.path(func_path, "plots", "hist_panel.R"))
 source(file.path(func_path, "plots", "create_ica_usage_plot.R"))
 source(file.path(func_path, "plots", "create_ica_rej.R"))
@@ -17,9 +18,6 @@ source(file.path(func_path, "plots", "create_control_categories_plot.R"))
 source(file.path(func_path, "plots", "rejected_cardiac_ics.R"))
 source(file.path(func_path, "plots", "plot_eeg_locations.R"))
 source(file.path(func_path, "plots", "plot_ecg_locations.R"))
-source(file.path(func_path, "plots", "plot_missing.R"))
-source(file.path(func_path, "plots", "plot_multiple_choices.R"))
-source(file.path(func_path, "plots", "plot_entropy.R"))
 source(file.path(func_path, "plots", "create_time_windows_plot.R"))
 source(file.path(func_path, "plots", "create_single_ecg_plot.R"))
 source(file.path(func_path, "plots", "plot_hedges_g.R"))
@@ -29,9 +27,12 @@ source(file.path(func_path, "plots", "plot_hedges_g_adjusted_for_noise.R"))
 source(file.path(func_path, "plots", "plot_simulated_effects.R"))
 
 source(file.path(func_path, 'figures', '01_overview_studies.R'))
+source(file.path(func_path, 'figures', '02_overview_pipelines.R'))
+source(file.path(func_path, 'figures', '04_ecg_summary.R'))
 source(file.path(func_path, 'figures', '06_hep_estimation.R'))
 source(file.path(func_path, 'figures', '07_stats.R'))
 source(file.path(func_path, 'figures', '08_controls.R'))
+source(file.path(func_path, 'figures', 's1_additional_hedges_g.R'))
 
 create_epoch_simulation_plot <- function(df){
   
@@ -277,68 +278,8 @@ cfa_removal <- function(df) {
 }
 
 
-figure_ecg_summary <- function(df, save_path, ext = 'png') {
-  # Map "unknown" to 9 so that it isn't lost during conversion to numeric and
-  # is positioned nicely
-  df <- df %>%
-    mutate(ecg_num_electrodes = replace(ecg_num_electrodes,
-                                        ecg_num_electrodes == "unknown", 9))
-  p_ecg_num_electrodes <- hist_panel(df, "ecg_num_electrodes", 
-                                     force.numeric = T, binwidth = 1,
-                                     x.label = "Number of ECG electrodes",
-                                     title = "Number of ECG electrodes") +
-    scale_x_continuous(breaks = seq(0, 9),
-                       labels = c(seq(0, 8), "N/M"))
-  p_ecg_leads <- hist_panel(df, "ecg_lead", fill_as_aesthetic = T,
-                            discrete = T, title = "ECG lead") +
-    scale_fill_manual(values = leads_palette,
-                      na.value = plot_fill_default_single,
-                      guide = "none") 
-  p_ecg_locations <- plot_ecg_locations(df, leads_palette)
-  fig_AB = plot_grid(
-    p_ecg_num_electrodes,
-    p_ecg_leads,
-    ncol = 1,
-    labels = c("A", "B")
-  )
-
-  fig <- plot_grid(
-    fig_AB,
-    p_ecg_locations,
-    nrow = 1,
-    rel_widths = c(1, 1.5),
-    labels = c("", "C")
-  )
-  
-  ggsave(
-    filename = file.path(save_path, paste0("ecg_summary_plot.", ext)),
-    plot = fig,
-    width = 10,
-    height = 4,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-}
-
-
-
-
 # Here we generate all figures
 make_figures <- function(df, save_path, ext = "svg") {
-
-  fig1BCD_studies <- studies_overview(df)
-  ggsave(
-    filename = file.path(save_path, paste0("studies_overview.", ext)),
-    plot = fig1BCD_studies,
-    width = 190,
-    height = 76.2,
-    units = "mm",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
 
   eeg_acq_prep_plot <- eeg_acq_prep(df)
   ggsave(

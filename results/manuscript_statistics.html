@@ -62,8 +62,8 @@ Heartbeat Evoked Responses</h3>
 
 
 
-<div id="overview" class="section level2">
-<h2>Overview</h2>
+<div id="overview" class="section level1">
+<h1>Overview</h1>
 <p>This document provides all values mentioned in the manuscript
 “Heartbeat-evoked responses in MEG/EEG: A systematic review of methods
 with suggestions for analysis and reporting”. All sections of this
@@ -71,8 +71,8 @@ document apart from this overview match the corresponding section of the
 manuscript. Numbers highlighted in <strong>bold</strong> are also
 present in the manuscript.</p>
 <div id="important-distinction-studies-vs-pipelines"
-class="section level3">
-<h3>Important Distinction: Studies vs Pipelines</h3>
+class="section level2">
+<h2>Important Distinction: Studies vs Pipelines</h2>
 <ul>
 <li><strong>Studies</strong>: Unique publications (identified by PMID).
 Each study represents one research paper.</li>
@@ -82,10 +82,10 @@ time windows, or statistical approaches).</li>
 </ul>
 </div>
 </div>
-<div id="methods" class="section level2">
-<h2>2. Methods</h2>
-<div id="literature-search" class="section level3">
-<h3>2.1. Literature search</h3>
+<div id="methods" class="section level1">
+<h1>2. Methods</h1>
+<div id="literature-search" class="section level2">
+<h2>2.1. Literature search</h2>
 <p>Table 1 - number of retrieved papers:</p>
 <ul>
 <li>15.01.2024: <strong>647</strong></li>
@@ -105,8 +105,8 @@ time windows, or statistical approaches).</li>
 </ul>
 <p>Final sample: <strong>132</strong> studies</p>
 </div>
-<div id="data-analysis" class="section level3">
-<h3>2.3. Data analysis</h3>
+<div id="data-analysis" class="section level2">
+<h2>2.3. Data analysis</h2>
 <p>Analysis parameters:</p>
 <ul>
 <li>Entropy - binning continuous variables if at least
@@ -117,10 +117,10 @@ time windows, or statistical approaches).</li>
 </ul>
 </div>
 </div>
-<div id="results" class="section level2">
-<h2>3. Results</h2>
-<div id="overview-of-the-included-studies" class="section level3">
-<h3>3.1. Overview of the included studies</h3>
+<div id="results" class="section level1">
+<h1>3. Results</h1>
+<div id="overview-of-the-included-studies" class="section level2">
+<h2>3.1. Overview of the included studies</h2>
 <p>Total studies: <strong>132</strong>
 (<strong>1986</strong>-<strong>2024</strong>)</p>
 <p>Modality:</p>
@@ -137,9 +137,11 @@ time windows, or statistical approaches).</li>
 <li>Both: <strong>7</strong> studies (<strong>5.3%</strong>)</li>
 </ul>
 </div>
-<div id="overview-of-methodological-choices" class="section level3">
-<h3>3.2. Overview of methodological choices</h3>
+<div id="overview-of-methodological-choices" class="section level2">
+<h2>3.2. Overview of methodological choices</h2>
 <p>Total pipelines: <strong>410</strong></p>
+<div id="multiple-choices" class="section level3">
+<h3>Multiple choices</h3>
 <p>Studies using multiple choices for:</p>
 <ul>
 <li><p>Statistical tests: <strong>56%</strong> (<strong>74</strong> /
@@ -147,6 +149,9 @@ time windows, or statistical approaches).</li>
 <li><p>HER window start or end times: <strong>45%</strong>
 (<strong>59</strong> / <strong>132</strong>)</p></li>
 </ul>
+</div>
+<div id="missing-information" class="section level3">
+<h3>Missing information</h3>
 <p>Missing information:</p>
 <ul>
 <li><p>cardiac IC rejection information (among those using CFA removal):
@@ -195,7 +200,7 @@ time windows, or statistical approaches).</li>
 </div>
 </div>
 <div id="meeg-acquisition-preprocessing" class="section level2">
-<h2>M/EEG Acquisition &amp; Preprocessing</h2>
+<h2>3.3. M/EEG acquisition &amp; preprocessing</h2>
 <div id="sensor-information" class="section level3">
 <h3>Sensor Information</h3>
 </div>
@@ -229,8 +234,9 @@ studies), Cz (<strong>18.1%</strong> (21/116) studies)</p>
 common)</p>
 <p>High-pass cutoffs: <strong>0.5, 0.1, 1 Hz</strong></p>
 </div>
-<div id="ecg-acquisition" class="section level3">
-<h3>3.4. ECG Acquisition</h3>
+</div>
+<div id="ecg-acquisition" class="section level2">
+<h2>3.4. ECG Acquisition</h2>
 <p>Studies that use ECG as a control variable: <strong>TODO</strong></p>
 <p>Studies that use 2 ECG electrodes: <strong>67.4</strong>%
 (<strong>89</strong> / <strong>132</strong>) studies</p>
@@ -246,8 +252,8 @@ common)</p>
 <strong>132</strong> studies)</li>
 </ul>
 </div>
-<div id="dealing-with-cardiac-field-artifacts" class="section level3">
-<h3>Dealing with cardiac field artifacts</h3>
+<div id="dealing-with-cardiac-artifacts" class="section level2">
+<h2>3.5. Dealing with cardiac artifacts</h2>
 <p>ICA for CFA: <strong>69</strong>/<strong>132</strong></p>
 <p>ICA timing (studies):</p>
 <ul>
@@ -256,10 +262,8 @@ common)</p>
 </ul>
 <p>Minimum IBI constraints: <strong>350</strong> to <strong>750</strong>
 ms (17 studies)</p>
-</div>
-</div>
-<div id="cfa-identification-approaches" class="section level2">
-<h2>CFA Identification Approaches</h2>
+<div id="cfa-identification-approaches" class="section level3">
+<h3>CFA Identification Approaches</h3>
 <ul>
 <li>Not reported: <strong>40.2%</strong> of studies using ICA
 (39/97)</li>
@@ -268,16 +272,16 @@ ms (17 studies)</p>
 * Automatic: <strong>20.7%</strong> (12/58) * Semi-Automatic:
 <strong>15.5%</strong> (9/58)</p>
 </div>
-<div id="cfa-identification-criteria" class="section level2">
-<h2>CFA Identification Criteria</h2>
+<div id="cfa-identification-criteria" class="section level3">
+<h3>CFA Identification Criteria</h3>
 <p>CFA criteria (pipelines): * Time Course: <strong>65.3%</strong>
 (32/49) * Topography: <strong>61.2%</strong> (30/49) * Power Spectrum:
 <strong>26.5%</strong> (13/49) * Correlation: <strong>4.1%</strong>
 (2/49) * Algorithm: <strong>18.4%</strong> (9/49) * Phase Consistency:
 <strong>14.3%</strong> (7/49)</p>
 </div>
-<div id="rejected-cardiac-ics" class="section level2">
-<h2>Rejected Cardiac ICs</h2>
+<div id="rejected-cardiac-ics" class="section level3">
+<h3>Rejected Cardiac ICs</h3>
 <ul>
 <li>Studies reporting number: <strong>20</strong> out of
 <strong>69</strong> studies that removed CFA-related ICs (20/69)</li>
@@ -285,14 +289,15 @@ ms (17 studies)</p>
 <li>Median: <strong>1.735</strong></li>
 </ul>
 </div>
-<div id="other-cfa-removal-strategies" class="section level2">
-<h2>Other CFA Removal Strategies</h2>
+<div id="other-cfa-removal-strategies" class="section level3">
+<h3>Other CFA Removal Strategies</h3>
 <p>Other CFA strategies: * CSD: 11 studies (<strong>8.3%</strong>)
 (studies) * Subtract/regress ECG from EEG: 8 studies
 (<strong>6.1%</strong>) (studies) * Pca On Hep: 2 studies
 (<strong>1.5%</strong>) (studies) * Subtract/Regress Ecg From Eeg, Limit
 Analysis To Time Of Minimal Artifact: 1 studies (<strong>0.8%</strong>)
 (studies)</p>
+</div>
 <div id="limit-time-range-analysis-window" class="section level3">
 <h3>Limit time range / analysis window</h3>
 <ul>
@@ -317,49 +322,8 @@ Analysis To Time Of Minimal Artifact: 1 studies (<strong>0.8%</strong>)
 </ul>
 </div>
 </div>
-<div id="hep-time-windows" class="section level2">
-<h2>HEP Time Windows</h2>
-</div>
-<div id="cardiac-reference-event-selection" class="section level2">
-<h2>Cardiac Reference Event Selection</h2>
-<p>HEP reference events (pipelines): * R-peak reference:
-<strong>93.2%</strong> of studies (123/132) * T-wave reference:
-<strong>4.5%</strong> of studies (6/132)</p>
-</div>
-<div id="hep-analysis-time-windows" class="section level2">
-<h2>HEP Analysis Time Windows</h2>
-<div id="t-wave-referenced-analysis" class="section level3">
-<h3>T-wave Referenced Analysis</h3>
-<ul>
-<li>Time range: <strong>-10</strong> to <strong>400</strong> ms after
-T-wave</li>
-<li>R-peak equivalent: approx. <strong>290</strong> to
-<strong>700</strong> ms after R-peak</li>
-</ul>
-</div>
-<div id="r-peak-referenced-analysis" class="section level3">
-<h3>R-peak Referenced Analysis</h3>
-<ul>
-<li>Time range: <strong>-250</strong> to <strong>1000</strong> ms
-relative to R-peak</li>
-</ul>
-<p><strong>Core overlap windows by analysis method:</strong> *
-Averaging: <strong>200</strong> to <strong>595</strong> ms (395ms
-window) - Studies overlapping with core: 92.7% (102/110) - Studies fully
-including core: 2.7% (3/110) - Median window size: 138ms</p>
-<ul>
-<li>Clustering: <strong>200</strong> to <strong>600</strong> ms (400ms
-window)
-<ul>
-<li>Studies overlapping with core: 100% (65/65)</li>
-<li>Studies fully including core: 47.7% (31/65)</li>
-<li>Median window size: 400ms</li>
-</ul></li>
-</ul>
-</div>
-</div>
 <div id="baseline-correction" class="section level2">
-<h2>Baseline Correction</h2>
+<h2>3.6. Baseline Correction</h2>
 <div id="general-statistics" class="section level3">
 <h3>General Statistics</h3>
 <p><strong>Overall baseline correction usage across all
@@ -390,17 +354,57 @@ ms around R-peak</li>
 </ul>
 </div>
 </div>
-<div id="significant-her-effects-time-ranges" class="section level2">
-<h2>Significant HER Effects Time Ranges</h2>
-<div id="r-peak-referenced-effects" class="section level3">
-<h3>R-peak Referenced Effects</h3>
+<div id="hep-time-windows" class="section level2">
+<h2>3.7. HEP Time Windows</h2>
+<div id="cardiac-reference-event-selection" class="section level3">
+<h3>Cardiac Reference Event Selection</h3>
+<p>HEP reference events (pipelines): * R-peak reference:
+<strong>93.2%</strong> of studies (123/132) * T-wave reference:
+<strong>4.5%</strong> of studies (6/132)</p>
+</div>
+<div id="hep-analysis-time-windows" class="section level3">
+<h3>HEP Analysis Time Windows</h3>
+<div id="t-wave-referenced-analysis" class="section level4">
+<h4>T-wave Referenced Analysis</h4>
+<ul>
+<li>Time range: <strong>-10</strong> to <strong>400</strong> ms after
+T-wave</li>
+<li>R-peak equivalent: approx. <strong>290</strong> to
+<strong>700</strong> ms after R-peak</li>
+</ul>
+</div>
+<div id="r-peak-referenced-analysis" class="section level4">
+<h4>R-peak Referenced Analysis</h4>
+<ul>
+<li>Time range: <strong>-250</strong> to <strong>1000</strong> ms
+relative to R-peak</li>
+</ul>
+<p><strong>Core overlap windows by analysis method:</strong> *
+Averaging: <strong>200</strong> to <strong>595</strong> ms (395ms
+window) - Studies overlapping with core: 92.7% (102/110) - Studies fully
+including core: 2.7% (3/110) - Median window size: 138ms</p>
+<ul>
+<li>Clustering: <strong>200</strong> to <strong>600</strong> ms (400ms
+window)
+<ul>
+<li>Studies overlapping with core: 100% (65/65)</li>
+<li>Studies fully including core: 47.7% (31/65)</li>
+<li>Median window size: 400ms</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="significant-her-effects-time-ranges" class="section level3">
+<h3>Significant HER Effects Time Ranges</h3>
+<div id="r-peak-referenced-effects" class="section level4">
+<h4>R-peak Referenced Effects</h4>
 <ul>
 <li>Significant effects range: <strong>-10</strong> to
 <strong>1000</strong> ms</li>
 </ul>
 </div>
-<div id="t-wave-referenced-effects" class="section level3">
-<h3>T-wave Referenced Effects</h3>
+<div id="t-wave-referenced-effects" class="section level4">
+<h4>T-wave Referenced Effects</h4>
 <ul>
 <li>Significant effects range: <strong>50</strong> to
 <strong>389</strong> ms</li>
@@ -408,10 +412,10 @@ ms around R-peak</li>
 </div>
 </div>
 <div id="statistical-analysis-methods-comparison"
-class="section level2">
-<h2>Statistical Analysis Methods Comparison</h2>
-<div id="r-peak-analysis" class="section level3">
-<h3>R-peak Analysis</h3>
+class="section level3">
+<h3>Statistical Analysis Methods Comparison</h3>
+<div id="r-peak-analysis" class="section level4">
+<h4>R-peak Analysis</h4>
 <ul>
 <li><strong>Peak Distribution Analysis</strong> (from cumulative plots):
 <ul>
@@ -428,8 +432,8 @@ permutations)</li>
 </ul></li>
 </ul>
 </div>
-<div id="t-wave-analysis" class="section level3">
-<h3>T-wave Analysis</h3>
+<div id="t-wave-analysis" class="section level4">
+<h4>T-wave Analysis</h4>
 <ul>
 <li><strong>Peak Distribution Analysis</strong> (from cumulative plots):
 <ul>
@@ -446,6 +450,7 @@ permutations)</li>
 </ul></li>
 </ul>
 </div>
+</div>
 <div id="analysis-window-definition" class="section level3">
 <h3>Analysis Window Definition</h3>
 <p>HEP determination method (pipelines): * Studies using averaging:
@@ -459,17 +464,20 @@ permutations)</li>
 <strong>%</strong> (/132)</li>
 </ul>
 </div>
-</div>
-<div id="hep-dependent-variables-analysis" class="section level2">
-<h2>HEP dependent variables analysis</h2>
+<div id="hep-dependent-variables-analysis" class="section level3">
+<h3>HEP dependent variables analysis</h3>
 <p>HEP values (pipelines): * Amplitude: <strong>127</strong> studies
 (<strong>90.1%</strong>) * Latency: <strong>3</strong> studies
 (<strong>2.1%</strong>) * Global Field Power: <strong>2</strong> studies
 (<strong>1.4%</strong>) * Other measures: <strong>9</strong> studies
 (<strong>6.3%</strong>)</p>
+</div>
+</div>
 <div id="statistical-analysis-and-power-considerations"
-class="section level3">
-<h3>3.8. Statistical analysis and power considerations</h3>
+class="section level2">
+<h2>3.8. Statistical analysis and power considerations</h2>
+<div id="overview-1" class="section level3">
+<h3>Overview</h3>
 <p>Overview of numbers presented in Fig. 7:</p>
 <ul>
 <li><p>Number of participants: <strong>1</strong> -
@@ -499,6 +507,9 @@ median = 1</p></li>
 <strong>222</strong> pipelines)</li>
 </ul></li>
 </ul>
+</div>
+<div id="power-analysis" class="section level3">
+<h3>Power analysis</h3>
 <p>Power analysis:</p>
 <ul>
 <li><p>Estimated minimal detectable effect sizes:
@@ -524,6 +535,9 @@ pipelines)</li>
 <strong>99.3%</strong> (<strong>133</strong> / <strong>134</strong>) of
 pipelines.</p></li>
 </ul>
+</div>
+<div id="preregistrations-publication-bias" class="section level3">
+<h3>Preregistrations &amp; publication bias</h3>
 <p>Preregistrations &amp; publication bias:</p>
 <ul>
 <li><p>Percentage of pipelines with preregistration:
@@ -534,8 +548,9 @@ pipelines.</p></li>
 studies)</p></li>
 </ul>
 </div>
-<div id="control-analyses" class="section level3">
-<h3>3.9. Control Analyses</h3>
+</div>
+<div id="control-analyses" class="section level2">
+<h2>3.9. Control Analyses</h2>
 <p>Control variables (pipelines): <strong>18.5%</strong> of pipelines
 (60/135) control for ECG.</p>
 <p><strong>49.4%</strong> of pipelines (86/174) control for overall

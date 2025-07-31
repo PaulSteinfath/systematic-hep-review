@@ -32,6 +32,7 @@ source(file.path(func_path, 'figures', '04_ecg_summary.R'))
 source(file.path(func_path, 'figures', '06_hep_estimation.R'))
 source(file.path(func_path, 'figures', '07_stats.R'))
 source(file.path(func_path, 'figures', '08_controls.R'))
+source(file.path(func_path, 'figures', 's1_additional_hedges_g.R'))
 
 create_epoch_simulation_plot <- function(df){
   
@@ -280,18 +281,4 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(epoch_simulation_plot)
-  
-  additional_hedges_g_plot <- plot_hedges_g(df = df, with_clustering = T, with_regression = T)
-  ggsave(
-    filename = file.path(save_path, paste0("additional_hedges_g_plot.", ext)),
-    plot = additional_hedges_g_plot,
-    width = 7,
-    height = 5,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  show(additional_hedges_g_plot)
-  
 }

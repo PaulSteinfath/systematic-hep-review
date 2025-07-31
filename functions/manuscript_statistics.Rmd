@@ -41,6 +41,15 @@ df_pipelines <- df_included
 get_row <- function(df, column, value) {
   as.list(df[df[[column]] == value,])
 }
+
+get_summary <- function(df, column, 
+                        digits_min = 0, digits_max = 0, digits_median = 1) {
+  list(
+    min = round(min(df[[column]], na.rm = TRUE), digits = digits_min),
+    max = round(max(df[[column]], na.rm = TRUE), digits = digits_max),
+    median = round(median(df[[column]], na.rm = TRUE), digits = digits_median)
+  )
+}
 ```
 
 ## Overview
@@ -95,8 +104,8 @@ Final sample: **`r total_included_pubmed + total_included_manual`** studies
 Analysis parameters:
 
 * Entropy - binning continuous variables if at least **`r params$entropy_unique_threshold`** unique values are present
-* Power computation - power threshold: TODO
-* Power computation - significance level: TODO
+* Power computation - significance level: **`r params$hedges_sig_level * 100`%**
+* Power computation - power threshold: **`r params$hedges_power_level * 100`%**
 * Number of permutations for testing peak differences: TODO
 
 ## 3. Results
@@ -1197,84 +1206,74 @@ HEP values (`r hep_value_level`):
 * Other measures: **`r sum(hep_value_studies$n[4:nrow(hep_value_studies)])`** studies (**`r sum(hep_value_studies$percentage[4:nrow(hep_value_studies)])`%**)
 
 
-## Statistical Analysis and power considerations
+### 3.8. Statistical analysis and power considerations
+
+Overview of numbers presented in Fig. 7:
+
+```{r participants-groups-conditions}
+participants_summary <- get_summary(df_pipelines,
+                                    "sample_size")
+groups_summary <- get_summary(df_pipelines,
+                              "groups")
+conditions_summary <- get_summary(df_pipelines,
+                                  "conditions")
+```
+
+* Number of participants: **`r participants_summary$min`** - **`r participants_summary$max`**, median = **`r participants_summary$median`**
+
+* Number of groups: **`r groups_summary$min`** - **`r groups_summary$max`**, median = `r groups_summary$median`
+
+* Number of conditions: **`r conditions_summary$min`** - **`r conditions_summary$max`**, median = `r conditions_summary$median`
+
+```{r hypothesis}
+hypothesis_df <- hist_discrete(df_pipelines,
+                               "hypothesis",
+                               group_col = NULL)
+hypothesis_diff <- get_row(hypothesis_df,
+                           "hypothesis",
+                           "Group/Condition Differences")
+hypothesis_corr <- get_row(hypothesis_df,
+                           "hypothesis",
+                           "Correlation")
+```
+
+* Percentage of pipelines with group or condition analysis: **`r hypothesis_diff$percentage`%** (**`r hypothesis_diff$n`** / **`r hypothesis_diff$total`**)
+
+* Percentage of pipelines with correlation analysis: **`r hypothesis_corr$percentage`%** (**`r hypothesis_corr$n`** / **`r hypothesis_corr$total`**)
+
+```{r trials-summary}
+missing_trials_original <- get_row(missing_df, "Column", "trials_original")
+
+trials_summary <- get_summary(df_pipelines,
+                              "trials_Mean")
+```
+
+* Percentage of missing HEP epoch info: **`r missing_trials_original$percentage`%** (**`r missing_trials_original$count`** / **`r missing_trials_original$total`** studies)
+
+* Number of trials per pipeline: **`r trials_summary$min`**-**`r trials_summary$max`**, median = **`r trials_summary$median`**
 
 ```{r stats}
+statistics_df <- hist_discrete(df_pipelines, "statistics",
+                               allowed = stats_allowed) %>%
+  arrange(-percentage)
+```
 
-# Calculate percentages for statistical test families
-statistical_test_stats <- df_pipelines %>%
-  distinct(PMID, statistics) %>%
-  filter(statistics != "unknown" & statistics != "none") %>% 
-  count(statistics) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1)) %>%
-  arrange(desc(percentage))
+* Most common statistical tests (top 3):
 
-# Check if statistical tests are at study or pipeline level
-statistics_level <- check_studies_or_pipelines(df_pipelines, "statistics")
-
-# Calculate percentages for analysis type
-analysis_type_stats <- df_pipelines %>%
-  mutate(
-    is_group_or_condition = if_else(grepl("group", tolower(hypothesis)), TRUE, FALSE),
-    is_correlation = if_else(grepl("correlation", tolower(hypothesis)), TRUE, FALSE)
-  ) %>%
-  summarise(
-    pct_group_or_condition = round(mean(is_group_or_condition, na.rm = TRUE) * 100, 1),
-    pct_correlation = round(mean(is_correlation, na.rm = TRUE) * 100, 1)
+```{r statistics-results, results='asis'}
+for (i in 1:3) {
+  row <- statistics_df[i, ]
+  cat(
+    paste0(
+      '  * ', row$statistics, ': ',
+      '**', row$percentage, '%**', 
+      ' (**', row$n, '** / **', row$total, '** ', row$level, ')\n'
+    )
   )
+}
+```
 
-# Participant statistics
-participants_stats <- df_pipelines %>%
-  distinct(PMID, sample_size) %>%
-  summarise(
-    participants_min = min(sample_size, na.rm = TRUE),
-    participants_max = max(sample_size, na.rm = TRUE),
-    participants_median = median(sample_size, na.rm = TRUE),
-    participants_n = sum(!is.na(sample_size))
-  )
-
-# Estimated and original # Trials per pipeline statistics
-trials_stats <- df_pipelines %>%
-  filter(!is.na(trials_Mean)) %>%
-  summarise(
-    min_trials = min(trials_Mean, na.rm = TRUE),
-    max_trials = max(trials_Mean, na.rm = TRUE),
-    mean_trials = round(median(trials_Mean, na.rm = TRUE), 1)
-  )
-
-# Check if trials are at study or pipeline level
-trials_level <- check_studies_or_pipelines(df_pipelines, "trials_Mean")
-
-#Missing HER Trials
-pct_missing_trials_original <- missing_df %>%
-  filter(Column == "trials_original") %>%
-  mutate(percentage = round(percentage * 100, 1)) %>%
-  pull(percentage)
-
-
-# Statistical tests split by clustering vs averaging - most common for each method
-stats_table <- df_pipelines %>%
-  filter(statistics != "unknown" & statistics != "none" & 
-         method_category %in% c("Averaging", "Clustering")) %>%
-  distinct(PMID, statistics, method_category) %>%
-  count(method_category, statistics) %>%
-  group_by(method_category) %>%
-  mutate(
-    total_in_category = sum(n),
-    percentage = round(n / total_in_category * 100, 1)
-  ) %>%
-  arrange(method_category, desc(percentage)) %>%
-  slice_head(n = 3) %>%
-  ungroup() %>%
-  select(method_category, statistics, n, percentage) %>%
-  rename(
-    "Analysis Method" = method_category,
-    "Statistical Test" = statistics,
-    "Studies (n)" = n,
-    "Percentage (%)" = percentage
-  )
-
-
+```{r effect-size}
 # Calculate minimum detectable effect sizes (Hedges' g) for each pipeline
 hedges_column <- compute_effect_columns(df_pipelines, 
                                         test_type_col = statistics, 
@@ -1283,115 +1282,82 @@ hedges_column <- compute_effect_columns(df_pipelines,
                                         conditions_col = conditions)
 
 # Combine with original data
-hedges_data <- bind_cols(df_pipelines, hedges_column) %>%
-              distinct(PMID, hedges_g, .keep_all = TRUE) %>%
-              filter(clustering ==0)
+hedges_df <- bind_cols(df_pipelines, hedges_column) %>%
+               filter(clustering == 0,
+                      statistics != "Regression") %>%
+               distinct(PMID, hedges_g, .keep_all = TRUE) %>%
+               drop_na(hedges_g)
 
-# Average of Coll et al. (2020) reported average effect size
-# not sure if this is the right way to do it
-coll_average_effect <- mean(c(0.35, 0.37, 0.49, 0.72))
+hedges_summary <- get_summary(hedges_df, "hedges_g",
+                              digits_min = 2, digits_max = 2, digits_median = 2)
+```
 
-# Calculate percentage of pipelines that could detect each individual Coll et al. effect size
-individual_effect_sizes <- c(0.35, 0.37, 0.49, 0.72)
-effect_size_names <- c("interoceptive_performance", "attention_to_heart", "clinical_vs_control", "arousal")
+Power analysis:
 
-# Calculate power for each individual effect size
-power_stats <- map2_dfr(individual_effect_sizes, effect_size_names, function(effect_size, name) {
-  hedges_data %>%
+* Estimated minimal detectable effect sizes: **`r hedges_summary$min`**-**`r hedges_summary$max`**, median = **`r hedges_summary$median`**
+
+```{r detect-coll}
+detect_effect <- function(effect_size, name) {
+  hedges_df %>%
     summarise(
-      effect_type = name,
+      name = name,
       effect_size = effect_size,
-      total_pipelines = n(),
-      pipelines_detecting = sum(hedges_g <= effect_size, na.rm = TRUE),
-      percentage_detecting = round(pipelines_detecting / total_pipelines * 100, 1)
+      total = n(),
+      count = sum(hedges_g <= effect_size, na.rm = TRUE),
+      percentage = round(count / total * 100, 1)
     )
-})
+}
 
-# Calculate percentage of pipelines that could detect the Coll et al. average effect size
-pipelines_detect_coll <- hedges_data %>%
-  summarise(
-    total_pipelines = n(),
-    pipelines_detecting_coll = sum(hedges_g <= coll_average_effect, na.rm = TRUE),
-    percentage_detecting_coll = round(pipelines_detecting_coll / total_pipelines * 100, 0)
+detecting_df <- map2_dfr(effect_sizes_Coll2020$value, 
+                         effect_sizes_Coll2020$kind,
+                         detect_effect) %>%
+  arrange(percentage)
+detecting_df$missing <- detecting_df$total - detecting_df$count
+detecting_df$missing_percent <- 100 - detecting_df$percentage
+
+# First row has the worst power, last row - the best
+underpowered_min <- detecting_df[nrow(detecting_df), ]
+underpowered_max <- detecting_df[1, ]
+```
+
+* Percent of pipelines detecting effects from Coll et al. (2020):
+
+```{r detect-coll-results, results='asis'}
+for (i in 1:nrow(detecting_df)) {
+  row <- detecting_df[i, ]
+  cat(
+    paste0(
+      '  * ', row$name, 
+      ' (**', row$effect_size, '**): ',
+      '**', row$percentage, '%**', 
+      ' (**', row$count, '** / **', row$total, '** pipelines)\n'
+    )
   )
+}
+```
 
-# Calculate minimal detectable effect size statistics
-hedges_g_stats <- hedges_data %>%
-  summarise(
-    min_hedges_g = round(min(hedges_g, na.rm = TRUE), 2),
-    max_hedges_g = round(max(hedges_g, na.rm = TRUE), 2),
-    median_hedges_g = round(median(hedges_g, na.rm = TRUE), 2)
-  )
+* Underpowered and potentially unreliable findings: **`r underpowered_min$missing_percent`%** (**`r underpowered_min$missing`** / **`r underpowered_min$total`**) to **`r underpowered_max$missing_percent`%** (**`r underpowered_max$missing`** / **`r underpowered_max$total`**) of pipelines.
 
-# Preregistration
-pct_prereg <- df_pipelines %>%
-  distinct(PMID, Preregistration) %>%
-  summarise(
-    percentage = round(mean(Preregistration, na.rm = TRUE) * 100, 1)
-  ) %>%
-  pull(percentage)
+```{r preregistation}
+prereg_df <- hist_discrete(df_pipelines, "Preregistration")
+have_prereg <- get_row(prereg_df, "Preregistration", 1)
 
-# publication bias
 non_sig_results <- df_pipelines %>%
   group_by(PMID) %>%
   filter(all(significant_test == 0, na.rm = TRUE)) %>%
   distinct(PMID, .keep_all = TRUE) %>%
-  ungroup() 
-
+  ungroup()
+non_sig_count <- nrow(non_sig_results)
+non_sig_percent <- round(non_sig_count / total_studies * 100, 1)
 ```
 
-Number of participants per pipeline: Min: **`r participants_stats$participants_min`**, Max: **`r participants_stats$participants_max`**, Median: **`r participants_stats$participants_median`**
+Preregistrations & publication bias:
 
-Number of groups: **`r min(df_pipelines$groups, na.rm = TRUE)`** - **`r max(df_pipelines$groups, na.rm = TRUE)`** 
+* Percentage of pipelines with preregistration: **`r have_prereg$percentage`%** (**`r have_prereg$n`** / **`r have_prereg$total`** **`r have_prereg$level`**) 
 
-Number of conditions: **`r min(df_pipelines$conditions, na.rm = TRUE)`** - **`r max(df_pipelines$conditions, na.rm = TRUE)`** 
+* Number and percentage of studies without significant results: **`r non_sig_percent`%** (**`r non_sig_count`** / **`r total_studies`** studies)
 
-Percentage of pipelines with group or condition analysis: **`r analysis_type_stats$pct_group_or_condition`%** (`r sum(grepl("group", tolower(df_pipelines$hypothesis)), na.rm = TRUE)`/`r sum(!is.na(df_pipelines$hypothesis))`)
-
-Percentage of pipelines with correlation analysis: **`r analysis_type_stats$pct_correlation`%** (`r sum(grepl("correlation", tolower(df_pipelines$hypothesis)), na.rm = TRUE)`/`r sum(!is.na(df_pipelines$hypothesis))`)
-
-Number of trials per pipeline: Min: **`r trials_stats$min_trials`**, Max: **`r trials_stats$max_trials`**, Median: **`r trials_stats$mean_trials `**
-
-Percentage of missing HEP epoch info: **`r pct_missing_trials_original`%**
-
-### Statistical Analysis Methods
-
-Statistical test families (`r statistics_level`):
-
-* **`r statistical_test_stats$statistics[1]`**: **`r statistical_test_stats$percentage[1]`%** (`r statistical_test_stats$n[1]` studies)
-* **`r statistical_test_stats$statistics[2]`**: **`r statistical_test_stats$percentage[2]`%** (`r statistical_test_stats$n[2]` studies)  
-* **`r statistical_test_stats$statistics[3]`**: **`r statistical_test_stats$percentage[3]`%** (`r statistical_test_stats$n[3]` studies)
-* **`r statistical_test_stats$statistics[4]`**: **`r statistical_test_stats$percentage[4]`%** (`r statistical_test_stats$n[4]` studies)
-
-#### Statistical Tests by Analysis Method
-
-```{r stats-by-method-table, results='asis'}
-knitr::kable(stats_table, 
-             caption = "Most common statistical test families by analysis method (Averaging vs Clustering)",
-             align = c("l", "l", "c", "c"))
-```
-
-### Power Analysis
-
-Only **`r pipelines_detect_coll$percentage_detecting_coll`%** of pipelines (`r pipelines_detect_coll$pipelines_detecting_coll`/`r pipelines_detect_coll$total_pipelines`) had sufficient power to detect the average effect size reported by Coll et al. (2020).
-
-The resulting minimal detectable effect sizes range from **`r hedges_g_stats$min_hedges_g`** to **`r hedges_g_stats$max_hedges_g`**, with a median of **`r hedges_g_stats$median_hedges_g`** Hedges' g.
-
-- **`r power_stats$percentage_detecting[power_stats$effect_type == "interoceptive_performance"]`%** of pipelines had enough power to detect Hedges' g of 0.35 (interoceptive performance meta-estimate)
-- **`r power_stats$percentage_detecting[power_stats$effect_type == "attention_to_heart"]`%** of pipelines could reliably detect Hedges' g of 0.37 (attention to heart meta-estimate)
-- **`r power_stats$percentage_detecting[power_stats$effect_type == "clinical_vs_control"]`%** of pipelines could reliably detect Hedges' g of 0.49 (clinical vs. control groups meta-estimate)
-- **`r power_stats$percentage_detecting[power_stats$effect_type == "arousal"]`%** of pipelines could reliably detect Hedges' g of 0.72 (arousal meta-estimate).
-
-These observations suggest that **`r 100 - max(power_stats$percentage_detecting)`%** to **`r 100 - min(power_stats$percentage_detecting)`%** of pipelines may have yielded underpowered and potentially unreliable findings.
-
-### Preregistration
-Percentage of pipelines with preregistration: **`r pct_prereg`%** 
-
-### publication bias
-
-Number and percentage of studies without significant results: **`r nrow(non_sig_results)`** studies (**`r round(nrow(non_sig_results) / total_studies * 100, 1)`%**)
-
-### Control Analyses
+### 3.9 Control Analyses
 
 ```{r control analyses}
 

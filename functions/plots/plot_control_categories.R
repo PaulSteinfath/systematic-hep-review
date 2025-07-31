@@ -1,7 +1,4 @@
 plot_control_categories <- function(df, tilt_labels = FALSE) {
-  ## 0. Look-ups 
-  control_variable_synonyms <- get_control_variable_mappings()
-  
   ## 1. Pre-processing 
   df_unique    <- dplyr::distinct(df, PMID, controls)
   df_controls  <- ifelse(is.na(df_unique$controls), "", df_unique$controls)

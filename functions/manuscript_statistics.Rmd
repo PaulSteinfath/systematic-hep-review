@@ -1361,8 +1361,6 @@ Preregistrations & publication bias:
 
 ```{r control analyses}
 
-  control_variable_synonyms <- get_control_variable_mappings()
-  
   ## 1. Pre-processing 
   df_unique    <- dplyr::distinct(df_included, PMID, controls)
   df_controls  <- ifelse(is.na(df_unique$controls), "", df_unique$controls)
@@ -1421,7 +1419,6 @@ ecg_heartbeat_related_pct <- ecg_heartbeat_counts_df %>%
 # only ECG controls
 
 ## 0. Look-ups
-control_variable_synonyms <- get_control_variable_mappings()
 target_cat <- "ECG and Heartbeat-Related Controls"
 
 # Identify ECG control variables

@@ -1,9 +1,4 @@
 create_control_variables_plot <- function(df) {
-  # Get control variable mappings from utility function
-  control_variable_synonyms <- get_control_variable_mappings()
-  category_colors <- get_category_colors()
-  category_order <- names(category_colors)
-  
   # Initialize data frame to store counts
   control_counts <- data.frame(
     Control_Variable = names(control_variable_synonyms),
@@ -31,14 +26,14 @@ create_control_variables_plot <- function(df) {
   
   # Filter and arrange data
   control_counts <- control_counts %>%
-    mutate(Category = factor(Category, levels = category_order)) %>%
+    mutate(Category = factor(Category, levels = names(control_category_colors))) %>%
     arrange(Category, desc(Count)) %>%
     mutate(Control_Variable = factor(Control_Variable, levels = rev(Control_Variable)))
   
   # Create plot with adjusted legend position
   ggplot(control_counts, aes(x = Count, y = Control_Variable, fill = Category)) +
     geom_bar(stat = "identity") +
-    scale_fill_manual(values = category_colors) +
+    scale_fill_manual(values = control_category_colors) +
     scale_x_continuous(
       labels = function(x) paste0(round(x, 1), "%"),
       expand = c(0, 0)  

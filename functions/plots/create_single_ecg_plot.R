@@ -76,8 +76,8 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
       by = by,
       t_peak_offset = t_peak_offset,
       x_limits = shared_limits) +
-      theme(plot.title = element_text(size = 9, margin = margin(b = 5)),
-        legend.position = "none")
+      theme_aligned_middle + 
+      theme(plot.title = element_text(size = 9, margin = margin(b = 5)))
   } else {
     baseline_plot <- no_valid_data_stub("No valid data") +
       ggtitle("Baseline window") +
@@ -138,7 +138,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   # Add R/T peak lines only if that's the current contrast
   if (identical(reference_values, c("R-peak", "T-peak"))) {
     ecg_plot <- ecg_plot +
-      annotate("text", x = 990, y = 0.4, label = "Simulated ECG", hjust = 1, size = 3) + 
+      annotate("text", x = 990, y = 0.2, label = "Simulated ECG", hjust = 1, size = 3) + 
       geom_vline(aes(xintercept = r_peak_ms, color = "R-peak"), linetype = "dashed", alpha = 0.5) +
       geom_vline(aes(xintercept = t_peak_ms, color = "T-peak"), linetype = "dashed", alpha = 0.5) +
       scale_color_manual(values = r_t_peak_palette, guide = "none")
@@ -175,7 +175,10 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
       legend.justification = c("right", "top"), 
       legend.background = element_rect(fill = alpha("white", 0.5)),
       legend.key.size = unit(0.8, "lines"),
-      legend.text = element_text(size = 7), 
+      legend.text = element_text(size = 6), 
+      legend.title = element_text(size = 7), 
+      plot.title = element_text(size = 8, margin = margin(b = 5)),
+      plot.subtitle = element_text(size = 7, margin = margin(b = 5)),
       axis.title.x = element_blank(), 
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(), 
@@ -206,14 +209,14 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   )
 
   title_grob <- ggdraw() +
-    draw_label(plot_title, fontface = 'bold', x = 0.5, y = 0.5, hjust = 0.5, size = 9) +
+    draw_label(plot_title, fontface = 'bold', x = 0.53, y = 0.5, hjust = 0.5, size = 10) +
     theme(plot.margin = margin(t = 5, r = 0, b = 10, l = 5))
 
   final_plot <- plot_grid(
     title_grob, plots_with_ylabel,
     ncol = 1,
     rel_heights = c(0.05, 0.95)
-  )
+  ) 
   
   # Add channel location plots as insets
   # NOTE: this is performed at the very end since ggdraw screws up alignment
@@ -225,7 +228,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   h_selected <- 0.15
   
   x_selected_legend <- 0.83
-  y_selected_legend <- 0.56
+  y_selected_legend <- 0.585 #0.56
   w_selected_legend <- 0.12
   h_selected_legend <- 0.035
   
@@ -235,7 +238,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   h_significant <- 0.15
   
   x_significant_legend <- 0.83
-  y_significant_legend <- 0.26
+  y_significant_legend <- 0.285 #0.26
   w_significant_legend <- 0.12
   h_significant_legend <- 0.035
   
@@ -243,8 +246,9 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
                          legend.key.width = unit(0.5, "lines"),
                          legend.key.height = unit(0.3, "lines"),
                          legend.ticks = element_blank(),
-                         legend.title = element_blank())
-  
+                         legend.title = element_blank(),
+                         legend.text = element_text(size = 7))
+
   if (!is.null(selected_channels)) {
     selected_legend <- get_plot_component(selected_channels + adjust_legend,
                                           "guide-box", return_all = T)[[3]]

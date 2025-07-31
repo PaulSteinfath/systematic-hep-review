@@ -122,7 +122,8 @@ figure_hep_estimation_summary <- function(df, save_path, ext = 'png') {
     ncol = 4,
     labels = c("A", "B", "C", "D"),
     align = "hv",
-    axis = "tblr"
+    axis = "tblr",
+    rel_widths = c(1.1, 0.9, 0.9, 0.9)
   )
   
   # Main HEP time windows plots
@@ -135,7 +136,7 @@ figure_hep_estimation_summary <- function(df, save_path, ext = 'png') {
     reference_values = c("R-peak", "T-peak"),
     by = "study",
     debug_inset = F
-  ) + theme(plot.title = element_text(size = 10))
+  ) 
 
   hep_cluster_plot <- create_single_ecg_plot(
     df,
@@ -146,7 +147,7 @@ figure_hep_estimation_summary <- function(df, save_path, ext = 'png') {
     reference_values = c("R-peak", "T-peak"),
     by = "study",
     debug_inset = F
-  ) + theme(plot.title = element_text(size = 10))
+  ) 
 
   hep_comparison_row <- plot_grid(
     hep_average_plot, 

@@ -435,42 +435,37 @@ Filter settings: **`r common_highpass$high_pass[1]`**-**`r common_lowpass$low_pa
 
 High-pass cutoffs: **`r paste(common_highpass$high_pass, collapse = ", ")` Hz**
 
-### ECG Acquisition
+### 3.4. ECG Acquisition
+
+Studies that use ECG as a control variable: **TODO**
 
 ```{r ecg_num_electrodes}
-two_ecg_electrodes <- df_included %>%
-  distinct(PMID, ecg_num_electrodes) %>%
-  group_by(ecg_num_electrodes) %>%
-  filter(ecg_num_electrodes == 2) %>%
-  summarize(count = n()) %>%
-  mutate(freq = count / total_studies * 100)
-two_ecg_electrodes_count <- two_ecg_electrodes$count
-two_ecg_electrodes_freq <- round(two_ecg_electrodes$freq, 1)
+# Map "unknown" to 9 so that it isn't lost during conversion to numeric
+df_pipelines <- df_pipelines %>%
+  mutate(ecg_num_electrodes = replace(ecg_num_electrodes,
+                                      ecg_num_electrodes == "unknown", 9))
+
+ecg_electrodes_df <- hist_continuous(df_pipelines, "ecg_num_electrodes",
+                                     binwidth = 1, force.numeric = T)
+two_ecg_electrodes <- get_row(ecg_electrodes_df, "ecg_num_electrodes", 2)
 ```
 
-Studies that use 2 ECG electrodes: `r two_ecg_electrodes_count` (**`r two_ecg_electrodes_freq`**%)
+Studies that use 2 ECG electrodes: **`r two_ecg_electrodes$percentage`**% (**`r two_ecg_electrodes$count`** / **`r two_ecg_electrodes$total`**) `r two_ecg_electrodes$level`
 
 ```{r ecg_num_leads}
-ecg_leads <- df_included %>%
-  distinct(PMID, ecg_lead) %>%
-  group_by(ecg_lead) %>%
-  summarize(count = n()) %>%
-  mutate(freq = round(count / total_studies * 100, 1))
-lead_i <- ecg_leads[ecg_leads$ecg_lead == "Lead I", ]
-lead_ii <- ecg_leads[ecg_leads$ecg_lead == "Lead II", ]
-lead_iii <- ecg_leads[ecg_leads$ecg_lead == "Lead III", ]
-lead_unclassified <- ecg_leads[ecg_leads$ecg_lead == "N/C", ]
-
-# Check if ECG leads are at study or pipeline level
-ecg_lead_level <- check_studies_or_pipelines(df_included, "ecg_lead")
+leads_df <- hist_discrete(df_pipelines, "ecg_lead")
+ecg_lead_i <- get_row(leads_df, "ecg_lead", "Lead I")
+ecg_lead_ii <- get_row(leads_df, "ecg_lead", "Lead II")
+ecg_lead_iii <- get_row(leads_df, "ecg_lead", "Lead III")
+ecg_lead_nc <- get_row(leads_df, "ecg_lead", "N/C")
 ```
 
 Number of studies that use different ECG leads:
 
-* Lead II: `r lead_ii$count` (**`r lead_ii$freq`**%) `r ecg_lead_level`
-* Lead I: `r lead_i$count` (**`r lead_i$freq`**%) `r ecg_lead_level`
-* Lead III: `r lead_iii$count` (**`r lead_iii$freq`**%) `r ecg_lead_level`
-* Unclassified: `r lead_unclassified$count` (**`r lead_unclassified$freq`**%) `r ecg_lead_level`
+* Lead II: **`r ecg_lead_ii$percentage`%** (**`r ecg_lead_ii$n`** / **`r ecg_lead_ii$total`** `r ecg_lead_ii$level`)
+* Lead I: **`r ecg_lead_i$percentage`%** (**`r ecg_lead_i$n`** / **`r ecg_lead_i$total`** `r ecg_lead_i$level`)
+* Lead III: **`r ecg_lead_iii$percentage`%** (**`r ecg_lead_iii$n`** / **`r ecg_lead_iii$total`** `r ecg_lead_iii$level`)
+* Unclassified: **`r ecg_lead_nc$percentage`%** (**`r ecg_lead_nc$n`** / **`r ecg_lead_nc$total`** `r ecg_lead_nc$level`)
 
 ### Dealing with cardiac field artifacts
 
@@ -1251,10 +1246,10 @@ trials_stats <- df_pipelines %>%
 trials_level <- check_studies_or_pipelines(df_pipelines, "trials_Mean")
 
 #Missing HER Trials
-pct_missing_trials_original <- results_df_missing %>%
+pct_missing_trials_original <- missing_df %>%
   filter(Column == "trials_original") %>%
-  mutate(Percent = round(Metric * 100, 1)) %>%
-  pull(Percent)
+  mutate(percentage = round(percentage * 100, 1)) %>%
+  pull(percentage)
 
 
 # Statistical tests split by clustering vs averaging - most common for each method

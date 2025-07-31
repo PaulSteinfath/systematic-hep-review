@@ -1339,29 +1339,23 @@ for (i in 1:nrow(detecting_df)) {
 * Underpowered and potentially unreliable findings: **`r underpowered_min$missing_percent`%** (**`r underpowered_min$missing`** / **`r underpowered_min$total`**) to **`r underpowered_max$missing_percent`%** (**`r underpowered_max$missing`** / **`r underpowered_max$total`**) of pipelines.
 
 ```{r preregistation}
-# Preregistration
-pct_prereg <- df_pipelines %>%
-  distinct(PMID, Preregistration) %>%
-  summarise(
-    percentage = round(mean(Preregistration, na.rm = TRUE) * 100, 1)
-  ) %>%
-  pull(percentage)
+prereg_df <- hist_discrete(df_pipelines, "Preregistration")
+have_prereg <- get_row(prereg_df, "Preregistration", 1)
 
-# publication bias
 non_sig_results <- df_pipelines %>%
   group_by(PMID) %>%
   filter(all(significant_test == 0, na.rm = TRUE)) %>%
   distinct(PMID, .keep_all = TRUE) %>%
-  ungroup() 
-
+  ungroup()
+non_sig_count <- nrow(non_sig_results)
+non_sig_percent <- round(non_sig_count / total_studies * 100, 1)
 ```
 
-### Preregistration
-Percentage of pipelines with preregistration: **`r pct_prereg`%** 
+Preregistrations & publication bias:
 
-### publication bias
+* Percentage of pipelines with preregistration: **`r have_prereg$percentage`%** (**`r have_prereg$n`** / **`r have_prereg$total`** **`r have_prereg$level`**) 
 
-Number and percentage of studies without significant results: **`r nrow(non_sig_results)`** studies (**`r round(nrow(non_sig_results) / total_studies * 100, 1)`%**)
+* Number and percentage of studies without significant results: **`r non_sig_percent`%** (**`r non_sig_count`** / **`r total_studies`** studies)
 
 ### 3.9 Control Analyses
 

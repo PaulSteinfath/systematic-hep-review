@@ -7,10 +7,29 @@ figure_stats <- function(df, save_path, ext = 'png') {
                   use_proportion = T, 
                   discrete = T, 
                   custom_labels = c("0" = "No", "1" = "Yes"))
-  b <- hist_panel(df = df, col = "sample_size", title = "Sample Size", x.label = "Number of Subjects", use_proportion = T)
-  c <- hist_panel(df = df, col = "groups", title = "Groups", x.label = "Number of Groups", binwidth = 1, use_proportion = T)  
-  d <- hist_panel(df = df, col = "conditions", title = "Conditions", x.label = "Number of Conditions", binwidth = 1, use_proportion = T)  
-  e <- hist_panel(df = df, col = "trials_Mean", title = "Averaged Epochs", force.numeric = T, x.label = "Number of Averaged Epochs", use_proportion = T)
+  b <- hist_panel(df = df, 
+                  col = "sample_size", 
+                  title = "Sample Size", 
+                  x.label = "Number of Subjects", 
+                  use_proportion = T)
+  c <- hist_panel(df = df, 
+                  col = "groups", 
+                  title = "Groups", 
+                  x.label = "Number of Groups", 
+                  binwidth = 1, 
+                  use_proportion = T)  
+  d <- hist_panel(df = df,
+                  col = "conditions", 
+                  title = "Conditions", 
+                  x.label = "Number of Conditions", 
+                  binwidth = 1, 
+                  use_proportion = T)  
+  e <- hist_panel(df = df, 
+                  col = "trials_Mean", 
+                  title = "Averaged Epochs", 
+                  force.numeric = T, 
+                  x.label = "Number of Averaged Epochs", 
+                  use_proportion = T)
   
   f <- hist_panel(df = df, 
                   col = "statistics", 

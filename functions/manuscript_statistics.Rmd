@@ -41,6 +41,14 @@ df_pipelines <- df_included
 get_row <- function(df, column, value) {
   as.list(df[df[[column]] == value,])
 }
+
+get_summary <- function(df, column) {
+  list(
+    min = min(df[[column]], na.rm = TRUE),
+    max = max(df[[column]], na.rm = TRUE),
+    median = round(median(df[[column]], na.rm = TRUE), 1)
+  )
+}
 ```
 
 ## Overview
@@ -1197,7 +1205,51 @@ HEP values (`r hep_value_level`):
 * Other measures: **`r sum(hep_value_studies$n[4:nrow(hep_value_studies)])`** studies (**`r sum(hep_value_studies$percentage[4:nrow(hep_value_studies)])`%**)
 
 
-## Statistical Analysis and power considerations
+### 3.8. Statistical analysis and power considerations
+
+Overview of numbers presented in Fig. 7:
+
+```{r participants-groups-conditions}
+participants_summary <- get_summary(df_pipelines,
+                                    "sample_size")
+groups_summary <- get_summary(df_pipelines,
+                              "groups")
+conditions_summary <- get_summary(df_pipelines,
+                                  "conditions")
+```
+
+* Number of participants: **`r participants_summary$min`** - **`r participants_summary$max`**, median = **`r participants_summary$median`**
+
+* Number of groups: **`r groups_summary$min`** - **`r groups_summary$max`**, median = `r groups_summary$median`
+
+* Number of conditions: **`r conditions_summary$min`** - **`r conditions_summary$max`**, median = `r conditions_summary$median`
+
+```{r hypothesis}
+hypothesis_df <- hist_discrete(df_pipelines,
+                               "hypothesis",
+                               group_col = NULL)
+hypothesis_diff <- get_row(hypothesis_df,
+                           "hypothesis",
+                           "Group/Condition Differences")
+hypothesis_corr <- get_row(hypothesis_df,
+                           "hypothesis",
+                           "Correlation")
+```
+
+* Percentage of pipelines with group or condition analysis: **`r hypothesis_diff$percentage`%** (**`r hypothesis_diff$n`** / **`r hypothesis_diff$total`**)
+
+* Percentage of pipelines with correlation analysis: **`r hypothesis_corr$percentage`%** (**`r hypothesis_corr$n`** / **`r hypothesis_corr$total`**)
+
+```{r trials-summary}
+missing_trials_original <- get_row(missing_df, "Column", "trials_original")
+
+trials_summary <- get_summary(df_pipelines,
+                              "trials_Mean")
+```
+
+* Percentage of missing HEP epoch info: **`r missing_trials_original$percentage`%** (**`r missing_trials_original$count`** / **`r missing_trials_original$total`** studies)
+
+* Number of trials per pipeline: **`r trials_summary$min`**-**`r trials_summary$max`**, median = **`r trials_summary$median`**
 
 ```{r stats}
 
@@ -1211,46 +1263,6 @@ statistical_test_stats <- df_pipelines %>%
 
 # Check if statistical tests are at study or pipeline level
 statistics_level <- check_studies_or_pipelines(df_pipelines, "statistics")
-
-# Calculate percentages for analysis type
-analysis_type_stats <- df_pipelines %>%
-  mutate(
-    is_group_or_condition = if_else(grepl("group", tolower(hypothesis)), TRUE, FALSE),
-    is_correlation = if_else(grepl("correlation", tolower(hypothesis)), TRUE, FALSE)
-  ) %>%
-  summarise(
-    pct_group_or_condition = round(mean(is_group_or_condition, na.rm = TRUE) * 100, 1),
-    pct_correlation = round(mean(is_correlation, na.rm = TRUE) * 100, 1)
-  )
-
-# Participant statistics
-participants_stats <- df_pipelines %>%
-  distinct(PMID, sample_size) %>%
-  summarise(
-    participants_min = min(sample_size, na.rm = TRUE),
-    participants_max = max(sample_size, na.rm = TRUE),
-    participants_median = median(sample_size, na.rm = TRUE),
-    participants_n = sum(!is.na(sample_size))
-  )
-
-# Estimated and original # Trials per pipeline statistics
-trials_stats <- df_pipelines %>%
-  filter(!is.na(trials_Mean)) %>%
-  summarise(
-    min_trials = min(trials_Mean, na.rm = TRUE),
-    max_trials = max(trials_Mean, na.rm = TRUE),
-    mean_trials = round(median(trials_Mean, na.rm = TRUE), 1)
-  )
-
-# Check if trials are at study or pipeline level
-trials_level <- check_studies_or_pipelines(df_pipelines, "trials_Mean")
-
-#Missing HER Trials
-pct_missing_trials_original <- missing_df %>%
-  filter(Column == "trials_original") %>%
-  mutate(percentage = round(percentage * 100, 1)) %>%
-  pull(percentage)
-
 
 # Statistical tests split by clustering vs averaging - most common for each method
 stats_table <- df_pipelines %>%
@@ -1339,20 +1351,6 @@ non_sig_results <- df_pipelines %>%
   ungroup() 
 
 ```
-
-Number of participants per pipeline: Min: **`r participants_stats$participants_min`**, Max: **`r participants_stats$participants_max`**, Median: **`r participants_stats$participants_median`**
-
-Number of groups: **`r min(df_pipelines$groups, na.rm = TRUE)`** - **`r max(df_pipelines$groups, na.rm = TRUE)`** 
-
-Number of conditions: **`r min(df_pipelines$conditions, na.rm = TRUE)`** - **`r max(df_pipelines$conditions, na.rm = TRUE)`** 
-
-Percentage of pipelines with group or condition analysis: **`r analysis_type_stats$pct_group_or_condition`%** (`r sum(grepl("group", tolower(df_pipelines$hypothesis)), na.rm = TRUE)`/`r sum(!is.na(df_pipelines$hypothesis))`)
-
-Percentage of pipelines with correlation analysis: **`r analysis_type_stats$pct_correlation`%** (`r sum(grepl("correlation", tolower(df_pipelines$hypothesis)), na.rm = TRUE)`/`r sum(!is.na(df_pipelines$hypothesis))`)
-
-Number of trials per pipeline: Min: **`r trials_stats$min_trials`**, Max: **`r trials_stats$max_trials`**, Median: **`r trials_stats$mean_trials `**
-
-Percentage of missing HEP epoch info: **`r pct_missing_trials_original`%**
 
 ### Statistical Analysis Methods
 

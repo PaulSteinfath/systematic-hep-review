@@ -10,7 +10,15 @@ hist_discrete <- function(df,
   
   # Get unique (group_col, col) combinations to avoid overestimating the weight
   # of papers with multiple rows
-  df_distinct <- distinct(df, !!sym(group_col), !!sym(col))
+  df_distinct <- df
+  level <- "pipelines"
+  if (!is.null(group_col)) {
+    df_distinct <- distinct(df, !!sym(group_col), !!sym(col))
+    multiple_rows_per_group <- any(table(df_distinct[[group_col]]) > 1)
+    if (!multiple_rows_per_group) {
+      level <- "studies"
+    }
+  }
   
   # Restrict allowed values
   if (!is.null(allowed)) {
@@ -20,8 +28,6 @@ hist_discrete <- function(df,
     df_distinct[[col]] <- allowed[df_distinct[[col]]]
   }
   
-  multiple_rows_per_group <- any(table(df_distinct[[group_col]]) > 1)
-  level <- if (multiple_rows_per_group) "pipelines" else "studies"
   total_count <- nrow(df_distinct)
   
   df_counts <- df_distinct %>% 

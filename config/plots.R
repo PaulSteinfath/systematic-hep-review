@@ -17,3 +17,7 @@ control_category_colors <- c(
   "Task and Experimental Controls" = "#847E89",
   "Other Controls" = "#BBBBBB"
 )
+
+common_colors <- list(
+  ecg_controls = "#647499ff"
+)

@@ -1,8 +1,6 @@
 bar_panel <- function(df,
                       value_col,
                       column_col = "Column",
-                      column_order = NULL,
-                      column_labels = NULL,
                       pipeline_colors = NULL,
                       plot_fill = plot_fill_default_single,
                       percentages = F,

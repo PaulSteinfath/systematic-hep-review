@@ -67,3 +67,13 @@ control_variable_synonyms <- list(
   "Illness Duration" = list(category = "Other Controls", synonyms = c()),
   "Hospitalization" = list(category = "Other Controls", synonyms = c())
 )
+
+# Accumulate control variables per category
+category_variables <- list()
+for (nm in names(control_variable_synonyms)) {
+  meta <- control_variable_synonyms[[nm]]
+  category_variables[[meta$category]] <-
+    c(category_variables[[meta$category]], nm, meta$synonyms)
+}
+control_categories <- names(category_variables)
+control_variables <- unlist(category_variables, use.names = F)

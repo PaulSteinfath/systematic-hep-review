@@ -9,7 +9,7 @@ figure_stats <- function(df, save_path, ext = 'png') {
                   custom_labels = c("0" = "No", "1" = "Yes"))
   b <- hist_panel(df = df, 
                   col = "sample_size", 
-                  title = "Sample Size", 
+                  title = "Sample size", 
                   x.label = "Number of Subjects", 
                   use_proportion = T)
   c <- hist_panel(df = df, 
@@ -26,14 +26,14 @@ figure_stats <- function(df, save_path, ext = 'png') {
                   use_proportion = T)  
   e <- hist_panel(df = df, 
                   col = "trials_Mean", 
-                  title = "Averaged Epochs", 
+                  title = "Averaged epochs", 
                   force.numeric = T, 
                   x.label = "Number of Averaged Epochs", 
                   use_proportion = T)
   
   f <- hist_panel(df = df, 
                   col = "statistics", 
-                  title = "Statistical Tests",
+                  title = "Statistical tests",
                   x.label = "", 
                   discrete = T, 
                   tilt_labels = F,

@@ -147,7 +147,7 @@ eeg_acq_prep <- function(df) {
   major_categories <- tolower(c(
     "Cz", "Nose", "Linked earlobes", "Linked mastoids",
     "FCz", "Common average", "Fpz", "CMS", "CMS and DRL",
-    "unknown", "Laplacian reference", "REST"
+    "unknown", "Laplacian reference", "REST", "Fz", "left mastoid"
   ))
 
   # Process reference categories
@@ -163,8 +163,8 @@ eeg_acq_prep <- function(df) {
   # Common reference category mapping
   ref_categories <- c(
     "Common average" = "CAR",
-    "Linked mastoids" = "LM",
-    "Linked earlobes" = "LE",
+    "Linked mastoids" = "LinkM",
+    "Linked earlobes" = "LinkE",
     "Cz" = "Cz",
     "FCz" = "FCz",
     "Fpz" = "Fpz",
@@ -174,7 +174,9 @@ eeg_acq_prep <- function(df) {
     "Laplacian reference" = "LAP",
     "REST" = "REST",
     "Other" = "Other",
-    "unknown" = "N/M"
+    "unknown" = "N/M",
+    "Fz" = "Fz",
+    "left mastoid" = "LM"
   )
 
   # Create individual histogtams for online / offline references
@@ -185,7 +187,7 @@ eeg_acq_prep <- function(df) {
     allowed = ref_categories[c(
       "Common average", "Linked mastoids", "Cz", "FCz",
       "Fpz", "CMS and DRL", "CMS", "Nose",
-      "Linked earlobes", "Other", "unknown"
+      "Linked earlobes", "Other", "unknown", "Fz", "left mastoid"
     )]
   )
 
@@ -195,7 +197,7 @@ eeg_acq_prep <- function(df) {
     modality_filter = "EEG",
     allowed = ref_categories[c(
       "Common average", "Linked mastoids", "Linked earlobes",
-      "Laplacian reference", "unknown", "Other"
+      "Laplacian reference", "unknown", "Other", "REST", "Cz"
     )]
   )
 
@@ -211,7 +213,7 @@ eeg_acq_prep <- function(df) {
     align = "hv",
     axis = "tblr",
     labels = c("B", "C"),
-    rel_widths = c(1.2, 0.8)
+    rel_widths = c(1.4, 0.6)
   )
 
   # Combine plots
@@ -233,7 +235,7 @@ eeg_acq_prep <- function(df) {
     filter_plot,
     nrow = 1,
     labels = c("", "", "E"),
-    rel_widths = c(1.2, 0.05, 1),
+    rel_widths = c(1.2, 0.05, 0.9),
     vjust = 1
   )
 }

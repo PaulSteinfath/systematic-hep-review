@@ -104,8 +104,8 @@ Final sample: **`r total_included_pubmed + total_included_manual`** studies
 Analysis parameters:
 
 * Entropy - binning continuous variables if at least **`r params$entropy_unique_threshold`** unique values are present
-* Power computation - power threshold: TODO
-* Power computation - significance level: TODO
+* Power computation - significance level: **`r params$hedges_sig_level * 100`%**
+* Power computation - power threshold: **`r params$hedges_power_level * 100`%**
 * Number of permutations for testing peak differences: TODO
 
 ## 3. Results

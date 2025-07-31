@@ -1357,7 +1357,7 @@ Preregistrations & publication bias:
 
 * Number and percentage of studies without significant results: **`r non_sig_percent`%** (**`r non_sig_count`** / **`r total_studies`** studies)
 
-### 3.9 Control Analyses
+### 3.9. Control Analyses
 
 ```{r control analyses}
 
@@ -1513,4 +1513,3 @@ Heart rate variability controls: **`r sprintf("%.1f", HRV_related_pct)`%** of pi
 Blood pressure controls: **`r sprintf("%.1f", BP_related_pct)`%** of pipelines (`r ecg_heartbeat_counts_df$n[ecg_heartbeat_counts_df$category == "Cardiovascular and Blood Pressure Controls"]`/`r nrow(ecg_heartbeat_df_distinct)`) control for blood pressure.
 
 Surrogate heartbeat controls: **`r sprintf("%.1f", ecg_related_pct)`%** of pipelines (`r ecg_counts_df$n[ecg_counts_df$variable == "Surrogate Heartbeats"]`/`r nrow(ecg_df_distinct)`) control for surrogate heartbeats.
-Surrogate heartbeat controls: **`r ecg_related_pct`%** of pipelines (`r ecg_counts_df$n[ecg_counts_df$variable == "Surrogate Heartbeats"]`/`r nrow(ecg_df_distinct)`) control for surrogate heartbeats.

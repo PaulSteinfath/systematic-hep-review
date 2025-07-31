@@ -1,4 +1,9 @@
-compute_min_detectable_g <- function(test_type, sample_size, groups, conditions) {
+compute_min_detectable_g <- function(test_type, 
+                                     sample_size, 
+                                     groups, 
+                                     conditions,
+                                     sig.level = 0.05,
+                                     power.level = 0.8) {
   
   # 0) Early exit for tests we don’t handle
   if (test_type %in% c("unknown",
@@ -72,16 +77,16 @@ compute_min_detectable_g <- function(test_type, sample_size, groups, conditions)
                       # one-sample
                       out <- pwr.t.test(n           = sample_size,
                                         d           = NULL,
-                                        sig.level   = 0.05,
-                                        power       = 0.8,
+                                        sig.level   = sig.level,
+                                        power       = power.level,
                                         type        = "one.sample",
                                         alternative = "two.sided")
                     } else {
                       # two-sample, equal ns
                       out <- pwr.t.test(n           = sample_size/2,
                                         d           = NULL,
-                                        sig.level   = 0.05,
-                                        power       = 0.8,
+                                        sig.level   = sig.level,
+                                        power       = power.level,
                                         type        = "two.sample",
                                         alternative = "two.sided")
                     }
@@ -100,16 +105,16 @@ compute_min_detectable_g <- function(test_type, sample_size, groups, conditions)
                     }
                     out <- pwr.anova.test(k         = cells,
                                           n         = sample_size / groups,
-                                          sig.level = 0.05,
-                                          power     = 0.8)
+                                          sig.level = sig.level,
+                                          power     = power.level)
                     2 * out$f
                   },
                   
                   # c) correlation → r → d = 2r / sqrt(1 - r^2)
                   "Correlation" = {
                     out <- pwr.r.test(n         = sample_size,
-                                      sig.level = 0.05,
-                                      power     = 0.8)
+                                      sig.level = sig.level,
+                                      power     = power.level)
                     r <- out$r
                     2 * r / sqrt(1 - r^2)
                   },
@@ -118,8 +123,8 @@ compute_min_detectable_g <- function(test_type, sample_size, groups, conditions)
                   "Regression" = {
                     out <- pwr.f2.test(u         = 1,
                                        v         = sample_size - 2,
-                                       sig.level = 0.05,
-                                       power     = 0.8)
+                                       sig.level = sig.level,
+                                       power     = power.level)
                     f <- sqrt(out$f2)
                     2 * f
                   }
@@ -131,7 +136,13 @@ compute_min_detectable_g <- function(test_type, sample_size, groups, conditions)
 }
 
 
-compute_effect_columns <- function(df, test_type_col, sample_size_col, groups_col, conditions_col) {
+compute_effect_columns <- function(df, 
+                                   test_type_col, 
+                                   sample_size_col, 
+                                   groups_col, 
+                                   conditions_col,
+                                   sig.level = 0.05,
+                                   power.level = 0.8) {
   df %>%
     rowwise() %>%
     mutate(
@@ -139,7 +150,9 @@ compute_effect_columns <- function(df, test_type_col, sample_size_col, groups_co
         test_type   = {{ test_type_col }},
         sample_size = as.numeric({{ sample_size_col }}),
         groups      = as.numeric({{ groups_col }}),
-        conditions  = as.numeric({{ conditions_col }})
+        conditions  = as.numeric({{ conditions_col }}),
+        sig.level   = sig.level,
+        power.level = power.level
       )
     ) %>%
     ungroup() %>%

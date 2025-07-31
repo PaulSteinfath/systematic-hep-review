@@ -27,7 +27,7 @@ figure_ecg_summary <- function(df, save_path, ext = 'png') {
     fig_AB,
     p_ecg_locations,
     nrow = 1,
-    rel_widths = c(1, 1.5),
+    rel_widths = c(1.2, 1.3),
     labels = c("", "C")
   )
   

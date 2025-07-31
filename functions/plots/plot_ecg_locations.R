@@ -132,8 +132,8 @@ plot_ecg_locations <- function(
     theme_void() +
     theme(aspect.ratio = aspect,
         strip.background = element_blank(),
-        plot.title = element_text(size = 9, hjust = 0.3, vjust = 2),
-        plot.subtitle = element_text(size = 8, hjust = 0.2, vjust = 2),
+        plot.title = element_text(size = 9, hjust = 0.3, vjust = 13),
+        plot.subtitle = element_text(size = 8, hjust = 0.2, vjust = 13),
         legend.text = element_text(size = 7),
         legend.title = element_text(size = 8))
            

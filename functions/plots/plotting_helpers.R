@@ -3,8 +3,8 @@ library(ggplot2)
 
 plot_theme_default <- theme_classic(base_family = "sans") +
   theme(panel.grid = element_blank(),
-        plot.title = element_text(size = 10),
-        plot.subtitle = element_text(size = 9),
+        plot.title = element_text(size = 9),
+        plot.subtitle = element_text(size = 8),
         axis.text.x = element_text(size = 7),
         axis.text.y = element_text(size = 7),
         legend.text = element_text(size = 7), 

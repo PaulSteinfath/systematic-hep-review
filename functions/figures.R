@@ -33,6 +33,7 @@ source(file.path(func_path, 'figures', '06_hep_estimation.R'))
 source(file.path(func_path, 'figures', '07_stats.R'))
 source(file.path(func_path, 'figures', '08_controls.R'))
 source(file.path(func_path, 'figures', 's1_additional_hedges_g.R'))
+source(file.path(func_path, 'figures', 's3_control_variables.R'))
 
 create_epoch_simulation_plot <- function(df){
   
@@ -239,21 +240,6 @@ make_figures <- function(df, save_path, ext = "svg") {
     bg = "white"
   )
   show(cfa_removal_plot)
-
-  control_vars_plot <- create_control_variables_plot(df)
-
-  ggsave(
-    filename = file.path(save_path, paste0("control_variables_plot.", ext)),
-    plot = control_vars_plot,
-    width = 7,
-    height = 12,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  show(control_vars_plot)
-
 
   control_categories_plot <- create_control_categories_plot(df)
 

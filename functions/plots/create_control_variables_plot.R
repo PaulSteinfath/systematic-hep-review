@@ -1,8 +1,8 @@
 create_control_variables_plot <- function(df) {
   # Get control variable mappings from utility function
   control_variable_synonyms <- get_control_variable_mappings()
-  category_order <- get_category_order()
   category_colors <- get_category_colors()
+  category_order <- names(category_colors)
   
   # Initialize data frame to store counts
   control_counts <- data.frame(

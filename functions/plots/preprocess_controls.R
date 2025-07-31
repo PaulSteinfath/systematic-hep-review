@@ -73,18 +73,6 @@ get_control_variable_mappings <- function() {
   return(control_variable_synonyms)
 }
 
-get_category_order <- function() {
-  c(
-    "ECG and Heartbeat-Related Controls",
-    "Heart Rate Variability (HRV) Controls",
-    "Cardiovascular and Blood Pressure Controls",
-    "Respiration",
-    "Demographic and Psychosocial Controls",
-    "Physiological and Environmental Controls",
-    "Task and Experimental Controls",
-    "Other Controls"
-    )
-}
 
 get_category_colors <- function() {
   c(

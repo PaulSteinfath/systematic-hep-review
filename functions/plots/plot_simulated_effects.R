@@ -123,7 +123,7 @@ plot_simulated_effects <- function(
       panel.grid.minor = element_blank(),
       strip.background = element_rect(fill = '#EEEEEE'),
       strip.text       = element_text(face = 'bold')
-    )
+    ) + plot_theme_default + theme(legend.title = element_text(size = 7))
   
   return(p)
 }

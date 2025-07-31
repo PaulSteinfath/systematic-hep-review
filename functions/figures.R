@@ -386,9 +386,9 @@ make_figures <- function(df, save_path, ext = "svg") {
   ggsave(
     filename = file.path(save_path, paste0("control_variables_plot.", ext)),
     plot = control_vars_plot,
-    width = 7,
-    height = 12,
-    units = "in",
+    width = 190,
+    height = 290,
+    units = "mm",
     dpi = 300,
     device = ext,
     bg = "white"
@@ -427,9 +427,9 @@ make_figures <- function(df, save_path, ext = "svg") {
   ggsave(
     filename = file.path(save_path, paste0("additional_hedges_g_plot.", ext)),
     plot = additional_hedges_g_plot,
-    width = 7,
-    height = 5,
-    units = "in",
+    width = 190,
+    height = 127,
+    units = "mm",
     dpi = 300,
     device = ext,
     bg = "white"

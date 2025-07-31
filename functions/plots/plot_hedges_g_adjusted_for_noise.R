@@ -10,7 +10,9 @@ plot_hedges_g_adjusted_for_noise <- function(df,
                                           sample_size_col = sample_size, 
                                           groups_col = groups, 
                                           conditions_col = conditions)
-  df <- bind_cols(df, hedges_column)
+  if (!"hedges_g" %in% colnames(df)) {
+    df <- bind_cols(df, hedges_column)
+  }
   
   if (!with_clustering) {df <- df[df$clustering==0,]}
   if (!with_regression) {df <- df[df$statistics!='Regression',]}
@@ -65,7 +67,7 @@ plot_hedges_g_adjusted_for_noise <- function(df,
       x     = "Hedges’ g (adjusted)",
       y     = NULL,
       title = "Original vs. trial-adjusted minimal-detectable g\nacross noise-ratio scenarios"
-    ) 
+    ) + plot_theme_default + theme(legend.title = element_text(size = 7))
 
   return(p)
 }

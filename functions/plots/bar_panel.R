@@ -51,17 +51,14 @@ bar_panel <- function(df,
   
   # Set theme
   p <- p + theme_classic(base_family = "sans") +
+    plot_theme_default
     theme(
-      title = element_text(size = 9),
-      axis.text.x = element_text(size = 9,
-                                 angle = if (tilt_labels) 45 else 0,
+      axis.text.x = element_text(angle = if (tilt_labels) 45 else 0,
                                  hjust = if (tilt_labels) 1 else 0.5),
-      axis.text.y = element_text(size = 8),
-      axis.title.x = element_text(size = 9, margin = margin(t = 4)),
-      axis.title.y = element_text(size = 9),
-      legend.position = "right", 
-      legend.justification = "center", 
-      legend.margin = margin(0, -1, 0, 0)
+        legend.position = c(0.35, 0.35), # move legend well inside plot area
+        legend.justification = c("left", "center"),
+        legend.margin = margin(0, 0, 0, 0),
+        legend.box.margin = margin(0, 0, 0, 0)
     )
 
   # Hide ticks if necessary

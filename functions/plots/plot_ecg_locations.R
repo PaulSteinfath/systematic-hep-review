@@ -109,8 +109,8 @@ plot_ecg_locations <- function(
   )
   
   # Plot the leads and positions on top of the body image
-  p <- ggplot(leads, aes(x = x, y = y)) +
-    geom_image(data = data.frame(x = 0.5, y = 0.5),
+  p <- ggplot(leads, aes(x = x, y = y)) + 
+        geom_image(data = data.frame(x = 0.5, y = 0.5),
                aes(image = body_image_path),
                size = 0.865) +    # more or less a magic number found 
                                   # through trial and error :(
@@ -131,8 +131,11 @@ plot_ecg_locations <- function(
            linewidth = guide_legend(title = "Number of studies")) +
     theme_void() +
     theme(aspect.ratio = aspect,
-          strip.background = element_blank()) +
-    custom_theme()
-  
-  p
+        strip.background = element_blank(),
+        plot.title = element_text(size = 9, hjust = 0.3, vjust = 2),
+        plot.subtitle = element_text(size = 8, hjust = 0.2, vjust = 2),
+        legend.text = element_text(size = 7),
+        legend.title = element_text(size = 8))
+           
+  p 
 }

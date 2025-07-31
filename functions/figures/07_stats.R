@@ -38,13 +38,7 @@ figure_stats <- function(df, save_path, ext = 'png') {
                   discrete = T, 
                   tilt_labels = F,
                   decreasing = F,
-                  allowed = c("t-test" = "t-test",
-                              "Correlation" = "Correlation",
-                              "Regression" = "Regression", 
-                              "ANOVA" = "ANOVA",
-                              "Non-parametric comparison" = "Non-parametric\ncomparison",
-                              "Classification" = "Classification",
-                              "F-test" = "F-test")) + coord_flip()
+                  allowed = stats_allowed) + coord_flip()
   g <- plot_hedges_g(df = df)
   
   first_row <- plot_grid(

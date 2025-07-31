@@ -1253,84 +1253,24 @@ trials_summary <- get_summary(df_pipelines,
 * Number of trials per pipeline: **`r trials_summary$min`**-**`r trials_summary$max`**, median = **`r trials_summary$median`**
 
 ```{r stats}
-
-# Calculate percentages for statistical test families
-statistical_test_stats <- df_pipelines %>%
-  distinct(PMID, statistics) %>%
-  filter(statistics != "unknown" & statistics != "none") %>% 
-  count(statistics) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1)) %>%
-  arrange(desc(percentage))
-
-# Check if statistical tests are at study or pipeline level
-statistics_level <- check_studies_or_pipelines(df_pipelines, "statistics")
-
-# Statistical tests split by clustering vs averaging - most common for each method
-stats_table <- df_pipelines %>%
-  filter(statistics != "unknown" & statistics != "none" & 
-         method_category %in% c("Averaging", "Clustering")) %>%
-  distinct(PMID, statistics, method_category) %>%
-  count(method_category, statistics) %>%
-  group_by(method_category) %>%
-  mutate(
-    total_in_category = sum(n),
-    percentage = round(n / total_in_category * 100, 1)
-  ) %>%
-  arrange(method_category, desc(percentage)) %>%
-  slice_head(n = 3) %>%
-  ungroup() %>%
-  select(method_category, statistics, n, percentage) %>%
-  rename(
-    "Analysis Method" = method_category,
-    "Statistical Test" = statistics,
-    "Studies (n)" = n,
-    "Percentage (%)" = percentage
-  )
-
-
-# Calculate power for each individual effect size
-
-
-# Calculate percentage of pipelines that could detect the Coll et al. average effect size
-pipelines_detect_coll <- hedges_data %>%
-  summarise(
-    total_pipelines = n(),
-    pipelines_detecting_coll = sum(hedges_g <= coll_average_effect, na.rm = TRUE),
-    percentage_detecting_coll = round(pipelines_detecting_coll / total_pipelines * 100, 0)
-  )
-
-# Preregistration
-pct_prereg <- df_pipelines %>%
-  distinct(PMID, Preregistration) %>%
-  summarise(
-    percentage = round(mean(Preregistration, na.rm = TRUE) * 100, 1)
-  ) %>%
-  pull(percentage)
-
-# publication bias
-non_sig_results <- df_pipelines %>%
-  group_by(PMID) %>%
-  filter(all(significant_test == 0, na.rm = TRUE)) %>%
-  distinct(PMID, .keep_all = TRUE) %>%
-  ungroup() 
-
+statistics_df <- hist_discrete(df_pipelines, "statistics",
+                               allowed = stats_allowed) %>%
+  arrange(-percentage)
 ```
 
-### Statistical Analysis Methods
+* Most common statistical tests (top 3):
 
-Statistical test families (`r statistics_level`):
-
-* **`r statistical_test_stats$statistics[1]`**: **`r statistical_test_stats$percentage[1]`%** (`r statistical_test_stats$n[1]` studies)
-* **`r statistical_test_stats$statistics[2]`**: **`r statistical_test_stats$percentage[2]`%** (`r statistical_test_stats$n[2]` studies)  
-* **`r statistical_test_stats$statistics[3]`**: **`r statistical_test_stats$percentage[3]`%** (`r statistical_test_stats$n[3]` studies)
-* **`r statistical_test_stats$statistics[4]`**: **`r statistical_test_stats$percentage[4]`%** (`r statistical_test_stats$n[4]` studies)
-
-#### Statistical Tests by Analysis Method
-
-```{r stats-by-method-table, results='asis'}
-knitr::kable(stats_table, 
-             caption = "Most common statistical test families by analysis method (Averaging vs Clustering)",
-             align = c("l", "l", "c", "c"))
+```{r statistics-results, results='asis'}
+for (i in 1:3) {
+  row <- statistics_df[i, ]
+  cat(
+    paste0(
+      '  * ', row$statistics, ': ',
+      '**', row$percentage, '%**', 
+      ' (**', row$n, '** / **', row$total, '** ', row$level, ')\n'
+    )
+  )
+}
 ```
 
 ```{r effect-size}
@@ -1398,6 +1338,24 @@ for (i in 1:nrow(detecting_df)) {
 
 * Underpowered and potentially unreliable findings: **`r underpowered_min$missing_percent`%** (**`r underpowered_min$missing`** / **`r underpowered_min$total`**) to **`r underpowered_max$missing_percent`%** (**`r underpowered_max$missing`** / **`r underpowered_max$total`**) of pipelines.
 
+```{r preregistation}
+# Preregistration
+pct_prereg <- df_pipelines %>%
+  distinct(PMID, Preregistration) %>%
+  summarise(
+    percentage = round(mean(Preregistration, na.rm = TRUE) * 100, 1)
+  ) %>%
+  pull(percentage)
+
+# publication bias
+non_sig_results <- df_pipelines %>%
+  group_by(PMID) %>%
+  filter(all(significant_test == 0, na.rm = TRUE)) %>%
+  distinct(PMID, .keep_all = TRUE) %>%
+  ungroup() 
+
+```
+
 ### Preregistration
 Percentage of pipelines with preregistration: **`r pct_prereg`%** 
 
@@ -1405,7 +1363,7 @@ Percentage of pipelines with preregistration: **`r pct_prereg`%**
 
 Number and percentage of studies without significant results: **`r nrow(non_sig_results)`** studies (**`r round(nrow(non_sig_results) / total_studies * 100, 1)`%**)
 
-### Control Analyses
+### 3.9 Control Analyses
 
 ```{r control analyses}
 

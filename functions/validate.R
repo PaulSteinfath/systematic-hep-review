@@ -1,5 +1,3 @@
-source(file.path(func_path, "plots", "preprocess_controls.R"))
-
 validate_row <- function(row, col_names) {
   # Add column names for easier manipulation of the data
   names(row) <- col_names
@@ -55,8 +53,7 @@ validate_preprocessed <- function(df) {
   errors <- unlist(errors, recursive = F)
 
   # Control mapping validation 
-  control_synonyms_map <- get_control_variable_mappings() 
-  control_mapping_errors <- validate_control_mapping(df, control_synonyms_map)
+  control_mapping_errors <- validate_control_mapping(df, control_variable_synonyms)
 
   # Combine errors
   all_errors <- c(errors, control_mapping_errors) 

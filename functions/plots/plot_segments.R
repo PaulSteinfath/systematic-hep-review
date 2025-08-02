@@ -30,7 +30,11 @@ plot_segments <- function(
     mutate(studyid = row_number())
     
   # Create main plot
-  p1 <- ggplot(df, aes(x = .data[[start_var]], xend = .data[[end_var]], y = studyid, yend = studyid)) +
+  p1 <- ggplot(df, 
+               aes(x = .data[[start_var]], 
+                   xend = .data[[end_var]], 
+                   y = studyid, 
+                   yend = studyid)) +
     geom_segment(color = "black", linewidth = 0.4)
 
   # Calculate top 3 most frequent start_var values
@@ -48,16 +52,18 @@ plot_segments <- function(
                linetype = "11") +
     geom_point(aes(x = .data[[start_var]]), color = "grey", size = 1, shape = 32) +
     geom_point(aes(x = .data[[end_var]]), color = "grey", size = 1, shape = 32) +
-    labs(x = x_label, y = y_label) +
+    labs(x = x_label, 
+         y = y_label,
+         title = "Filter cutoffs", 
+         subtitle = paste("n =", nrow(df), "studies")) +
+    plot_theme_default +
     custom_theme() +
     theme(
       axis.text.y = element_blank(),
-      axis.title.y = element_text(size = 9, family = "sans", face = font_face),
       axis.ticks.y = element_blank(),
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
-      axis.title.x = element_blank(),
-      plot.margin = margin(0.5, 0.5, 0.1, 0.5, unit = "cm")
+      axis.title.x = element_blank()
     )
 
   # Density calculation
@@ -81,29 +87,21 @@ plot_segments <- function(
   p2 <- ggplot(density_df, aes(x = Frequency, y = 1, fill = Density)) +
     geom_raster() +
     scale_fill_gradient(
-      low = "white", 
-      high = plot_fill_default_single,
+      low = "#EEEEEE", 
+      high = "#696969",
       limits = c(0, max(density_df$Density, na.rm = TRUE)),
-      breaks = scales::pretty_breaks(n = 4),
-      name = "#Studies"
+      breaks = scales::pretty_breaks(n = 4)
     ) +
-    labs(x = x_label, y = "", fill = "#Studies") +
+    labs(x = x_label, y = "", fill = "Number of studies") +
+    plot_theme_default +
     custom_theme() +
     theme(
-      axis.text.x = element_text(size = 8, color = "black", family = "sans", face = font_face),
-      axis.title.x = element_text(size = 9, color = "black", family = "sans", face = font_face),
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank(),
       axis.title.y = element_blank(),
-      plot.margin = margin(0.1, 0.5, 0.2, 0.5, unit = "cm"),  
       legend.position = if(show_legend) "bottom" else "none",
       legend.direction = "horizontal",
-      legend.key.height = unit(0.2, "cm"),
-      legend.key.width = unit(0.8, "cm"),
-      legend.text = element_text(size = 8),
-      legend.title = element_text(size = 9),
-      legend.margin = margin(t = 0.1, b = 0, unit = "cm"),  
-      legend.box.margin = margin(0, 0, 0, 0, unit = "cm")   
+      legend.title.position = "top"
     )
 
   # Adapt x-axis label resolution
@@ -122,22 +120,25 @@ plot_segments <- function(
   }
 
   # Create the base combined plot
+  legend <- get_plot_component(p2, "guide-box", return_all = T)[[3]]
+  shifted_legend <- plot_grid(
+    NULL, legend,
+    nrow = 1,
+    rel_widths = c(0.1, 1)
+  )
   combined_plot <- plot_grid(
-    p1, p2, 
+    p1, 
+    p2 + theme(legend.position = "none"),
+    NULL,
+    shifted_legend,
+    NULL,
     ncol = 1,
     align = "v",
     axis = "lr",
-    rel_heights = c(7.3, 1.2)
+    rel_heights = c(7, 0.7, 0.05, 0.8, 0.2),
+    labels = c('E', '', '', '', ''),
+    label_x = c(-0.05, 0, 0, 0, 0)
   )
-
-  # add title and subtitle  
-  combined_plot <- combined_plot +
-    labs(title = "Filter Cutoffs", subtitle = paste("n =", nrow(df), "studies")) + 
-    custom_theme() +
-    theme(
-      plot.title = element_text(hjust = 0.1, margin = margin(b = 4)),
-      plot.subtitle = element_text(hjust = 0.1)
-    )
 
   return(combined_plot)
 }

@@ -1,7 +1,6 @@
 # Import plotting functions
 source(file.path(func_path, "plots", "plotting_helpers.R"))
 source(file.path(func_path, "plots", "utils.R"))
-source(file.path(func_path, "plots", "preprocess_controls.R"))
 source(file.path(func_path, "plots", "create_combined_plot.R"))
 source(file.path(func_path, "plots", "bar_panel.R"))
 source(file.path(func_path, "plots", "hist_panel.R"))
@@ -13,8 +12,7 @@ source(file.path(func_path, "plots", "rr_intervals_plot.R"))
 source(file.path(func_path, "plots", "other_strategy_plot.R"))
 source(file.path(func_path, "plots", "epoch_continuous_ica.R"))
 source(file.path(func_path, "plots", "minimal_artifact_windows_plot.R"))
-source(file.path(func_path, "plots", "create_control_variables_plot.R"))
-source(file.path(func_path, "plots", "create_control_categories_plot.R"))
+source(file.path(func_path, "plots", "plot_control_variables.R"))
 source(file.path(func_path, "plots", "rejected_cardiac_ics.R"))
 source(file.path(func_path, "plots", "plot_eeg_locations.R"))
 source(file.path(func_path, "plots", "plot_ecg_locations.R"))
@@ -33,6 +31,7 @@ source(file.path(func_path, 'figures', '06_hep_estimation.R'))
 source(file.path(func_path, 'figures', '07_stats.R'))
 source(file.path(func_path, 'figures', '08_controls.R'))
 source(file.path(func_path, 'figures', 's1_additional_hedges_g.R'))
+source(file.path(func_path, 'figures', 's3_control_variables.R'))
 
 create_epoch_simulation_plot <- function(df){
   
@@ -240,34 +239,6 @@ make_figures <- function(df, save_path, ext = "svg") {
   )
   show(cfa_removal_plot)
 
-  control_vars_plot <- create_control_variables_plot(df)
-
-  ggsave(
-    filename = file.path(save_path, paste0("control_variables_plot.", ext)),
-    plot = control_vars_plot,
-    width = 7,
-    height = 12,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  show(control_vars_plot)
-
-
-  control_categories_plot <- create_control_categories_plot(df)
-
-  ggsave(
-    filename = file.path(save_path, paste0("control_categories_plot.", ext)),
-    plot = control_categories_plot,
-    width = 7,
-    height = 5,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  show(control_categories_plot)
 
   epoch_simulation_plot <- create_epoch_simulation_plot(df)
   ggsave(

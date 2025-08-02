@@ -23,9 +23,9 @@ plot_control_categories <- function(df, tilt_labels = FALSE) {
   for (cat in unique(category_df$category)) {
     transformed_name <- new_labels[[cat]]
     if (cat == "ECG and Heartbeat-Related Controls") {
-      category_colors[transformed_name] <- "#647499ff"
+      category_colors[transformed_name] <- common_colors$ecg_controls
     } else {
-      category_colors[transformed_name] <- "#696969"
+      category_colors[transformed_name] <- common_colors$fill_default
     }
   }
   

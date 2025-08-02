@@ -19,5 +19,7 @@ control_category_colors <- c(
 )
 
 common_colors <- list(
-  ecg_controls = "#647499ff"
+  ecg_controls = "#647499ff",
+  fill_default = "#696969",
+  grid_lines = "grey90"
 )

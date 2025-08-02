@@ -63,8 +63,8 @@ create_filter_plots <- function(df) {
     end_var = "low_pass",
     x_scale = "log",
     custom_breaks = c(0.01, 0.1, 0.5, 1, 20, 40, 80),
-    x_label = "Filter Cutoff (Hz)",
-    y_label = "Individual Studies",
+    x_label = "Filter cutoff (Hz)",
+    y_label = "Individual studies",
     show_legend = TRUE 
   )
   return(filter_plot)
@@ -163,7 +163,6 @@ eeg_acq_prep <- function(df) {
     NULL,
     filter_plot,
     nrow = 1,
-    labels = c("", "", "E"),
     rel_widths = c(1.2, 0.05, 0.9),
     vjust = 1
   )

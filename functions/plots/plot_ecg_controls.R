@@ -31,7 +31,7 @@ plot_ecg_controls <- function(df, tilt_labels = FALSE) {
                  percentages = T,
                  title = "ECG- and heartbeat-related controls",
                  x_lab = "",
-                 y_lab = "Proportion of pipelines") +
+                 y_lab = "Proportion of studies") +
     labs(subtitle = paste0("n = ", total_count, " studies"))
   
   # Override the default fill color to match "Other Controls" category

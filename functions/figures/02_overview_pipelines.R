@@ -42,7 +42,7 @@ figure_overview_pipelines <- function(df, save_path, ext = 'svg') {
   p1 <- bar_panel(entropy_df,
                   value_col = "Entropy",
                   flip = T,
-                  pipeline_colors = pipeline_colors,
+                  colors = pipeline_colors,
                   title = "Entropy",
                   y_lab = "Entropy")
   
@@ -50,7 +50,7 @@ figure_overview_pipelines <- function(df, save_path, ext = 'svg') {
                   value_col = "percentage",
                   percentages = T,
                   flip = T,
-                  pipeline_colors = pipeline_colors,
+                  colors = pipeline_colors,
                   title = "Multiple Choices",
                   x_lab = "",
                   y_lab = "Proportion of Studies",
@@ -60,7 +60,7 @@ figure_overview_pipelines <- function(df, save_path, ext = 'svg') {
                   value_col = "percentage",
                   percentages = T,
                   flip = T,
-                  pipeline_colors = pipeline_colors,
+                  colors = pipeline_colors,
                   title = "Missing Information",
                   x_lab = "",
                   y_lab = "Proportion of Studies",

@@ -1,7 +1,8 @@
 bar_panel <- function(df,
                       value_col,
                       column_col = "Column",
-                      pipeline_colors = NULL,
+                      color_col = "Step",
+                      colors = NULL,
                       plot_fill = plot_fill_default_single,
                       percentages = F,
                       x_lab = "Methodological choice",
@@ -17,10 +18,10 @@ bar_panel <- function(df,
   
   if (!is.null(pipeline_colors)) {
     p <- p + 
-      geom_bar(aes(fill = Step), stat = "identity", color = "white", linewidth = 0.5) +
+      geom_bar(aes(fill = !!sym(color_col)), stat = "identity", color = "white", linewidth = 0.5) +
       scale_fill_manual(
         name = "Category",
-        values = pipeline_colors, 
+        values = colors, 
         guide = if (show_legend) "legend" else "none"
       )
   } else {

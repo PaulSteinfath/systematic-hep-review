@@ -9,7 +9,6 @@ plot_control_categories <- function(df, tilt_labels = FALSE) {
   ordered_columns <- category_df$category
   category_df$category <- factor(category_df$category, 
                                  levels = ordered_columns)
-  
   new_labels <- c("ECG and Heartbeat-Related Controls" = "ECG- and Heartbeat-\nRelated Controls",
                   "Heart Rate Variability (HRV) Controls" = "Heart Rate Variability\n(HRV) Controls",
                   "Cardiovascular and Blood Pressure Controls" = "Cardiovascular and\nBlood Pressure Controls",
@@ -22,7 +21,7 @@ plot_control_categories <- function(df, tilt_labels = FALSE) {
   # Adjust colors to highlight ECG
   category_colors <- c()
   for (cat in unique(category_df$category)) {
-    transformed_name <- new_labels[cat]
+    transformed_name <- new_labels[[cat]]
     if (cat == "ECG and Heartbeat-Related Controls") {
       category_colors[transformed_name] <- "#647499ff"
     } else {
@@ -38,14 +37,15 @@ plot_control_categories <- function(df, tilt_labels = FALSE) {
   p <- bar_panel(category_df, 
                  value_col = "percentage", 
                  column_col = "category", 
+                 color_col = "category",
+                 colors = category_colors,
                  flip = T, 
                  percentages = T,
+                 show_legend = F,
                  title = "Control categories",
                  x_lab = "",
-                 y_lab = "Proportion of pipelines") +
+                 y_lab = "Proportion of studies") +
     labs(subtitle = paste0("n = ", total_count, " studies"))
-  
-  p <- p + scale_fill_manual(values = category_colors, guide = "none")
   
   return(p)
 }

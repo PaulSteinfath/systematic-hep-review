@@ -64,9 +64,11 @@ convert_to_factors <- c("rsHEP", "modality", "ICA", "ica_on_epochs", "hep_relati
 
 ref_mapping <- c(
   "Common average" = "CAR",
-  "Linked mastoids" = "LM",
-  "Linked earlobes" = "LE",
+  "Linked mastoids" = "LinkM",
+  "Left mastoid" = "LM",
+  "Linked earlobes" = "LinkE",
   "Cz" = "Cz",
+  "Fz" = "Fz",
   "FCz" = "FCz",
   "Fpz" = "Fpz",
   "CMS" = "CMS",
@@ -78,12 +80,14 @@ ref_mapping <- c(
   "unknown" = "N/M"
 )
 online_ref_categories <- c(
-  "Common average", "Linked mastoids", "Cz", "FCz",
-  "Fpz", "CMS", "Nose", "Linked earlobes", "Other", "unknown"
+  "Common average", 
+  "Linked mastoids", "Left mastoid", 
+  "Cz", "Fz", "FCz", "Fpz", 
+  "CMS", "Nose", "Linked earlobes", "Other", "unknown"
 )
 offline_ref_categories <- c(
   "Common average", "Linked mastoids", "Linked earlobes",
-  "Laplacian reference", "unknown", "Other"
+  "Laplacian reference", "REST", "Cz", "unknown", "Other"
 )
 
 
@@ -364,7 +368,6 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   
   # NOTE: apply steps one by one to get adequate messages in case of errors
   df_included <- preprocess_studies(df_included)
-  df_included <- preprocess_reference(df_included)
   df_included <- preprocess_ecg(df_included)
   df_included <- preprocess_channels(df_included)
   df_included <- preprocess_hep_significant(df_included)

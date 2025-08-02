@@ -1,7 +1,6 @@
 # Import plotting functions
 source(file.path(func_path, "plots", "plotting_helpers.R"))
 source(file.path(func_path, "plots", "utils.R"))
-source(file.path(func_path, "plots", "preprocess_controls.R"))
 source(file.path(func_path, "plots", "plot_segments.R"))
 source(file.path(func_path, "plots", "bar_panel.R"))
 source(file.path(func_path, "plots", "hist_panel.R"))

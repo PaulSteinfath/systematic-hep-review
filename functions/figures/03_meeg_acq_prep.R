@@ -1,5 +1,9 @@
 figure_meeg_acq_prep <- function(df, save_path, ext = 'png') {
-
+  # NOTE: during preprocessing, some references merge into Other category,
+  # which affects other measures such as entropy. Therefore, the 
+  # preprocessing is performed right before making the plots
+  df <- preprocess_reference(df)
+  
   # Create individual histogtams for online / offline references
   ref_online <- hist_panel(df, "reference_online",
                            title = "Reference (online)",
@@ -61,8 +65,7 @@ figure_meeg_acq_prep <- function(df, save_path, ext = 'png') {
     NULL,
     filter_plot,
     nrow = 1,
-    labels = c("", "", "E"),
-    rel_widths = c(1.2, 0.05, 1),
+    rel_widths = c(1.2, 0.05, 0.9),
     vjust = 1
   )
   

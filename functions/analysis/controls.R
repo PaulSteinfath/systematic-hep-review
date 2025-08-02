@@ -1,8 +1,9 @@
 add_control_presence <- function(df,
                                  level = "category") {
-  # Split controls by comma
+  # Split controls by comma, remove white spaces from both sides
   controls <- ifelse(is.na(df$controls), "", df$controls)
-  controls_split <- str_split(controls, ', ')
+  controls_split <- str_split(trimws(controls), ', ')
+  controls_split <- lapply(controls_split, \(x) trimws(x))
   
   # TRUE/FALSE presence matrices for variables and categories
   n_rows <- nrow(df)

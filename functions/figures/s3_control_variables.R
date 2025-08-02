@@ -1,5 +1,5 @@
 figure_control_variables <- function(df, save_path, ext = 'svg') {
-  fig <- create_control_variables_plot(df)
+  fig <- plot_control_variables(df)
   
   ggsave(
     filename = file.path(save_path, paste0("figS3_control_variables.", ext)),

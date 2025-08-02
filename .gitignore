@@ -4,6 +4,9 @@ data/HEP Literature - Normalization.docx
 data/HEP - Pubmed Results.csv
 data/HEP - Manual.csv
 
+# Track only PNGs, not SVGs
+results/*.svg
+
 # Supporting files (CSS styles, JS) for the HTML report
 results/manuscript_statistics_files/
 

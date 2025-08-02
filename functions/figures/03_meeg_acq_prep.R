@@ -17,7 +17,16 @@ figure_meeg_acq_prep <- function(df, save_path, ext = 'png') {
                             modality_filter = "EEG",
                             allowed = ref_mapping[offline_ref_categories])
   
-  # Create plots for filtering cutoffs, ICA rejection, and ICA usage
+  # ICA usage and types of rejected components
+  ica_rej_plot <- plot_rejected_components(df)
+  ica_simple_plot <- hist_panel(df, "ICA", 
+                                x.label = "",
+                                title = "ICA usage",
+                                discrete = T,
+                                custom_labels = c("0" = "No ICA",
+                                                  "1" = "ICA"))
+  
+  # Plot for filtering cutoffs
   filter_plot <- plot_segments(
     df = df,
     start_var = "high_pass",
@@ -28,14 +37,6 @@ figure_meeg_acq_prep <- function(df, save_path, ext = 'png') {
     y_label = "Individual studies",
     show_legend = TRUE 
   )
-  
-  ica_rej_plot <- plot_rejected_components(df)
-  ica_simple_plot <- hist_panel(df, "ICA", 
-                                x.label = "",
-                                title = "ICA usage",
-                                discrete = T,
-                                custom_labels = c("0" = "No ICA",
-                                                  "1" = "ICA"))
   
   plot_BC <- plot_grid( 
     ref_offline,
@@ -70,7 +71,7 @@ figure_meeg_acq_prep <- function(df, save_path, ext = 'png') {
   )
   
   ggsave(
-    filename = file.path(save_path, paste0("eeg_acq_prep_plot.", ext)),
+    filename = file.path(save_path, paste0("fig3_meeg_acq_prep.", ext)),
     plot = fig,
     width = 10,
     height = 11,

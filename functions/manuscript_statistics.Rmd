@@ -281,60 +281,20 @@ ica_used <- get_usage_pipelines(df_pipelines, c('ica_used'), distinct = T) %>%
 
 ```{r rejected-components}
 # Component rejection types
-component_types_df <- df_pipelines %>%
-  filter(ICA == 1) %>%
-  distinct(PMID, rejected_components) %>%
-  filter(rejected_components != "", rejected_components != "unknown") %>%
-  mutate(pipeline_id = row_number())
+component_types_df <- rejections_per_component_type(df_pipelines) %>%
+  mutate(percentage = round_custom(percentage * 100))
 
-# Check if component types are at study or pipeline level
-component_types_level <- check_studies_or_pipelines(df_pipelines %>% filter(ICA == 1), "rejected_components")
-
-# Clean rejected_components
-component_types_df$rejected_components <- sapply(component_types_df$rejected_components, function(x) {
-  x <- gsub("[\r\n]+", ",", x)    
-  x <- gsub(",+", ",", x)         
-  x <- gsub("^,|,$", "", x)       
-  comps <- unlist(strsplit(x, ","))
-  comps <- unique(trimws(comps))
-  comps <- comps[comps != ""]
-  paste(comps, collapse = ",")
-})
-
-# Count total pipelines before splitting
-total_ica_pipelines <- nrow(component_types_df)
-
-# Create component types data
-component_types_expanded <- component_types_df %>%
-  separate_rows(rejected_components, sep = ",") %>%
-  mutate(
-    rejected_components = trimws(rejected_components),
-    rejected_components = tolower(rejected_components)
-  ) %>%
-  mutate(rejected_components = case_when(
-    rejected_components == "eye movements" ~ "Ocular",
-    rejected_components == "blinks" ~ "Ocular", 
-    rejected_components == "muscle" ~ "Muscle",
-    rejected_components == "cfa" ~ "CFA",
-    rejected_components == "channel noise" ~ "Channel noise",
-    rejected_components == "line noise" ~ "Line noise",
-    rejected_components == "other" ~ "Other",
-    TRUE ~ str_to_title(rejected_components)
-  )) %>%
-  filter(rejected_components != "")
-
-# Calculate percentages based on distinct pipeline_ids 
-component_types <- component_types_expanded %>%
-  group_by(rejected_components) %>%
-  summarise(count = n_distinct(pipeline_id), .groups = "drop") %>%
-  arrange(desc(count)) %>%
-  mutate(percentage = round(count / total_ica_pipelines * 100, 1))  
+for (i in 1:3) {
+  row <- component_types_df[i, ]
+  cat(
+    paste0(
+      '  * ', row$rejected_components, ': ',
+      '**', row$percentage, '%**', 
+      ' (**', row$count, '** / **', row$total, '**) ', row$level, '\n'
+    )
+  )
+}
 ```
-
-* `r component_types$rejected_components[1]`: **`r component_types$percentage[1]`%** (`r component_types$count[1]`/`r total_ica_pipelines`) `r component_types_level`
-* `r component_types$rejected_components[2]`: **`r component_types$percentage[2]`%** (`r component_types$count[2]`/`r total_ica_pipelines`) `r component_types_level`
-* `r component_types$rejected_components[3]`: **`r component_types$percentage[3]`%** (`r component_types$count[3]`/`r total_ica_pipelines`) `r component_types_level`
-* Other noise: **`r component_types$percentage[4] + component_types$percentage[5] + component_types$percentage[6]`%** (`r component_types$count[4] + component_types$count[5] + component_types$count[6]`/`r total_ica_pipelines`) `r component_types_level`
 
 ## 3.4. ECG Acquisition
 

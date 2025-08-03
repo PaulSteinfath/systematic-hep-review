@@ -332,6 +332,8 @@ Number of studies that use different ECG leads:
 
 Studies using any strategy for dealing with CFA: **TODO**
 
+ICA used to remove CFA: **TODO**
+
 ```{r ica-continuous-or-epochs}
 df_used_ica <- df_pipelines %>% filter(ICA == 1)
 ica_on_epochs <- get_usage_studies(df_used_ica, c('ica_on_epochs')) %>%
@@ -341,10 +343,39 @@ ica_continuous <- get_usage_studies(df_used_ica,
   mutate(percentage = round_custom(percentage))
 ```
 
-ICA applied to what data?
+### ICA applied to what data?
 
 * Continuous: **`r ica_continuous$percentage`%** (`r ica_continuous$count`/`r ica_continuous$total`) `r ica_continuous$level`
 * Epoched: **`r ica_on_epochs$percentage`%** (`r ica_on_epochs$count`/`r ica_on_epochs$total`) `r ica_on_epochs$level`
+
+### CFA rejection approach
+
+TODO
+
+### CFA rejection criteria
+
+TODO
+
+### Removal of CFA-related ICs
+
+```{r cfa-related-ics}
+# Number of studies that reported the number of rejected ICs
+df_pipelines$reject_cfa_ics <- grepl("cfa", 
+                                     df_pipelines$rejected_components, 
+                                     ignore.case = T)
+df_pipelines$report_rejected_cfa_ics <- !is.na(df_pipelines$rejected_cardiac_ics)
+report_cfa <- get_usage_studies(df_pipelines %>% filter(reject_cfa_ics == 1),
+                                c("report_rejected_cfa_ics")) %>%
+  mutate(percentage = round_custom(percentage))
+
+# Number of rejected cardiac ICs (studies)
+cardiac_ic_stats <- get_summary(df_pipelines %>%
+                                  filter(!is.na(rejected_cardiac_ics)),
+                                "rejected_cardiac_ics")
+```
+
+* Reported the number: **`r report_cfa$percentage`%** (**`r report_cfa$count`** / **`r report_cfa$total`**) `r report_cfa$level`
+* Range: **`r cardiac_ic_stats$min`** - **`r cardiac_ic_stats$max`**, median = `r cardiac_ic_stats$median`
 
 ```{r cfa}
 # CFA identification approaches (studies - no difference to unique pipelines)
@@ -389,16 +420,6 @@ cfa_criteria_counts <- df_studies %>%
 
 # Check if CFA criteria are at study or pipeline level
 cfa_criteria_level <- check_studies_or_pipelines(df_pipelines, "cfa_rej_criteria")
-
-# Number of rejected cardiac ICs (studies)
-cardiac_ic_stats <- df_studies %>%
-  filter(!is.na(rejected_cardiac_ics)) %>%
-  summarise(
-    n_studies = n(),
-    min_ics = min(rejected_cardiac_ics, na.rm = TRUE),
-    max_ics = max(rejected_cardiac_ics, na.rm = TRUE),
-    median_ics = median(rejected_cardiac_ics, na.rm = TRUE)
-  )
 
 # Other CFA removal strategies (pipelines)
 # For minimal artifact window, we need to match plotting function logic 
@@ -548,12 +569,6 @@ CFA criteria (`r cfa_criteria_level`):
 * `r cfa_criteria_counts$cfa_rej_criteria[6]`: **`r cfa_criteria_counts$percentage[6]`%** (`r cfa_criteria_counts$count[6]`/`r cfa_criteria_counts$total_pipelines[6]`)
 * `r cfa_criteria_counts$cfa_rej_criteria[4]`: **`r cfa_criteria_counts$percentage[4]`%** (`r cfa_criteria_counts$count[4]`/`r cfa_criteria_counts$total_pipelines[4]`)
 * `r cfa_criteria_counts$cfa_rej_criteria[5]`: **`r cfa_criteria_counts$percentage[5]`%** (`r cfa_criteria_counts$count[5]`/`r cfa_criteria_counts$total_pipelines[5]`)
-
-### Rejected Cardiac ICs
-
-* Studies reporting number: **`r cardiac_ic_stats$n_studies`** out of **`r no_cfa_stats$studies_with_ica_for_cfa`** studies that removed CFA-related ICs (`r cardiac_ic_stats$n_studies`/`r no_cfa_stats$studies_with_ica_for_cfa`)
-* Range: **`r cardiac_ic_stats$min_ics`** - **`r cardiac_ic_stats$max_ics`**
-* Median: **`r cardiac_ic_stats$median_ics`**
 
 ### Other CFA Removal Strategies
 

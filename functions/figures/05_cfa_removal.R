@@ -11,7 +11,19 @@ figure_cfa_removal <- function(df, save_path, ext = "svg") {
   )
   
   cfa_criteria_plot <- summarize_cfa_criteria(df)
-  cardiac_ics_plot <- rejected_cardiac_ics(df)
+  
+  # Panel C: number of rejected CFA-related ICs
+  cardiac_ics_plot <- hist_panel(
+    df %>%
+      distinct(PMID, rejected_cardiac_ics) %>%
+      filter(!is.na(rejected_cardiac_ics)), 
+    "rejected_cardiac_ics",
+    x.label = "",
+    title = "Number of rejected CFA-related ICs",
+    discrete = FALSE,
+    binwidth = 1
+  )
+  
   other_strategies_plot <- other_strategy_plot(df)
   rr_plot <- rr_intervals_plot(df)
   minimal_artifact_plot <- minimal_artifact_windows_plot(df, t_peak_offset = 300)

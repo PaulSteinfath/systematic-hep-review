@@ -210,211 +210,38 @@ knitr::kable(missing_df_top,
 
 ## 3.3. M/EEG acquisition & preprocessing
 
-### Sensor Information
+### Online reference
 
-```{r channels}
-#Sensor statistics
-sensor_stats <- df_pipelines %>%
-distinct(PMID, meeg_num_electrodes) %>%
-  summarise(
-    min_channels = min(meeg_num_electrodes),
-    max_channels = max(meeg_num_electrodes),
-    median_channels = median(meeg_num_electrodes),
-    n_studies = n()
-  )
-```
-
-### Reference Schemes
-
-```{r references}
-# Reference processing
-major_categories <- tolower(c(
-  "Cz", "Nose", "Linked earlobes", "Linked mastoids",
-  "FCz", "Common average", "Fpz", "CMS", "CMS and DRL",
-  "unknown", "Laplacian reference", "REST"
-))
-
-# Process reference categories
-df_ref <- df_pipelines %>% 
-  filter(modality == "EEG") %>%
-  mutate(across(
-    .cols = c(reference_online, reference_offline),
-    .fns = ~ case_when(
-      tolower(.) %in% major_categories ~ tolower(.),
-      TRUE ~ "Other"
-    )
-  ))
-
-# Common reference category mapping 
-ref_categories <- c(
-  "common average" = "CAR",
-  "linked mastoids" = "LM", 
-  "linked earlobes" = "LE",
-  "cz" = "Cz",
-  "fcz" = "FCz",
-  "fpz" = "Fpz",
-  "cms" = "CMS",
-  "cms and drl" = "CMS",
-  "nose" = "Nose",
-  "laplacian reference" = "LAP",
-  "rest" = "REST",
-  "other" = "Other",
-  "unknown" = "N/M"
-)
-
+```{r online-reference}
 # Online reference distribution
-online_ref_counts <- df_ref %>% 
-  distinct(PMID, reference_online) %>%
-  count(reference_online) %>%
-  filter(reference_online %in% names(ref_categories)) %>%
-  mutate(
-    display_name = ref_categories[reference_online],
-    percentage = round(n / sum(n) * 100, 1)
-  ) %>%
-  arrange(desc(n))
+df_ref <- df_pipelines %>% preprocess_reference()
+online_ref_counts <- hist_discrete(df_ref, "reference_online",
+                                   modality_filter = "EEG",
+                                   allowed = ref_mapping[online_ref_categories]) %>%
+  mutate(percentage = round_custom(percentage))
 
-# Check if online references are at study or pipeline level
-online_ref_level <- check_studies_or_pipelines(df_ref, "reference_online")
+online_ref_lm <- get_row(online_ref_counts, "reference_online", "LinkM")
+online_ref_cz <- get_row(online_ref_counts, "reference_online", "Cz")
+```
 
+* Linked mastoids: **`r online_ref_lm$percentage`%** (**`r online_ref_lm$n`** / **`r online_ref_lm$total`**) `r online_ref_lm$level`
+* Cz: **`r online_ref_cz$percentage`%** (**`r online_ref_cz$n`** / **`r online_ref_cz$total`**) `r online_ref_cz$level`
+
+### Offline reference
+
+```{r offline-reference}
 # Offline reference distribution
-offline_ref_counts <- df_ref %>% 
-  distinct(PMID, reference_offline)%>%
-  count(reference_offline) %>%
-  filter(reference_offline %in% names(ref_categories)) %>%
-  mutate(
-    display_name = ref_categories[reference_offline],
-    percentage = round(n / sum(n) * 100, 1)
-  ) %>%
-  arrange(desc(n))
+offline_ref_counts <- hist_discrete(df_ref, "reference_offline",
+                                    modality_filter = "EEG",
+                                    allowed = ref_mapping[offline_ref_categories]) %>%
+  mutate(percentage = round_custom(percentage))
 
-# Check if offline references are at study or pipeline level
-offline_ref_level <- check_studies_or_pipelines(df_ref, "reference_offline")
+offline_ref_car <- get_row(offline_ref_counts, "reference_offline", "CAR")
 ```
 
-Online reference: Linked mastoids (**`r online_ref_counts$percentage[online_ref_counts$display_name == "LM"]`%** (`r online_ref_counts$n[online_ref_counts$display_name == "LM"]`/`r sum(online_ref_counts$n)`) `r online_ref_level`), Cz (**`r online_ref_counts$percentage[online_ref_counts$display_name == "Cz"]`%** (`r online_ref_counts$n[online_ref_counts$display_name == "Cz"]`/`r sum(online_ref_counts$n)`) `r online_ref_level`)
+* Common average: **`r offline_ref_car$percentage`%** (**`r offline_ref_car$n`** / **`r offline_ref_car$total`**) `r offline_ref_car$level`
 
-Offline reference: Common Average Reference (**`r offline_ref_counts$percentage[offline_ref_counts$display_name == "CAR"]`%** (`r offline_ref_counts$n[offline_ref_counts$display_name == "CAR"]`/`r sum(offline_ref_counts$n)`) `r offline_ref_level`))
-
-### Artifact Removal
-
-```{r artifacts}
-# Artifact removal statistics
-artifact_stats <- df_pipelines %>%
-  summarise(
-    # Noisy epochs removal 
-    noisy_epochs_pct = round(mean(grepl("noisy epoch", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
-    
-    # Bad channels removal 
-    bad_channels_pct = round(mean(grepl("bad channels", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
-    
-    # Blink/EOG correction
-    blink_correction_pct = round(mean(grepl("blink|eye|gratton", other_cleaning_strategy, ignore.case = TRUE) %in% TRUE, na.rm = TRUE) * 100, 0),
-
-    # ICA usage
-    ica_pct = round(mean(ICA == 1, na.rm = TRUE) * 100, 1),
-
-    # Pipelines with ICA
-    n_ica_studies = sum(ICA == 1, na.rm = TRUE),
-    total_studies = n() 
-  )
-
-# Check if artifact removal strategies are at study or pipeline level
-noisy_epochs_level <- check_studies_or_pipelines(df_pipelines, "other_cleaning_strategy")
-bad_channels_level <- check_studies_or_pipelines(df_pipelines, "other_cleaning_strategy")
-ica_level <- check_studies_or_pipelines(df_pipelines, "ICA")
-
-# Studies using ICA
-ica_studies <- df_pipelines %>%
-  group_by(PMID) %>%
-  summarise(uses_ica = any(ICA == 1, na.rm = TRUE)) %>%
-  summarise(
-    n_ica_studies = sum(uses_ica),
-    total_studies = n(),
-    ica_study_pct = round(mean(uses_ica) * 100, 1)
-  )
-
-# Studies using ICA specifically for cfa removal
-ica_for_cfa_studies <- df_pipelines %>%
-  group_by(PMID) %>%
-  summarise(
-    uses_ica_for_cfa = any(ICA == 1 & 
-                           rejected_components != "" &
-                           grepl("cfa", rejected_components, ignore.case = TRUE)),
-    .groups = "drop"
-  ) %>%
-  summarise(
-    n_ica_cfa_studies = sum(uses_ica_for_cfa),
-    total_studies = n(),
-    ica_cfa_study_pct = round(mean(uses_ica_for_cfa) * 100, 1)
-  )
-
-# Component rejection types
-component_types_df <- df_pipelines %>%
-  filter(ICA == 1) %>%
-  distinct(PMID, rejected_components) %>%
-  filter(rejected_components != "", rejected_components != "unknown") %>%
-  mutate(pipeline_id = row_number())
-
-# Check if component types are at study or pipeline level
-component_types_level <- check_studies_or_pipelines(df_pipelines %>% filter(ICA == 1), "rejected_components")
-
-# Clean rejected_components
-component_types_df$rejected_components <- sapply(component_types_df$rejected_components, function(x) {
-  x <- gsub("[\r\n]+", ",", x)    
-  x <- gsub(",+", ",", x)         
-  x <- gsub("^,|,$", "", x)       
-  comps <- unlist(strsplit(x, ","))
-  comps <- unique(trimws(comps))
-  comps <- comps[comps != ""]
-  paste(comps, collapse = ",")
-})
-
-# Count total pipelines before splitting
-total_ica_pipelines <- nrow(component_types_df)
-
-# Create component types data
-component_types_expanded <- component_types_df %>%
-  separate_rows(rejected_components, sep = ",") %>%
-  mutate(
-    rejected_components = trimws(rejected_components),
-    rejected_components = tolower(rejected_components)
-  ) %>%
-  mutate(rejected_components = case_when(
-    rejected_components == "eye movements" ~ "Ocular",
-    rejected_components == "blinks" ~ "Ocular", 
-    rejected_components == "muscle" ~ "Muscle",
-    rejected_components == "cfa" ~ "CFA",
-    rejected_components == "channel noise" ~ "Channel noise",
-    rejected_components == "line noise" ~ "Line noise",
-    rejected_components == "other" ~ "Other",
-    TRUE ~ str_to_title(rejected_components)
-  )) %>%
-  filter(rejected_components != "")
-
-# Calculate percentages based on distinct pipeline_ids 
-component_types <- component_types_expanded %>%
-  group_by(rejected_components) %>%
-  summarise(count = n_distinct(pipeline_id), .groups = "drop") %>%
-  arrange(desc(count)) %>%
-  mutate(percentage = round(count / total_ica_pipelines * 100, 1))  
-```
-
-
-Artifact removal:
-
-* Noisy epochs: **`r artifact_stats$noisy_epochs_pct`%** (`r sum(grepl("noisy epoch", df_studies$other_cleaning_strategy, ignore.case = TRUE), na.rm = TRUE)`/`r nrow(df_studies)`) `r noisy_epochs_level`
-* Bad channels: **`r artifact_stats$bad_channels_pct`%** (`r sum(grepl("bad channels", df_studies$other_cleaning_strategy, ignore.case = TRUE), na.rm = TRUE)`/`r nrow(df_studies)`) `r bad_channels_level`
-* ICA usage: **`r ica_studies$ica_study_pct`%** (`r ica_studies$n_ica_studies`/`r ica_studies$total_studies`) studies
-* ICA for CFA: **`r ica_for_cfa_studies$ica_cfa_study_pct`%** (`r ica_for_cfa_studies$n_ica_cfa_studies`/`r ica_for_cfa_studies$total_studies`) studies
-
-ICA component types removed:
-
-* `r component_types$rejected_components[1]`: **`r component_types$percentage[1]`%** (`r component_types$count[1]`/`r total_ica_pipelines`) `r component_types_level`
-* `r component_types$rejected_components[2]`: **`r component_types$percentage[2]`%** (`r component_types$count[2]`/`r total_ica_pipelines`) `r component_types_level`
-* `r component_types$rejected_components[3]`: **`r component_types$percentage[3]`%** (`r component_types$count[3]`/`r total_ica_pipelines`) `r component_types_level`
-* Other noise: **`r component_types$percentage[4] + component_types$percentage[5] + component_types$percentage[6]`%** (`r component_types$count[4] + component_types$count[5] + component_types$count[6]`/`r total_ica_pipelines`) `r component_types_level`
-
-### Filter Settings
+### Filter settings
 
 ```{r filters}
 # Filter statistics
@@ -422,30 +249,52 @@ filter_data <- df_pipelines %>%
   filter(!is.na(high_pass) & !is.na(low_pass)) %>%
   distinct(PMID, high_pass, low_pass, .keep_all = TRUE)
 
-filter_stats <- filter_data %>%
-  summarise(
-    n_valid = n(),
-    high_pass_range_min = min(high_pass),
-    high_pass_range_max = max(high_pass),
-    low_pass_range_min = min(low_pass), 
-    low_pass_range_max = max(low_pass)
-  )
-
 # Most common high-pass filter values (studies)
 common_highpass <- filter_data %>%
   count(high_pass, sort = TRUE) %>%
   head(3)
-
-# Most common low-pass filter values (studies)
-common_lowpass <- filter_data %>%
-  count(low_pass, sort = TRUE) %>%
-  head(3)
-
 ```
 
-Filter settings: **`r common_highpass$high_pass[1]`**-**`r common_lowpass$low_pass[1]` Hz** (most common)
+* Most common high-pass cutoffs: **`r paste(sort(common_highpass$high_pass), collapse = ", ")` Hz**
 
-High-pass cutoffs: **`r paste(common_highpass$high_pass, collapse = ", ")` Hz**
+### Artifact removal
+
+```{r artifacts}
+artifact_removal <- get_usage_studies(df_pipelines,
+                                      c('clean_noisy_epochs',
+                                        'clean_bad_channels')) %>%
+  mutate(percentage = round_custom(percentage))
+
+noisy_epochs <- get_row(artifact_removal, "column", "clean_noisy_epochs")
+bad_channels <- get_row(artifact_removal, "column", "clean_bad_channels")
+
+df_pipelines$ica_used <- df_pipelines$ICA == 1
+ica_used <- get_usage_pipelines(df_pipelines, c('ica_used'), distinct = T) %>%
+  mutate(percentage = round_custom(percentage))
+```
+
+* Noisy epochs: **`r noisy_epochs$percentage`%** (**`r noisy_epochs$count`** / **`r noisy_epochs$total`**) `r noisy_epochs$level`
+* Bad channels: **`r bad_channels$percentage`%** (**`r bad_channels$count`** / **`r bad_channels$total`**) `r bad_channels$level`
+* ICA usage: **`r ica_used$percentage`%** (**`r ica_used$count`** / **`r ica_used$total`**) `r ica_used$level`
+
+### Types of rejected ICA components
+
+```{r rejected-components}
+# Component rejection types
+component_types_df <- rejections_per_component_type(df_pipelines) %>%
+  mutate(percentage = round_custom(percentage * 100))
+
+for (i in 1:3) {
+  row <- component_types_df[i, ]
+  cat(
+    paste0(
+      '  * ', row$rejected_components, ': ',
+      '**', row$percentage, '%**', 
+      ' (**', row$count, '** / **', row$total, '**) ', row$level, '\n'
+    )
+  )
+}
+```
 
 ## 3.4. ECG Acquisition
 
@@ -688,7 +537,7 @@ Minimum IBI constraints: **`r ibi_stats$min_ibi`** to **`r ibi_stats$max_ibi`** 
 
 ### CFA Identification Approaches
 
-* Not reported: **`r round((1 - sum(cfa_approach_counts$n) / ica_studies$n_ica_studies) * 100, 1)`%** of studies using ICA (`r ica_studies$n_ica_studies - sum(cfa_approach_counts$n)`/`r ica_studies$n_ica_studies`)
+* Not reported: **`r round((1 - sum(cfa_approach_counts$n) / ica_used$count) * 100, 1)`%** of studies using ICA (`r ica_used$count - sum(cfa_approach_counts$n)`/`r ica_used$count`)
 
 CFA approaches (`r cfa_approach_level`):
 * `r cfa_approach_counts$cfa_rej_approach[1]`: **`r cfa_approach_counts$percentage[1]`%** (`r cfa_approach_counts$n[1]`/`r sum(cfa_approach_counts$n)`)
@@ -1261,7 +1110,7 @@ trials_summary <- get_summary(df_pipelines,
 
 ```{r stats}
 statistics_df <- hist_discrete(df_pipelines, "statistics",
-                               allowed = stats_allowed) %>%
+                               allowed = allowed$statistics) %>%
   arrange(-percentage)
 ```
 

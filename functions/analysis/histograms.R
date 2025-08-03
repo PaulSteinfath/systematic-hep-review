@@ -35,7 +35,7 @@ hist_discrete <- function(df,
     arrange(desc(n)) %>%
     mutate(
       total = total_count,
-      percentage = round(n / total_count * 100, 1),
+      percentage = n / total_count * 100,
       level = level
     )
   
@@ -64,8 +64,55 @@ hist_continuous <- function(df,
     mutate({{col}} := x,
            total = total_count,
            level = level,
-           percentage = round(count / total * 100, 1)) %>%
+           percentage = count / total * 100) %>%
     select({{col}}, count, total, percentage, level)
   
   hist_df
+}
+
+
+get_usage_studies <- function(df, cols, group_col = "PMID") {
+  usage <- data.frame()
+  
+  for (col in cols) {
+    is_using <- by(df[[col]], df[[group_col]], \(x) any(x), simplify = T)
+    
+    col_usage <- data.frame(
+      column = col,
+      count = sum(is_using),
+      total = length(is_using),
+      level = "studies"
+    )
+    col_usage$percentage = col_usage$count / col_usage$total * 100
+    
+    usage <- bind_rows(usage, col_usage)
+  }
+  
+  usage
+}
+
+
+get_usage_pipelines <- function(df, cols, group_col = "PMID", distinct = F) {
+  usage <- data.frame()
+  
+  for (col in cols) {
+    is_using <- df[[col]]
+    if (distinct) {
+      df_distinct <- df %>%
+        distinct(!!sym(group_col), !!sym(col))
+      is_using <- df_distinct[[col]]
+    }
+    
+    col_usage <- data.frame(
+      column = col,
+      count = sum(is_using),
+      total = length(is_using),
+      level = "pipelines"
+    )
+    col_usage$percentage = col_usage$count / col_usage$total * 100
+    
+    usage <- bind_rows(usage, col_usage)
+  }
+  
+  usage
 }

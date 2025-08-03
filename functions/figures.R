@@ -1,12 +1,11 @@
 # Import plotting functions
 source(file.path(func_path, "plots", "plotting_helpers.R"))
 source(file.path(func_path, "plots", "utils.R"))
-source(file.path(func_path, "plots", "create_combined_plot.R"))
+source(file.path(func_path, "plots", "plot_segments.R"))
 source(file.path(func_path, "plots", "bar_panel.R"))
 source(file.path(func_path, "plots", "hist_panel.R"))
 source(file.path(func_path, "plots", "create_ica_usage_plot.R"))
-source(file.path(func_path, "plots", "create_ica_rej.R"))
-source(file.path(func_path, "plots", "create_simple_ica_plot.R"))
+source(file.path(func_path, "plots", "plot_rejected_components.R"))
 source(file.path(func_path, "plots", "summarize_cfa_criteria.R"))
 source(file.path(func_path, "plots", "rr_intervals_plot.R"))
 source(file.path(func_path, "plots", "other_strategy_plot.R"))
@@ -26,6 +25,7 @@ source(file.path(func_path, "plots", "plot_simulated_effects.R"))
 
 source(file.path(func_path, 'figures', '01_overview_studies.R'))
 source(file.path(func_path, 'figures', '02_overview_pipelines.R'))
+source(file.path(func_path, 'figures', '03_meeg_acq_prep.R'))
 source(file.path(func_path, 'figures', '04_ecg_summary.R'))
 source(file.path(func_path, 'figures', '06_hep_estimation.R'))
 source(file.path(func_path, 'figures', '07_stats.R'))
@@ -52,120 +52,6 @@ create_epoch_simulation_plot <- function(df){
     rel_widths = c(0.5, 0.05, 0.5)
   )
   
-}
-
-
-# Create filter cutoff plots
-create_filter_plots <- function(df) {
-  filter_plot <- create_combined_plot(
-    df = df,
-    start_var = "high_pass",
-    end_var = "low_pass",
-    x_scale = "log",
-    custom_breaks = c(0.01, 0.1, 0.5, 1, 20, 40, 80),
-    x_label = "Filter cutoff (Hz)",
-    y_label = "Individual studies",
-    show_legend = TRUE 
-  )
-  return(filter_plot)
-}
-
-# Create EEG Acquisition & Preprocessing
-eeg_acq_prep <- function(df) {
-  # Define major reference categories once
-  major_categories <- tolower(c(
-    "Cz", "Nose", "Linked earlobes", "Linked mastoids",
-    "FCz", "Common average", "Fpz", "CMS", "CMS and DRL",
-    "unknown", "Laplacian reference", "REST", "Fz", "left mastoid"
-  ))
-
-  # Process reference categories
-  df_ref <- df %>%
-    mutate(across(
-      .cols = c(reference_online, reference_offline),
-      .fns = ~ case_when(
-        tolower(.) %in% major_categories ~ tolower(.),
-        TRUE ~ "Other"
-      )
-    ))
-
-  # Common reference category mapping
-  ref_categories <- c(
-    "Common average" = "CAR",
-    "Linked mastoids" = "LinkM",
-    "Linked earlobes" = "LinkE",
-    "Cz" = "Cz",
-    "FCz" = "FCz",
-    "Fpz" = "Fpz",
-    "CMS" = "CMS",
-    "CMS and DRL" = "CMS",
-    "Nose" = "Nose",
-    "Laplacian reference" = "LAP",
-    "REST" = "REST",
-    "Other" = "Other",
-    "unknown" = "N/M",
-    "Fz" = "Fz",
-    "left mastoid" = "LM"
-  )
-
-  # Create individual histogtams for online / offline references
-  ref_online <- hist_panel(df_ref, "reference_online",
-    title = "Reference (online)",
-    discrete = TRUE, tilt_labels = F,
-    modality_filter = "EEG",
-    allowed = ref_categories[c(
-      "Common average", "Linked mastoids", "Cz", "FCz",
-      "Fpz", "CMS and DRL", "CMS", "Nose",
-      "Linked earlobes", "Other", "unknown", "Fz", "left mastoid"
-    )]
-  )
-
-  ref_offline <- hist_panel(df_ref, "reference_offline",
-    title = "Reference (offline)",
-    discrete = TRUE, tilt_labels = F,
-    modality_filter = "EEG",
-    allowed = ref_categories[c(
-      "Common average", "Linked mastoids", "Linked earlobes",
-      "Laplacian reference", "unknown", "Other", "REST", "Cz"
-    )]
-  )
-
-  # Create plots for filtering cutoffs, ICA rejection, and ICA usage
-  filter_plot <- create_filter_plots(df)
-  ica_rej_plot <- create_ica_rej(df)
-  ica_simple_plot <- create_simple_ica_plot(df)
-
-  plot_BC <- plot_grid( 
-    ref_offline,
-    ica_simple_plot,
-    ncol = 2,
-    align = "hv",
-    axis = "tblr",
-    labels = c("B", "C"),
-    rel_widths = c(1.4, 0.6)
-  )
-
-  # Combine plots
-  fig_ABCD <- plot_grid(
-    plot_grid(ref_online, ncol = 1, labels = "A"),    
-    NULL,                                              # Spacer
-    plot_BC,                                          
-    plot_grid(ica_rej_plot, ncol = 1, labels = "D"),  
-    ncol = 1,
-    align = "hv",
-    axis = "tblr",
-    vjust = 1,
-    rel_heights = c(1, 0.05, 1, 1) # A, spacer, B&C, D
-    )
-
-  plot_grid(
-    fig_ABCD,
-    NULL,
-    filter_plot,
-    nrow = 1,
-    rel_widths = c(1.2, 0.05, 0.9),
-    vjust = 1
-  )
 }
 
 
@@ -210,21 +96,6 @@ cfa_removal <- function(df) {
 
 # Here we generate all figures
 make_figures <- function(df, save_path, ext = "svg") {
-
-  eeg_acq_prep_plot <- eeg_acq_prep(df)
-
-  ggsave(
-    filename = file.path(save_path, paste0("eeg_acq_prep_plot.", ext)),
-    plot = eeg_acq_prep_plot,
-    width = 10,
-    height = 11,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  show(eeg_acq_prep_plot)
-
 
   cfa_removal_plot <- cfa_removal(df)
 

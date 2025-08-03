@@ -11,3 +11,13 @@ process_char_vector <- function(x) {
   tokens <- tokens[!(tokens == "" | tolower(tokens) == "unknown")]
   return(tokens)
 }
+
+
+round_custom <- function(x) {
+  # Show one digit after decimal point only for small values (<10)
+  above <- x > 10
+  x[above] <- round(x[above], digits = 0)
+  x[!above] <- round(x[!above], digits = 1)
+  
+  x
+}

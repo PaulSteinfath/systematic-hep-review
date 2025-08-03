@@ -117,6 +117,19 @@ resolve_all_except <- function(row) {
 }
 
 
+preprocess_cleaning <- function(df) {
+  other_cleaning <- str_split(df_included$other_cleaning_strategy, ', ')
+  other_cleaning <- lapply(other_cleaning, \(x) tolower(trimws(x)))
+  
+  for (approach in c('noisy epochs', 'bad channels')) {
+    use_approach <- sapply(other_cleaning, \(x) approach %in% x)
+    df[[paste0("clean_", str_replace(approach, ' ', '_'))]] <- use_approach
+  }
+  
+  df
+}
+
+
 preprocess_channels <- function(df) {
   # Fill in standard EEG locations if the whole layout was used
   use_layout <- df$eeg_locations == "layout"
@@ -369,6 +382,7 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   # NOTE: apply steps one by one to get adequate messages in case of errors
   df_included <- preprocess_studies(df_included)
   df_included <- preprocess_ecg(df_included)
+  df_included <- preprocess_cleaning(df_included)
   df_included <- preprocess_channels(df_included)
   df_included <- preprocess_hep_significant(df_included)
   

@@ -1,6 +1,15 @@
 figure_cfa_removal <- function(df, save_path, ext = "svg") {
+  # Panel A: is ICA applied to continuous or epoched data?
+  ica_usage_plot <- hist_panel(
+    df %>% 
+      distinct(PMID, ICA, ica_on_epochs) %>%
+      filter(ICA == 1),
+    col = "ica_on_epochs",
+    title = "ICA Usage",
+    discrete = TRUE,
+    custom_labels = c("0" = "Continuous", "1" = "Epoched")
+  )
   
-  ica_usage_plot <- epoch_continuous_ica(df)
   cfa_criteria_plot <- summarize_cfa_criteria(df)
   cardiac_ics_plot <- rejected_cardiac_ics(df)
   other_strategies_plot <- other_strategy_plot(df)

@@ -330,23 +330,23 @@ Number of studies that use different ECG leads:
 
 ## 3.5. Dealing with cardiac artifacts
 
+Studies using any strategy for dealing with CFA: **TODO**
+
+```{r ica-continuous-or-epochs}
+df_used_ica <- df_pipelines %>% filter(ICA == 1)
+ica_on_epochs <- get_usage_studies(df_used_ica, c('ica_on_epochs')) %>%
+  mutate(percentage = round_custom(percentage))
+ica_continuous <- get_usage_studies(df_used_ica, 
+                                    c('ica_on_epochs'), negate = T) %>%
+  mutate(percentage = round_custom(percentage))
+```
+
+ICA applied to what data?
+
+* Continuous: **`r ica_continuous$percentage`%** (`r ica_continuous$count`/`r ica_continuous$total`) `r ica_continuous$level`
+* Epoched: **`r ica_on_epochs$percentage`%** (`r ica_on_epochs$count`/`r ica_on_epochs$total`) `r ica_on_epochs$level`
+
 ```{r cfa}
-# ICA epoch/continuous
-ica_timing <- df_studies %>%
-  filter(ICA == 1 & !is.na(ica_on_epochs)) %>%
-  count(ica_on_epochs) %>%
-  mutate(
-    timing = case_when(
-      ica_on_epochs == 0 ~ "Continuous",
-      ica_on_epochs == 1 ~ "Epoched",
-      TRUE ~ "Unknown"
-    ),
-    percentage = round(n / sum(n) * 100, 1)
-  )
-
-# Check if ICA timing is at study or pipeline level
-ica_timing_level <- check_studies_or_pipelines(df_pipelines %>% filter(ICA == 1), "ica_on_epochs")
-
 # CFA identification approaches (studies - no difference to unique pipelines)
 cfa_approach_counts <- df_studies %>%
   filter(cfa_rej_approach != "" & 
@@ -527,11 +527,6 @@ ibi_stats <- rr_interval_pipelines %>%
 ```
 
 ICA for CFA: **`r no_cfa_stats$studies_with_ica_for_cfa`**/**`r no_cfa_stats$total_studies`**
-
-ICA timing (`r ica_timing_level`):
-
-* Continuous: **`r ica_timing$percentage[ica_timing$timing == "Continuous"]`%** (`r ica_timing$n[ica_timing$timing == "Continuous"]`/`r sum(ica_timing$n)`)
-* Epoched: **`r ica_timing$percentage[ica_timing$timing == "Epoched"]`%** (`r ica_timing$n[ica_timing$timing == "Epoched"]`/`r sum(ica_timing$n)`)
 
 Minimum IBI constraints: **`r ibi_stats$min_ibi`** to **`r ibi_stats$max_ibi`** ms (`r ibi_stats$n_studies` studies)
 

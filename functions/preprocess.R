@@ -118,7 +118,7 @@ resolve_all_except <- function(row) {
 
 
 preprocess_cleaning <- function(df) {
-  other_cleaning <- str_split(df_included$other_cleaning_strategy, ', ')
+  other_cleaning <- str_split(df$other_cleaning_strategy, ', ')
   other_cleaning <- lapply(other_cleaning, \(x) tolower(trimws(x)))
   
   for (approach in c('noisy epochs', 'bad channels')) {

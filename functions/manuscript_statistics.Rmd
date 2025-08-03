@@ -1150,7 +1150,7 @@ trials_summary <- get_summary(df_pipelines,
 
 ```{r stats}
 statistics_df <- hist_discrete(df_pipelines, "statistics",
-                               allowed = stats_allowed) %>%
+                               allowed = allowed$statistics) %>%
   arrange(-percentage)
 ```
 

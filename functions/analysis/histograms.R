@@ -71,6 +71,8 @@ hist_continuous <- function(df,
 }
 
 
+# For 0/1 columns, get the count and percentage of studies with 1
+# At least one pipeline with 1 per study is needed
 get_usage_studies <- function(df, cols, group_col = "PMID") {
   usage <- data.frame()
   
@@ -92,6 +94,8 @@ get_usage_studies <- function(df, cols, group_col = "PMID") {
 }
 
 
+# For 0/1 columns, get the count and percentage of pipelines with 1
+# Optionally, with filtering to only consider distinct pipelines 
 get_usage_pipelines <- function(df, cols, group_col = "PMID", distinct = F) {
   usage <- data.frame()
   

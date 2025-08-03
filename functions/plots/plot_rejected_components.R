@@ -16,7 +16,7 @@ plot_rejected_components <- function(df) {
     labs(
       x = "",
       y = "Proportion of pipelines",
-      title = "Types of Rejected ICA Components",
+      title = "Types of rejected ICA components",
       subtitle = paste("n =", total_count, level)
     ) 
 

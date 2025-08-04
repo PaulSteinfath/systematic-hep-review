@@ -38,7 +38,7 @@ figure_stats <- function(df, save_path, ext = 'png') {
                   discrete = T, 
                   tilt_labels = F,
                   decreasing = F,
-                  allowed = stats_allowed) + coord_flip()
+                  allowed = allowed$statistics) + coord_flip()
   g <- plot_hedges_g(df = df)
   
   first_row <- plot_grid(

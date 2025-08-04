@@ -26,18 +26,23 @@ source_all <- function(folder) {
   }
 }
 
+# Import all functions and parameters
+func_path <- file.path(getwd(), 'functions')
+
 # Load parameters first
-config_path <- file.path(getwd(), "config")
+config_path <- file.path(func_path, "config")
 source_all(config_path)
 
-# Import all functions
-func_path <- file.path(getwd(), 'functions')
+# Preprocessing and analysis
 source(file.path(func_path, 'utils.R'))
-
+source(file.path(func_path, 'preprocess.R'))
+source(file.path(func_path, 'validate.R'))
 analysis_path <- file.path(func_path, "analysis")
 source_all(analysis_path)
 
-source(file.path(func_path, 'figures.R'))
-source(file.path(func_path, 'preprocess.R'))
-source(file.path(func_path, 'prisma.R'))
-source(file.path(func_path, 'validate.R'))
+# Figures
+figures_path <- file.path(func_path, "figures")
+plots_path <- file.path(func_path, "plots")
+source_all(plots_path)
+source_all(figures_path)
+

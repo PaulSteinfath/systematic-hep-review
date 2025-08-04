@@ -1,8 +1,8 @@
-minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
+plot_minimal_artifact_windows <- function(df, t_peak_offset = 300) {
 
   df_minimal <- df %>%
     distinct(PMID, other_cfa_removal_strategy, .keep_all = TRUE) %>%
-    filter(str_detect(tolower(other_cfa_removal_strategy), "limit analysis to time of minimal artifact")) %>%
+    filter(cfa_use_minimal_artifact_window) %>%
     select(PMID, hep_start, hep_end, hep_relative_to) %>%
     distinct()
   
@@ -14,7 +14,7 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
      mutate(
       # Create T-peak indicator
       is_tpeak = tolower(hep_relative_to) == "t-peak",
-      # shift T-peak
+      # Shift T-peak
       hep_start = hep_start + if_else(is_tpeak, t_peak_offset, 0),
       hep_end = hep_end + if_else(is_tpeak, t_peak_offset, 0),
       reference = if_else(is_tpeak, "T-peak", "R-peak"),
@@ -46,7 +46,7 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
 
   ggplot() +
     geom_line(data = ecg_data, aes(x = time, y = voltage),
-              color = plot_fill_default_single, linewidth = 1, alpha = 0.3) +
+              color = common_colors$fill_default, linewidth = 1, alpha = 0.3) +
     geom_segment(
       data = df_minimal,
       aes(x = hep_start, xend = hep_end, 
@@ -54,25 +54,26 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
           color = reference),
       linewidth = 0.7
     ) +
-    geom_vline(xintercept = 0, linetype = "dotted", color = "gray40") +
+    geom_vline(xintercept = 0, linetype = "dotted", color = common_colors$r_peak_vline) +
     geom_vline(xintercept = t_peak_offset, linetype = "dashed", color = r_t_peak_palette["T-peak"]) +
     labs(
       x = "Time (ms)",
-      y = "",
-      title = "Minimal Artifact Window",
+      y = "Individual studies",
+      title = "Minimal artifact window",
       subtitle = paste("n =", nrow(df_minimal), "studies"),
       color = "Reference"
     ) +
-    scale_color_manual(values = r_t_peak_palette) +
+    scale_color_manual(name = "Reference event",
+                       values = r_t_peak_palette) +
     plot_theme_default +
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
-          panel.grid.major.y = element_blank(),
-          panel.grid.minor = element_blank(),
+          title = element_text(hjust = 0, size = 9), 
           plot.caption = element_text(hjust = 0.5, size = 9, margin = margin(t = 10)),
           legend.position = "top",
           legend.title = element_text(size = 8),
           legend.margin = margin(0, 0, 0, 0),
           legend.box.margin = margin(-5, 0, 0, 0),
-          axis.title.x = element_text(hjust = 0.5))
+          axis.title.x = element_text(hjust = 0.5),
+          axis.title.y = element_text(hjust = 0.5))
 }

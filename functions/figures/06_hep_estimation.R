@@ -117,8 +117,10 @@ figure_hep_estimation_summary <- function(df, save_path, ext = 'png') {
   )
   
   first_row_histograms <- plot_grid(
-    avg_cluster_prop_plot, rt_peak_prop_plot,
-    baseline_def_prop_plot, hep_type_prop_plot,
+    rt_peak_prop_plot,
+    baseline_def_prop_plot,
+    avg_cluster_prop_plot, 
+    hep_type_prop_plot,
     ncol = 4,
     labels = c("A", "B", "C", "D"),
     align = "hv",

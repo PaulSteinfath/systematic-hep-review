@@ -1,9 +1,8 @@
 bar_panel <- function(df,
                       value_col,
                       column_col = "Column",
-                      column_order = NULL,
-                      column_labels = NULL,
-                      pipeline_colors = NULL,
+                      color_col = "Step",
+                      colors = NULL,
                       plot_fill = plot_fill_default_single,
                       percentages = F,
                       x_lab = "Methodological choice",
@@ -17,12 +16,12 @@ bar_panel <- function(df,
 {
   p <- ggplot(df, aes(x = !!sym(column_col), y = !!sym(value_col)))
   
-  if (!is.null(pipeline_colors)) {
+  if (!is.null(colors)) {
     p <- p + 
-      geom_bar(aes(fill = Step), stat = "identity", color = "white", linewidth = 0.5) +
+      geom_bar(aes(fill = !!sym(color_col)), stat = "identity", color = "white", linewidth = 0.5) +
       scale_fill_manual(
         name = "Category",
-        values = pipeline_colors, 
+        values = colors, 
         guide = if (show_legend) "legend" else "none"
       )
   } else {

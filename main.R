@@ -24,7 +24,9 @@ generate_prisma(df_screening, prisma_template_path,
                 derivatives_path, results_path, ext = ext)
 figure_overview_studies(df_included, results_path, ext = ext)
 figure_overview_pipelines(df_included, results_path, ext = ext)
+figure_meeg_acq_prep(df_included, results_path, ext = ext)
 figure_ecg_summary(df_included, results_path, ext = ext)
+figure_cfa_removal(df_included, results_path, ext = ext)
 figure_hep_estimation_summary(df_included, results_path, ext = ext)
 figure_stats(df_included, results_path, ext = ext)
 figure_controls(df_included, results_path, ext = ext)
@@ -32,6 +34,8 @@ make_figures(df_included, results_path, ext = ext)
 
 # Generate supplementary figures
 figure_additional_hedges_g(df_included, results_path, ext = ext)
+figure_epoch_simulation(df_included, results_path, ext = ext)
+figure_control_variables(df_included, results_path, ext = ext)
 
 # Save the results
 write.csv(df_included, file.path(derivatives_path, 'included.csv'), row.names = F)

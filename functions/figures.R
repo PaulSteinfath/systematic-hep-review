@@ -4,15 +4,13 @@ source(file.path(func_path, "plots", "utils.R"))
 source(file.path(func_path, "plots", "plot_segments.R"))
 source(file.path(func_path, "plots", "bar_panel.R"))
 source(file.path(func_path, "plots", "hist_panel.R"))
-source(file.path(func_path, "plots", "create_ica_usage_plot.R"))
 source(file.path(func_path, "plots", "plot_rejected_components.R"))
-source(file.path(func_path, "plots", "summarize_cfa_criteria.R"))
-source(file.path(func_path, "plots", "rr_intervals_plot.R"))
-source(file.path(func_path, "plots", "other_strategy_plot.R"))
-source(file.path(func_path, "plots", "epoch_continuous_ica.R"))
-source(file.path(func_path, "plots", "minimal_artifact_windows_plot.R"))
+source(file.path(func_path, "plots", "plot_cfa_criteria.R"))
+source(file.path(func_path, "plots", "plot_cfa_algorithm.R"))
+source(file.path(func_path, "plots", "plot_rr_intervals.R"))
+source(file.path(func_path, "plots", "plot_other_cfa_strategy.R"))
+source(file.path(func_path, "plots", "plot_minimal_artifact_windows.R"))
 source(file.path(func_path, "plots", "plot_control_variables.R"))
-source(file.path(func_path, "plots", "rejected_cardiac_ics.R"))
 source(file.path(func_path, "plots", "plot_eeg_locations.R"))
 source(file.path(func_path, "plots", "plot_ecg_locations.R"))
 source(file.path(func_path, "plots", "create_time_windows_plot.R"))
@@ -27,6 +25,7 @@ source(file.path(func_path, 'figures', '01_overview_studies.R'))
 source(file.path(func_path, 'figures', '02_overview_pipelines.R'))
 source(file.path(func_path, 'figures', '03_meeg_acq_prep.R'))
 source(file.path(func_path, 'figures', '04_ecg_summary.R'))
+source(file.path(func_path, 'figures', '05_cfa_removal.R'))
 source(file.path(func_path, 'figures', '06_hep_estimation.R'))
 source(file.path(func_path, 'figures', '07_stats.R'))
 source(file.path(func_path, 'figures', '08_controls.R'))
@@ -55,62 +54,8 @@ create_epoch_simulation_plot <- function(df){
 }
 
 
-# CFA Removal
-cfa_removal <- function(df) {
-
-  ica_usage_plot <- epoch_continuous_ica(df)
-  cfa_criteria_plot <- summarize_cfa_criteria(df)
-  cardiac_ics_plot <- rejected_cardiac_ics(df)
-  other_strategies_plot <- other_strategy_plot(df)
-  rr_plot <- rr_intervals_plot(df)
-  minimal_artifact_plot <- minimal_artifact_windows_plot(df, t_peak_offset = 300)
- 
-  # Combine subplots into rows
-  top_row <- plot_grid(
-    ica_usage_plot,
-    cfa_criteria_plot,
-    ncol = 2, labels = c("A", "B"),
-    align = "v", axis = "b",
-    rel_widths = c(0.25, 0.75),
-    label_x = c(0, 0.07),  
-    label_y = c(1, 1)
-  )
-
-  middle_row <- plot_grid(
-    cardiac_ics_plot,
-    other_strategies_plot,
-    ncol = 2, labels = c("C", "D"),
-    align = "hv", rel_widths = c(0.4, 0.6)
-  )
-
-  bottom_row <- plot_grid(
-    rr_plot,
-    minimal_artifact_plot,
-    ncol = 2, labels = c("E", "F"),
-    align = "hv"
-  )
-
-  plot_grid(top_row, middle_row, bottom_row, ncol = 1)
-}
-
-
 # Here we generate all figures
 make_figures <- function(df, save_path, ext = "svg") {
-
-  cfa_removal_plot <- cfa_removal(df)
-
-  ggsave(
-    filename = file.path(save_path, paste0("cfa_removal_plot.", ext)),
-    plot = cfa_removal_plot,
-    width = 10,
-    height = 11,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
-  show(cfa_removal_plot)
-
 
   epoch_simulation_plot <- create_epoch_simulation_plot(df)
   ggsave(

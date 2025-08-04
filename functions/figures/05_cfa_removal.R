@@ -24,7 +24,7 @@ figure_cfa_removal <- function(df, save_path, ext = "svg") {
     binwidth = 1
   )
   
-  other_strategies_plot <- other_strategy_plot(df)
+  other_strategies_plot <- plot_other_cfa_strategy(df)
   rr_plot <- plot_rr_intervals(df)
   minimal_artifact_plot <- plot_minimal_artifact_windows(df, 
                                                          t_peak_offset = params$t_peak_offset)

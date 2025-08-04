@@ -1,4 +1,13 @@
 allowed <- list(
+  other_cfa_removal = c(
+    "cfa_use_minimal_rr" = "Minimal RR\ninterval", 
+    "cfa_use_minimal_artifact_window" = "Minimal artifact\nwindow", 
+    "cfa_csd" = "CSD", 
+    "cfa_regress" = "Subtract/regress\nECG from EEG", 
+    "cfa_pca" = "PCA on\nHEP", 
+    "cfa_subtract_rest" = "Subtract rsHEP\nfrom task HEP"
+  ),
+  
   ica_component_types = c(
     "eye movements" = "Ocular",
     "blinks" = "Ocular",

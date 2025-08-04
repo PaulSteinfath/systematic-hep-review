@@ -118,13 +118,23 @@ resolve_all_except <- function(row) {
 
 
 preprocess_cfa_removal <- function(df) {
+  df$reject_cfa_ics <- grepl("cfa", df$rejected_components, ignore.case = T)
+  
   df$cfa_minimal_rr <- as.numeric(
     str_match(tolower(df$other_cfa_removal_strategy), 
               "rr at least\\s*(\\d+)\\s*ms")[, 2]
   )
+  df$cfa_use_minimal_rr <- !is.na(df$cfa_minimal_rr)
   
   df$cfa_use_minimal_artifact_window <- str_detect(tolower(df$other_cfa_removal_strategy), 
                                                    "limit analysis to time of minimal artifact")
+  df$cfa_csd <- str_detect(tolower(df$other_cfa_removal_strategy), "csd")
+  df$cfa_regress <- str_detect(tolower(df$other_cfa_removal_strategy), 
+                               "subtract/regress ecg from eeg")
+  df$cfa_pca <- str_detect(tolower(df$other_cfa_removal_strategy), 
+                           "pca on hep")
+  df$cfa_subtract_rest <- str_detect(tolower(df$other_cfa_removal_strategy),
+                                     "subtract rshep from taskhep")
   
   df
 }

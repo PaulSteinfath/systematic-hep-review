@@ -85,7 +85,7 @@ get_usage_studies <- function(df, cols, group_col = "PMID", negate = F) {
       total = length(is_using),
       level = "studies"
     )
-    col_usage$percentage = col_usage$count / col_usage$total * 100
+    col_usage$percentage = col_usage$count / col_usage$total
     
     usage <- bind_rows(usage, col_usage)
   }
@@ -113,7 +113,7 @@ get_usage_pipelines <- function(df, cols, group_col = "PMID", distinct = F) {
       total = length(is_using),
       level = "pipelines"
     )
-    col_usage$percentage = col_usage$count / col_usage$total * 100
+    col_usage$percentage = col_usage$count / col_usage$total
     
     usage <- bind_rows(usage, col_usage)
   }

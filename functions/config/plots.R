@@ -7,6 +7,31 @@ common_colors <- list(
   simulated_ecg_alpha = 0.3
 )
 
+figure_setup <- list(
+  width = 190,
+  units = "mm",
+  dpi = 300
+)
+
+font_setup <- list(
+  title = 10,
+  subtitle = 8,
+  axis.title = 8,
+  axis.text = 7,
+  legend.title = 9,
+  legend.text = 8
+)
+
+plot_theme_default <- theme(panel.grid = element_blank(), 
+                            plot.title = element_text(size = font_setup$title), 
+                            plot.subtitle = element_text(size = font_setup$subtitle),
+                            axis.title.x = element_text(size = font_setup$axis.title),
+                            axis.text.x = element_text(size = font_setup$axis.text),
+                            axis.title.y = element_text(size = font_setup$axis.title),
+                            axis.text.y = element_text(size = font_setup$axis.text),
+                            legend.title = element_text(size = font_setup$legend.title),
+                            legend.text = element_text(size = font_setup$legend.text))
+
 # Color palettes
 pipeline_colors <- c(
   "Experiment"     = "#2E2E2E",
@@ -26,6 +51,11 @@ r_t_peak_palette <- c(
   "R-peak" = "#696969", 
   "T-peak" = "#E69F00"
 )
+
+palette_Coll2021 <- c("Attention to the heart" = "#1b9e77",
+                      "Interoceptive performance" = "#d95f02",
+                      "Arousal" = "#7570b3",
+                      "Clinical vs. control groups" = "#e7298a")
 
 control_category_colors <- c(
   "ECG and Heartbeat-Related Controls" = "#4D6B89",

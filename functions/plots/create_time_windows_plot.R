@@ -116,7 +116,6 @@ create_time_windows_plot <- function(df,
        subtitle = paste("n =", datapoint_count, tolower(datapoint_type))) + 
   scale_y_continuous() +
   plot_theme_default +
-  custom_theme() +
   theme(
     axis.text.y = element_text(size = 8),
     axis.title.y = element_blank(),

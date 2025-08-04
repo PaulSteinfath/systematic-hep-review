@@ -21,3 +21,17 @@ round_custom <- function(x) {
   
   x
 }
+
+
+save_figure <- function(fig, aspect_ratio, save_path, filename, ext) {
+  ggsave(
+    filename = file.path(save_path, paste0(filename, ".", ext)),
+    plot = fig,
+    width = figure_setup$width,
+    height = aspect_ratio * figure_setup$width,
+    units = figure_setup$units,
+    dpi = figure_setup$dpi,
+    device = ext,
+    bg = "white"
+  )
+}

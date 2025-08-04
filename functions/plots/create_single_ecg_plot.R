@@ -133,7 +133,8 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   ecg_df <- create_ecg_data(shared_limits[1], shared_limits[2], n_points = 1000)
 
   ecg_plot <- ggplot(ecg_df, aes(x = time, y = voltage)) +
-    geom_line(color = plot_fill_default_single, linewidth = 0.5)
+    geom_line(color = common_colors$fill_default, 
+              linewidth = 0.5)
 
   # Add R/T peak lines only if that's the current contrast
   if (identical(reference_values, c("R-peak", "T-peak"))) {

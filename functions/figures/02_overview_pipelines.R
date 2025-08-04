@@ -78,14 +78,9 @@ figure_overview_pipelines <- function(df, save_path, ext = 'svg') {
                    label_y = c(1, NA, 1, NA, 1),  
                    rel_widths = c(1.1, 0.025, 0.7, 0.025, 0.7))
   
-  ggsave(
-    filename = file.path(save_path, paste0("fig2_pipelines_overview.", ext)),
-    plot = fig,
-    width = 190,
-    height = 279.4,
-    units = "mm",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
+  save_figure(fig,
+              aspect_ratio = 1.1,  # height / width
+              save_path,
+              filename = "fig2_overview_pipelines",
+              ext = ext)
 }

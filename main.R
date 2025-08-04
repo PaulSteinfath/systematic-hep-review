@@ -30,7 +30,6 @@ figure_cfa_removal(df_included, results_path, ext = ext)
 figure_hep_estimation_summary(df_included, results_path, ext = ext)
 figure_stats(df_included, results_path, ext = ext)
 figure_controls(df_included, results_path, ext = ext)
-make_figures(df_included, results_path, ext = ext)
 
 # Generate supplementary figures
 figure_additional_hedges_g(df_included, results_path, ext = ext)

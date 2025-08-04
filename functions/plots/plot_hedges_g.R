@@ -14,12 +14,12 @@ plot_hedges_g <- function(df, with_clustering=FALSE, with_regression=FALSE){
   
   p <- hist_panel(df, col = "hedges_g", force.numeric = T, 
                   title = "Hedges' g", x.label = "Hedges' g", use_proportion = T) +
-    geom_point(data = effect_sizes_Coll2020,
+    geom_point(data = effect_sizes_Coll2021,
                mapping = aes(x = value, y = 0.13, fill = kind), 
                shape = 25, 
                size = 3) +
-    scale_fill_manual(name = "Effect sizes from\nColl et al. (2020)", 
-                      values = palette_Coll2020) +
+    scale_fill_manual(name = "Effect sizes from\nColl et al. (2021)", 
+                      values = palette_Coll2021) +
     theme(legend.position = c(1, 1),
           legend.justification = c("right", "top"),
           legend.margin = margin(0, 0, 0, 0),

@@ -18,14 +18,9 @@ figure_overview_studies <- function(df, save_path, ext = "svg") {
                    nrow = 1, labels = c("B", "C", "D"), align = "h",
                    axis = "bt")
   
-  ggsave(
-    filename = file.path(save_path, paste0("fig1_overview_studies.", ext)),
-    plot = fig,
-    width = 190,
-    height = 76.2,
-    units = "mm",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
+  save_figure(fig,
+              aspect_ratio = 0.3,  # height / width
+              save_path,
+              filename = "fig1_overview_studies",
+              ext = ext)
 }

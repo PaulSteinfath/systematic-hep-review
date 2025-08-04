@@ -1051,8 +1051,8 @@ detect_effect <- function(effect_size, name) {
     )
 }
 
-detecting_df <- map2_dfr(effect_sizes_Coll2020$value, 
-                         effect_sizes_Coll2020$kind,
+detecting_df <- map2_dfr(effect_sizes_Coll2021$value, 
+                         effect_sizes_Coll2021$kind,
                          detect_effect) %>%
   arrange(percentage)
 detecting_df$missing <- detecting_df$total - detecting_df$count
@@ -1063,7 +1063,7 @@ underpowered_min <- detecting_df[nrow(detecting_df), ]
 underpowered_max <- detecting_df[1, ]
 ```
 
-* Percent of pipelines detecting effects from Coll et al. (2020):
+* Percent of pipelines detecting effects from Coll et al. (2021):
 
 ```{r detect-coll-results, results='asis'}
 for (i in 1:nrow(detecting_df)) {

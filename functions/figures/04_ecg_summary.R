@@ -13,7 +13,7 @@ figure_ecg_summary <- function(df, save_path, ext = 'png') {
   p_ecg_leads <- hist_panel(df, "ecg_lead", fill_as_aesthetic = T,
                             discrete = T, title = "ECG lead") +
     scale_fill_manual(values = leads_palette,
-                      na.value = plot_fill_default_single,
+                      na.value = common_colors$fill_default,
                       guide = "none") 
   p_ecg_locations <- plot_ecg_locations(df, leads_palette)
   fig_AB = plot_grid(
@@ -27,18 +27,13 @@ figure_ecg_summary <- function(df, save_path, ext = 'png') {
     fig_AB,
     p_ecg_locations,
     nrow = 1,
-    rel_widths = c(1.2, 1.3),
+    rel_widths = c(1, 1.5),
     labels = c("", "C")
   )
   
-  ggsave(
-    filename = file.path(save_path, paste0("fig4_ecg_summary.", ext)),
-    plot = fig,
-    width = 190,
-    height = 101.6,
-    units = "mm",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
+  save_figure(fig,
+              aspect_ratio = 0.5,  # height / width
+              save_path,
+              filename = "fig4_ecg_summary",
+              ext = ext)
 }

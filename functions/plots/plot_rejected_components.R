@@ -10,7 +10,6 @@ plot_rejected_components <- function(df) {
              fill = common_colors$fill_default, 
              color = "white", 
              linewidth = 0.5) +
-    custom_theme() +
     scale_y_continuous(labels = scales::percent, 
                        expand = expansion(mult = c(0, .1))) +
     labs(
@@ -18,7 +17,8 @@ plot_rejected_components <- function(df) {
       y = "Proportion of pipelines",
       title = "Types of rejected ICA components",
       subtitle = paste("n =", total_count, level)
-    ) 
+    ) +
+    plot_theme_default
 
   return(p)
 }

@@ -117,9 +117,9 @@ plot_ecg_locations <- function(
     geom_line(aes(group = setup, color = ecg_lead, linewidth = count)) +
     geom_segment(data = pos_actual[pos_actual$label == "LL",], 
                  mapping = aes(x = x, y = y, xend = x, yend = 0),
-                 linewidth = 1, color = plot_fill_default_single,
+                 linewidth = 1, color = common_colors$fill_default,
                  arrow = arrow(length = unit(0.25, "cm"))) + 
-    geom_point(data = pos_actual, size = 8, color = plot_fill_default_single) +
+    geom_point(data = pos_actual, size = 8, color = common_colors$fill_default) +
     geom_text(data = pos_actual, aes(label = label), color="white", size = 3) +
     scale_x_continuous(limits = c(0, 1)) +
     scale_y_continuous(limits = c(0, 1)) +
@@ -130,12 +130,12 @@ plot_ecg_locations <- function(
     guides(color = guide_legend(title = "ECG lead"),
            linewidth = guide_legend(title = "Number of studies")) +
     theme_void() +
+    theme(title = element_text(size = font_setup$title),
+          subtitle = element_text(size = font_setup$subtitle),
+          legend.title = element_text(size = font_setup$legend.title),
+          legend.text = element_text(size = font_setup$legend.text))
     theme(aspect.ratio = aspect,
-        strip.background = element_blank(),
-        plot.title = element_text(size = 9, hjust = 0.3, vjust = 13),
-        plot.subtitle = element_text(size = 8, hjust = 0.2, vjust = 13),
-        legend.text = element_text(size = 7),
-        legend.title = element_text(size = 8))
+          strip.background = element_blank())
            
   p 
 }

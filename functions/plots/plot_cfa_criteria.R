@@ -13,7 +13,6 @@ plot_cfa_criteria <- function(df) {
              color = "white", 
              linewidth = 0.5) +
     plot_theme_default +
-    custom_theme() +
     scale_y_continuous(labels = scales::percent, 
                        expand = expansion(mult = c(0, .1))) +
     labs(

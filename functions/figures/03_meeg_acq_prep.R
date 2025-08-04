@@ -45,7 +45,7 @@ figure_meeg_acq_prep <- function(df, save_path, ext = 'png') {
     align = "hv",
     axis = "tblr",
     labels = c("B", "C"),
-    rel_widths = c(1.4, 0.6)
+    rel_widths = c(1.3, 0.7)
   )
   
   # Combine plots
@@ -70,14 +70,9 @@ figure_meeg_acq_prep <- function(df, save_path, ext = 'png') {
     vjust = 1
   )
   
-  ggsave(
-    filename = file.path(save_path, paste0("fig3_meeg_acq_prep.", ext)),
-    plot = fig,
-    width = 10,
-    height = 11,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
+  save_figure(fig, 
+              aspect_ratio = 1.0,  # height / width
+              save_path = save_path,
+              filename = "fig3_meeg_acq_prep",
+              ext = ext)
 }

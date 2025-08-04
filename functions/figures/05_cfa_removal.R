@@ -10,6 +10,7 @@ figure_cfa_removal <- function(df, save_path, ext = "svg") {
     custom_labels = c("0" = "Continuous", "1" = "Epoched")
   )
   
+  # Panels B and C: approach and criteria for rejecting CFA-related ICs
   cfa_approach_plot <- hist_panel(df %>% 
                                     filter(reject_cfa_ics), 
                                   "cfa_rej_approach", 
@@ -19,7 +20,7 @@ figure_cfa_removal <- function(df, save_path, ext = "svg") {
   cfa_criteria_plot <- plot_cfa_criteria(df)
   cfa_algorithm_plot <- plot_cfa_algorithm(df)
   
-  # Panel C: number of rejected CFA-related ICs
+  # Panel D: number of rejected CFA-related ICs
   cardiac_ics_plot <- hist_panel(
     df %>%
       distinct(PMID, rejected_cardiac_ics) %>%
@@ -31,6 +32,7 @@ figure_cfa_removal <- function(df, save_path, ext = "svg") {
     binwidth = 0.5
   )
   
+  # Panels E-G: other strategies for removing CFA
   other_strategies_plot <- plot_other_cfa_strategy(df)
   rr_plot <- plot_rr_intervals(df)
   minimal_artifact_plot <- plot_minimal_artifact_windows(df, 

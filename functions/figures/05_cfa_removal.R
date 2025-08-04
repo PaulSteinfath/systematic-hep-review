@@ -10,7 +10,7 @@ figure_cfa_removal <- function(df, save_path, ext = "svg") {
     custom_labels = c("0" = "Continuous", "1" = "Epoched")
   )
   
-  cfa_criteria_plot <- summarize_cfa_criteria(df)
+  cfa_criteria_plot <- plot_cfa_criteria(df)
   
   # Panel C: number of rejected CFA-related ICs
   cardiac_ics_plot <- hist_panel(

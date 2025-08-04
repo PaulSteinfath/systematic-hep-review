@@ -1,13 +1,4 @@
 allowed <- list(
-  other_cfa_removal = c(
-    "cfa_use_minimal_rr" = "Minimal RR\ninterval", 
-    "cfa_use_minimal_artifact_window" = "Minimal artifact\nwindow", 
-    "cfa_csd" = "CSD", 
-    "cfa_regress" = "Subtract/regress\nECG from EEG", 
-    "cfa_pca" = "PCA on\nHEP", 
-    "cfa_subtract_rest" = "Subtract rsHEP\nfrom task HEP"
-  ),
-  
   ica_component_types = c(
     "eye movements" = "Ocular",
     "blinks" = "Ocular",
@@ -16,6 +7,27 @@ allowed <- list(
     "channel noise" = "Channel\nnoise",
     "line noise" = "Line\nnoise",
     "other" = "Other"
+  ),
+  
+  cfa_criteria = c(
+    "time course" = "Time course",
+    "topography" = "Topography",
+    "power spectrum" = "Power spectrum",
+    "phase consistency" = "Phase\nconsistency",
+    "iclabel" = "Algorithm",
+    "corrmap" = "Algorithm",
+    "correlation" = "Correlation",
+    "sasica" = "Algorithm",
+    "unknown" = "N/M"
+  ),
+  
+  other_cfa_removal = c(
+    "cfa_use_minimal_rr" = "Minimal RR\ninterval", 
+    "cfa_use_minimal_artifact_window" = "Minimal artifact\nwindow", 
+    "cfa_csd" = "CSD", 
+    "cfa_regress" = "Subtract/regress\nECG from EEG", 
+    "cfa_pca" = "PCA on\nHEP", 
+    "cfa_subtract_rest" = "Subtract rsHEP\nfrom task HEP"
   ),
   
   statistics = c(

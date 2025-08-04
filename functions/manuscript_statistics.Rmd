@@ -390,7 +390,22 @@ for (i in 1:nrow(cfa_rej_approach)) {
 
 ### CFA rejection criteria
 
-TODO
+```{r cfa-rejection-criteria}
+criteria_counts <- cfa_criteria_counts(df_included,
+                                       mapping = allowed$cfa_criteria) %>%
+  mutate(percentage = round_custom(percentage * 100))
+
+for (i in 1:nrow(criteria_counts)) {
+  row <- criteria_counts[i, ]
+  cat(
+    paste0(
+      '  * ', row$cfa_rej_criteria, ': ',
+      '**', row$percentage, '%**', 
+      ' (**', row$count, '** / **', row$total, '** ', row$level, ')\n'
+    )
+  )
+}
+```
 
 ### Removal of CFA-related ICs
 
@@ -409,47 +424,6 @@ cardiac_ic_stats <- get_summary(df_pipelines %>%
 
 * Reported the number: **`r report_cfa$percentage`%** (**`r report_cfa$count`** / **`r report_cfa$total`**) `r report_cfa$level`
 * Range: **`r cardiac_ic_stats$min`** - **`r cardiac_ic_stats$max`**, median = `r cardiac_ic_stats$median`
-
-```{r cfa}
-# CFA identification criteria (studies) - using same logic as plotting function
-cfa_criteria_mapping <- c(
-  "time course" = "Time Course",
-  "topography" = "Topography",
-  "power spectrum" = "Power Spectrum",
-  "phase consistency" = "Phase Consistency",  # Note: plotting function uses "Phase\nConsistency" but we'll use this for text
-  "iclabel" = "Algorithm",
-  "corrmap" = "Algorithm",
-  "correlation" = "Correlation",
-  "sasica" = "Algorithm"
-)
-cfa_criteria_counts <- df_studies %>%
-  filter(!is.na(cfa_rej_criteria), cfa_rej_criteria != "", tolower(cfa_rej_criteria) != "unknown") %>%
-  distinct(PMID, cfa_rej_criteria) %>%
-  separate_rows(cfa_rej_criteria, sep = ",") %>%
-  mutate(
-    cfa_rej_criteria = str_trim(str_replace_all(tolower(cfa_rej_criteria), "[\r\n]", " ")),
-    cfa_rej_criteria = ifelse(cfa_rej_criteria %in% names(cfa_criteria_mapping),
-                              cfa_criteria_mapping[cfa_rej_criteria],
-                              str_to_title(cfa_rej_criteria))
-  ) %>%
-  count(cfa_rej_criteria, name = "count") %>%
-  mutate(
-    total_pipelines = n_distinct(df_studies$PMID[df_studies$cfa_rej_criteria != "" & tolower(df_studies$cfa_rej_criteria) != "unknown"]),
-    percentage = round(count / total_pipelines * 100, 1)
-  ) %>%
-  arrange(desc(count))
-
-# Check if CFA criteria are at study or pipeline level
-cfa_criteria_level <- check_studies_or_pipelines(df_pipelines, "cfa_rej_criteria")
-```
-
-CFA criteria (`r cfa_criteria_level`):
-* `r cfa_criteria_counts$cfa_rej_criteria[1]`: **`r cfa_criteria_counts$percentage[1]`%** (`r cfa_criteria_counts$count[1]`/`r cfa_criteria_counts$total_pipelines[1]`)
-* `r cfa_criteria_counts$cfa_rej_criteria[2]`: **`r cfa_criteria_counts$percentage[2]`%** (`r cfa_criteria_counts$count[2]`/`r cfa_criteria_counts$total_pipelines[2]`)
-* `r cfa_criteria_counts$cfa_rej_criteria[3]`: **`r cfa_criteria_counts$percentage[3]`%** (`r cfa_criteria_counts$count[3]`/`r cfa_criteria_counts$total_pipelines[3]`)
-* `r cfa_criteria_counts$cfa_rej_criteria[6]`: **`r cfa_criteria_counts$percentage[6]`%** (`r cfa_criteria_counts$count[6]`/`r cfa_criteria_counts$total_pipelines[6]`)
-* `r cfa_criteria_counts$cfa_rej_criteria[4]`: **`r cfa_criteria_counts$percentage[4]`%** (`r cfa_criteria_counts$count[4]`/`r cfa_criteria_counts$total_pipelines[4]`)
-* `r cfa_criteria_counts$cfa_rej_criteria[5]`: **`r cfa_criteria_counts$percentage[5]`%** (`r cfa_criteria_counts$count[5]`/`r cfa_criteria_counts$total_pipelines[5]`)
 
 ### Other CFA removal strategies
 

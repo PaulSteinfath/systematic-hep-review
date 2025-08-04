@@ -1,4 +1,4 @@
-figure_stats <- function(df, save_path, ext = 'png') {
+figure_stats <- function(df, save_path = NULL, ext = 'png') {
   
   a <- hist_panel(df, 
                   col = "Preregistration", 
@@ -59,14 +59,18 @@ figure_stats <- function(df, save_path, ext = 'png') {
   p <- plot_grid(first_row, spacer, second_row,
                  ncol = 1, rel_heights = c(1, 0.1, 1.4))
   
-  ggsave(
-    filename = file.path(save_path, paste0("fig7_stats.", ext)),
-    plot = p,
-    width = 10,
-    height = 6.5,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
+  if (!is.null(save_path)) {
+    ggsave(
+      filename = file.path(save_path, paste0("fig7_stats.", ext)),
+      plot = p,
+      width = 10,
+      height = 6.5,
+      units = "in",
+      dpi = 300,
+      device = ext,
+      bg = "white"
+    )
+  }
+  
+  return(p)
 }

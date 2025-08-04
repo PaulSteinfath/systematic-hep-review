@@ -1,8 +1,21 @@
 library(DT)
 library(dplyr)
 library(ggplot2)
-library(palmerpenguins)
 library(shiny)
+
+# Source required functions and load data
+# Set working directory to project root before sourcing
+old_wd <- getwd()
+setwd("..")
+source("init_workspace.R")
+setwd(old_wd)
+
+# Load the data if not already available
+if (!exists("df_included")) {
+  df_full <- load_data("../data/HEP - Pubmed Results.csv", "../data/HEP - Manual.csv")
+  c(df_screening, df_included) %<-% preprocess(df_full)
+}
+
 
 function(input, output) {
   output$table <- renderDT(
@@ -16,31 +29,80 @@ function(input, output) {
     df_included[input$table_rows_all, ]
   })
   
-  output$yearPlot <- renderPlot({
-    ggplot(df_selected(), aes(x = Year)) +
-      geom_histogram(binwidth = 1, color = "white", fill = "lightgray") +
-      geom_histogram(data = df_selected(), binwidth = 1, color = "white", fill = "blue") +
-      theme_classic()
+  # Overview Studies Plot
+  output$overviewStudiesPlot <- renderPlot({
+    tryCatch({
+      figure_overview_studies(df_selected(), save_path = NULL)
+    }, error = function(e) {
+      ggplot() + 
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
+        theme_void()
+    })
   }, res = 96)
   
-  output$acquisitionPrepPlot <- renderPlot({
-    eeg_acq_prep(df_selected())
+  # Overview Pipelines Plot  
+  output$overviewPipelinesPlot <- renderPlot({
+    tryCatch({
+      figure_overview_pipelines(df_selected(), save_path = NULL)
+    }, error = function(e) {
+      ggplot() + 
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
+        theme_void()
+    })
   }, res = 96)
   
-  output$cfaRemovalPlot <- renderPlot({
-    cfa_removal(df_selected())
+  # M/EEG Acquisition & Preprocessing Plot
+  output$meegAcqPrepPlot <- renderPlot({
+    tryCatch({
+      figure_meeg_acq_prep(df_selected(), save_path = NULL)
+    }, error = function(e) {
+      ggplot() + 
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
+        theme_void()
+    })
   }, res = 96)
   
-  output$controlVariablesPlot <- renderPlot({
-    create_control_variables_plot(df_selected())
-  }, res = 96)
-  
+  # ECG Summary Plot
   output$ecgSummaryPlot <- renderPlot({
-      ecg_summary(df_selected())
-    }, res = 96
-  )
-
-  output$hepTimeWindowsCombinedPlot <- renderPlot({
-    create_hep_time_windows_summary_plot(df_selected())
+    tryCatch({
+      figure_ecg_summary(df_selected(), save_path = NULL)
+    }, error = function(e) {
+      ggplot() + 
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
+        theme_void()
+    })
   }, res = 96)
-}
+  
+  # HEP Estimation Summary Plot
+  output$hepEstimationPlot <- renderPlot({
+    tryCatch({
+      figure_hep_estimation_summary(df_selected(), save_path = NULL)
+    }, error = function(e) {
+      ggplot() + 
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
+        theme_void()
+    })
+  }, res = 96)
+  
+  # Statistics Plot
+  output$statsPlot <- renderPlot({
+    tryCatch({
+      figure_stats(df_selected(), save_path = NULL)
+    }, error = function(e) {
+      ggplot() + 
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
+        theme_void()
+    })
+  }, res = 96)
+  
+  # Controls Plot
+  output$controlsPlot <- renderPlot({
+    tryCatch({
+      figure_controls(df_selected(), save_path = NULL)
+    }, error = function(e) {
+      ggplot() + 
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
+        theme_void()
+    })
+  }, res = 96)
+  }

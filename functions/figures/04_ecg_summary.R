@@ -1,4 +1,4 @@
-figure_ecg_summary <- function(df, save_path, ext = 'png') {
+figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
   # Map "unknown" to 9 so that it isn't lost during conversion to numeric and
   # is positioned nicely
   df <- df %>%
@@ -31,14 +31,18 @@ figure_ecg_summary <- function(df, save_path, ext = 'png') {
     labels = c("", "C")
   )
   
-  ggsave(
-    filename = file.path(save_path, paste0("fig4_ecg_summary.", ext)),
-    plot = fig,
-    width = 10,
-    height = 4,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
+  if (!is.null(save_path)) {
+    ggsave(
+      filename = file.path(save_path, paste0("fig4_ecg_summary.", ext)),
+      plot = fig,
+      width = 10,
+      height = 4,
+      units = "in",
+      dpi = 300,
+      device = ext,
+      bg = "white"
+    )
+  }
+  
+  return(fig)
 }

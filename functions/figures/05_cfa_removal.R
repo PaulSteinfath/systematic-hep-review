@@ -1,4 +1,4 @@
-figure_cfa_removal <- function(df, save_path, ext = "svg") {
+figure_cfa_removal <- function(df, save_path = NULL, ext = "svg") {
   # Panel A: is ICA applied to continuous or epoched data?
   ica_usage_plot <- hist_panel(
     df %>% 
@@ -83,14 +83,18 @@ figure_cfa_removal <- function(df, save_path, ext = "svg") {
               width = 0.225, height = 0.15)
   
   
-  ggsave(
-    filename = file.path(save_path, paste0("fig5_cfa_removal.", ext)),
-    plot = fig,
-    width = 10,
-    height = 9,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
+  if (!is.null(save_path)) {
+    ggsave(
+      filename = file.path(save_path, paste0("fig5_cfa_removal.", ext)),
+      plot = fig,
+      width = 10,
+      height = 9,
+      units = "in",
+      dpi = 300,
+      device = ext,
+      bg = "white"
+    )
+  }
+  
+  return(fig)
 }

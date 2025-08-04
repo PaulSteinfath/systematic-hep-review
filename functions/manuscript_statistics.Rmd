@@ -559,14 +559,20 @@ Other CFA strategies:
 * `r other_cfa_strategies$strategy[5]`: `r other_cfa_strategies$n[5]` studies (**`r other_cfa_strategies$percentage[5]`%**) (`r other_cfa_strategies$level[5]`)
 * `r other_cfa_strategies$strategy[6]`: `r other_cfa_strategies$n[6]` studies (**`r other_cfa_strategies$percentage[6]`%**) (`r other_cfa_strategies$level[6]`)
 
-### Limit time range / analysis window
-
-* `r other_cfa_strategies$strategy[1]`: `r other_cfa_strategies$n[1]` studies (**`r other_cfa_strategies$percentage[1]`%**) (`r other_cfa_strategies$level[1]`)
-* `r other_cfa_strategies$strategy[2]`: **`r other_cfa_strategies$n[2]`** studies (**`r other_cfa_strategies$percentage[2]`%**) (`r other_cfa_strategies$level[2]`)
-
 ### Studies Without Any CFA Approach
 
 * Studies with any CFA approach: **`r no_cfa_stats$pct_with_any_cfa`**% (`r no_cfa_stats$studies_with_any_cfa`/`r no_cfa_stats$total_studies`)
+
+### Minimal CFA window
+
+```{r minimal-cfa-window}
+minimal_cfa_window <- get_usage_studies(df_pipelines, 
+                                        c('cfa_use_minimal_artifact_window')) %>%
+  mutate(percentage = round_custom(percentage))
+
+```
+
+* Number of studies: **`r minimal_cfa_window$percentage`%** (**`r minimal_cfa_window$count`** / **`r minimal_cfa_window$total`**) `r minimal_cfa_window$level`
 
 ### Minimal RR interval
 

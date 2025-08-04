@@ -119,9 +119,12 @@ resolve_all_except <- function(row) {
 
 preprocess_cfa_removal <- function(df) {
   df$cfa_minimal_rr <- as.numeric(
-    str_match(tolower(df_included$other_cfa_removal_strategy), 
+    str_match(tolower(df$other_cfa_removal_strategy), 
               "rr at least\\s*(\\d+)\\s*ms")[, 2]
   )
+  
+  df$cfa_use_minimal_artifact_window <- str_detect(tolower(df$other_cfa_removal_strategy), 
+                                                   "limit analysis to time of minimal artifact")
   
   df
 }

@@ -26,7 +26,8 @@ figure_cfa_removal <- function(df, save_path, ext = "svg") {
   
   other_strategies_plot <- other_strategy_plot(df)
   rr_plot <- plot_rr_intervals(df)
-  minimal_artifact_plot <- minimal_artifact_windows_plot(df, t_peak_offset = 300)
+  minimal_artifact_plot <- plot_minimal_artifact_windows(df, 
+                                                         t_peak_offset = params$t_peak_offset)
   
   # Combine subplots into rows
   top_row <- plot_grid(

@@ -71,7 +71,9 @@ hist_continuous <- function(df,
 }
 
 
-get_usage_studies <- function(df, cols, group_col = "PMID") {
+# For 0/1 columns, get the count and percentage of studies with 1
+# At least one pipeline with 1 per study is needed
+get_usage_studies <- function(df, cols, group_col = "PMID", negate = F) {
   usage <- data.frame()
   
   for (col in cols) {
@@ -79,11 +81,11 @@ get_usage_studies <- function(df, cols, group_col = "PMID") {
     
     col_usage <- data.frame(
       column = col,
-      count = sum(is_using),
+      count = if (negate) sum(!is_using) else sum(is_using),
       total = length(is_using),
       level = "studies"
     )
-    col_usage$percentage = col_usage$count / col_usage$total * 100
+    col_usage$percentage = col_usage$count / col_usage$total
     
     usage <- bind_rows(usage, col_usage)
   }
@@ -92,6 +94,8 @@ get_usage_studies <- function(df, cols, group_col = "PMID") {
 }
 
 
+# For 0/1 columns, get the count and percentage of pipelines with 1
+# Optionally, with filtering to only consider distinct pipelines 
 get_usage_pipelines <- function(df, cols, group_col = "PMID", distinct = F) {
   usage <- data.frame()
   
@@ -109,7 +113,7 @@ get_usage_pipelines <- function(df, cols, group_col = "PMID", distinct = F) {
       total = length(is_using),
       level = "pipelines"
     )
-    col_usage$percentage = col_usage$count / col_usage$total * 100
+    col_usage$percentage = col_usage$count / col_usage$total
     
     usage <- bind_rows(usage, col_usage)
   }

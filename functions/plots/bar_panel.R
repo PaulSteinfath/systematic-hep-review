@@ -16,7 +16,7 @@ bar_panel <- function(df,
 {
   p <- ggplot(df, aes(x = !!sym(column_col), y = !!sym(value_col)))
   
-  if (!is.null(pipeline_colors)) {
+  if (!is.null(colors)) {
     p <- p + 
       geom_bar(aes(fill = !!sym(color_col)), stat = "identity", color = "white", linewidth = 0.5) +
       scale_fill_manual(

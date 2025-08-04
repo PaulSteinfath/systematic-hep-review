@@ -82,7 +82,7 @@ figure_cfa_removal <- function(df, save_path, ext = "svg") {
   
   
   ggsave(
-    filename = file.path(save_path, paste0("cfa_removal_plot.", ext)),
+    filename = file.path(save_path, paste0("fig5_cfa_removal.", ext)),
     plot = fig,
     width = 10,
     height = 9,

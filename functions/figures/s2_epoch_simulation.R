@@ -18,7 +18,7 @@ figure_epoch_simulation <- function(df, save_path, ext = "png") {
   )
   
   ggsave(
-    filename = file.path(save_path, paste0("epoch_simulation_plot.", ext)),
+    filename = file.path(save_path, paste0("figS2_epoch_simulation.", ext)),
     plot = p,
     width = 7,
     height = 5,

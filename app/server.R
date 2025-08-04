@@ -1,13 +1,14 @@
 library(DT)
 library(dplyr)
 library(ggplot2)
-library(palmerpenguins)
 library(shiny)
 
 # Source required functions and load data
-source("../functions/figures.R")
-source("../functions/preprocess.R") 
-source("../config.R")
+# Set working directory to project root before sourcing
+old_wd <- getwd()
+setwd("..")
+source("init_workspace.R")
+setwd(old_wd)
 
 # Load the data if not already available
 if (!exists("df_included")) {
@@ -28,94 +29,80 @@ function(input, output) {
     df_included[input$table_rows_all, ]
   })
   
-  output$yearPlot <- renderPlot({
-    ggplot(df_selected(), aes(x = Year)) +
-      geom_histogram(binwidth = 1, color = "white", fill = "lightgray") +
-      geom_histogram(data = df_selected(), binwidth = 1, color = "white", fill = "blue") +
-      theme_classic()
-  }, res = 96)
-  
-  output$acquisitionPrepPlot <- renderPlot({
-    eeg_acq_prep(df_selected())
-  }, res = 96)
-  
-  output$cfaRemovalPlot <- renderPlot({
-    cfa_removal(df_selected())
-  }, res = 96)
-  
-  output$controlVariablesPlot <- renderPlot({
-    create_control_variables_plot(df_selected())
-  }, res = 96)
-  
-  output$ecgSummaryPlot <- renderPlot({
-      ecg_summary(df_selected())
-    }, res = 96
-  )
-
-  output$hepTimeWindowsCombinedPlot <- renderPlot({
-    create_hep_time_windows_summary_plot(df_selected())
-  }, res = 96)
-  
-  # EEG Locations by Approach Plot
-  output$eegLocationsByApproachPlot <- renderPlot({
-    req(input$approach_reference_var)
-    
+  # Overview Studies Plot
+  output$overviewStudiesPlot <- renderPlot({
     tryCatch({
-      # Check if we have enough data for each reference value
-      filtered_data <- df_selected()
-      
-      # Filter to only EEG data (since EEG locations only work for EEG)
-      eeg_data <- filtered_data %>% filter(modality == "EEG")
-      
-      if(nrow(eeg_data) == 0) {
-        ggplot() + 
-          geom_text(aes(x = 0, y = 0, label = "No EEG data available in current selection"), size = 4) +
-          theme_void()
-      } else {
-        # Get all available values for the reference variable
-        available_values <- unique(eeg_data[[input$approach_reference_var]])
-        available_values <- available_values[!is.na(available_values) & available_values != "" & available_values != "unknown"]
-        
-        if(length(available_values) < 2) {
-          ggplot() + 
-            geom_text(aes(x = 0, y = 0, 
-                         label = paste("Need at least 2 different values for", input$approach_reference_var, "to compare")), 
-                     size = 4) +
-            theme_void()
-        } else {
-          data_counts <- table(eeg_data[[input$approach_reference_var]])
-          sufficient_values <- names(data_counts)[data_counts >= 3]
-          
-          if(length(sufficient_values) < 2) {
-            ggplot() + 
-              geom_text(aes(x = 0, y = 0, 
-                           label = "Insufficient EEG data: Need at least 3 studies per group"), 
-                       size = 4) +
-              theme_void()
-          } else {
-            # Additional check: ensure we have valid EEG location data
-            eeg_data_with_locations <- eeg_data %>%
-              filter(!is.na(eeg_locations), eeg_locations != "", eeg_locations != "unknown")
-            
-            if(nrow(eeg_data_with_locations) < 5) {
-              ggplot() + 
-                geom_text(aes(x = 0, y = 0, 
-                             label = "Insufficient EEG location data for plotting\n(Need at least 5 studies with location info)"), 
-                         size = 4) +
-                theme_void()
-            } else {
-              # Use all sufficient values for comparison
-              eeg_locations_summary(eeg_data, 
-                                  reference_var = input$approach_reference_var,
-                                  reference_values = sufficient_values)
-            }
-          }
-        }
-      }
+      figure_overview_studies(df_selected(), save_path = NULL)
     }, error = function(e) {
       ggplot() + 
-        geom_text(aes(x = 0, y = 0, label = paste("Error creating plot:", e$message)), size = 4) +
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
         theme_void()
     })
   }, res = 96)
-}
+  
+  # Overview Pipelines Plot  
+  output$overviewPipelinesPlot <- renderPlot({
+    tryCatch({
+      figure_overview_pipelines(df_selected(), save_path = NULL)
+    }, error = function(e) {
+      ggplot() + 
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
+        theme_void()
+    })
+  }, res = 96)
+  
+  # M/EEG Acquisition & Preprocessing Plot
+  output$meegAcqPrepPlot <- renderPlot({
+    tryCatch({
+      figure_meeg_acq_prep(df_selected(), save_path = NULL)
+    }, error = function(e) {
+      ggplot() + 
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
+        theme_void()
+    })
+  }, res = 96)
+  
+  # ECG Summary Plot
+  output$ecgSummaryPlot <- renderPlot({
+    tryCatch({
+      figure_ecg_summary(df_selected(), save_path = NULL)
+    }, error = function(e) {
+      ggplot() + 
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
+        theme_void()
+    })
+  }, res = 96)
+  
+  # HEP Estimation Summary Plot
+  output$hepEstimationPlot <- renderPlot({
+    tryCatch({
+      figure_hep_estimation_summary(df_selected(), save_path = NULL)
+    }, error = function(e) {
+      ggplot() + 
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
+        theme_void()
+    })
+  }, res = 96)
+  
+  # Statistics Plot
+  output$statsPlot <- renderPlot({
+    tryCatch({
+      figure_stats(df_selected(), save_path = NULL)
+    }, error = function(e) {
+      ggplot() + 
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
+        theme_void()
+    })
+  }, res = 96)
+  
+  # Controls Plot
+  output$controlsPlot <- renderPlot({
+    tryCatch({
+      figure_controls(df_selected(), save_path = NULL)
+    }, error = function(e) {
+      ggplot() + 
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
+        theme_void()
+    })
+  }, res = 96)
+  }

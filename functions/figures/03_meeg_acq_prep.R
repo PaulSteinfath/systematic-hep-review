@@ -1,4 +1,4 @@
-figure_meeg_acq_prep <- function(df, save_path, ext = 'png') {
+figure_meeg_acq_prep <- function(df, save_path = NULL, ext = 'png') {
   # NOTE: during preprocessing, some references merge into Other category,
   # which affects other measures such as entropy. Therefore, the 
   # preprocessing is performed right before making the plots
@@ -70,14 +70,18 @@ figure_meeg_acq_prep <- function(df, save_path, ext = 'png') {
     vjust = 1
   )
   
-  ggsave(
-    filename = file.path(save_path, paste0("fig3_meeg_acq_prep.", ext)),
-    plot = fig,
-    width = 10,
-    height = 11,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
+  if (!is.null(save_path)) {
+    ggsave(
+      filename = file.path(save_path, paste0("fig3_meeg_acq_prep.", ext)),
+      plot = fig,
+      width = 10,
+      height = 11,
+      units = "in",
+      dpi = 300,
+      device = ext,
+      bg = "white"
+    )
+  }
+  
+  return(fig)
 }

@@ -1,4 +1,4 @@
-figure_hep_estimation_summary <- function(df, save_path, ext = 'png') {
+figure_hep_estimation_summary <- function(df, save_path = NULL, ext = 'png') {
   
   #cluster / average histogram
   df_hep_determination <- df %>%
@@ -167,14 +167,18 @@ figure_hep_estimation_summary <- function(df, save_path, ext = 'png') {
     rel_heights = c(0.25, 0.02, 0.75)
   )
   
-  ggsave(
-    filename = file.path(save_path, paste0("fig6_hep_estimation.", ext)),
-    plot = hep_time_windows_combined,
-    width = 10, 
-    height = 9,
-    units = "in",
-    dpi = 300,
-    device = ext,
-    bg = "white"
-  )
+  if (!is.null(save_path)) {
+    ggsave(
+      filename = file.path(save_path, paste0("fig6_hep_estimation.", ext)),
+      plot = hep_time_windows_combined,
+      width = 10, 
+      height = 9,
+      units = "in",
+      dpi = 300,
+      device = ext,
+      bg = "white"
+    )
+  }
+  
+  return(hep_time_windows_combined)
 }

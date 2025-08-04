@@ -21,5 +21,8 @@ control_category_colors <- c(
 common_colors <- list(
   ecg_controls = "#647499ff",
   fill_default = "#696969",
-  grid_lines = "grey90"
+  grid_lines = "grey90",
+  r_peak_vline = "gray40",
+  simulated_ecg = "#696969",
+  simulated_ecg_alpha = 0.3
 )

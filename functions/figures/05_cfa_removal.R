@@ -25,7 +25,7 @@ figure_cfa_removal <- function(df, save_path, ext = "svg") {
   )
   
   other_strategies_plot <- other_strategy_plot(df)
-  rr_plot <- rr_intervals_plot(df)
+  rr_plot <- plot_rr_intervals(df)
   minimal_artifact_plot <- minimal_artifact_windows_plot(df, t_peak_offset = 300)
   
   # Combine subplots into rows
@@ -53,7 +53,12 @@ figure_cfa_removal <- function(df, save_path, ext = "svg") {
     align = "hv"
   )
   
-  fig <- plot_grid(top_row, middle_row, bottom_row, ncol = 1)
+  fig <- plot_grid(top_row, 
+                   middle_row, 
+                   bottom_row, 
+                   ncol = 1,
+                   align = "h",
+                   axis = "l")
   
   ggsave(
     filename = file.path(save_path, paste0("cfa_removal_plot.", ext)),

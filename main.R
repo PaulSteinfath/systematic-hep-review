@@ -34,6 +34,7 @@ make_figures(df_included, results_path, ext = ext)
 
 # Generate supplementary figures
 figure_additional_hedges_g(df_included, results_path, ext = ext)
+figure_epoch_simulation(df_included, results_path, ext = ext)
 figure_control_variables(df_included, results_path, ext = ext)
 
 # Save the results

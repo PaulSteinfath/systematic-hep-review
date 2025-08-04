@@ -9,10 +9,17 @@ allowed <- list(
     "other" = "Other"
   ),
   
+  cfa_approach = c(
+    "Manual" = "Manual",
+    "Automatic" = "Automatic",
+    "Semi-automatic" = "Semi-\nautomatic",
+    "unknown" = "N/M"
+  ),
+  
   cfa_criteria = c(
     "time course" = "Time course",
     "topography" = "Topography",
-    "power spectrum" = "Power spectrum",
+    "power spectrum" = "Power\nspectrum",
     "phase consistency" = "Phase\nconsistency",
     "iclabel" = "Algorithm",
     "corrmap" = "Algorithm",
@@ -26,8 +33,8 @@ allowed <- list(
     "cfa_use_minimal_artifact_window" = "Minimal artifact\nwindow", 
     "cfa_csd" = "CSD", 
     "cfa_regress" = "Subtract/regress\nECG from EEG", 
-    "cfa_pca" = "PCA on\nHEP", 
-    "cfa_subtract_rest" = "Subtract rsHEP\nfrom task HEP"
+    "cfa_pca" = "PCA on\nHER", 
+    "cfa_subtract_rest" = "Subtract rsHER\nfrom task HER"
   ),
   
   statistics = c(

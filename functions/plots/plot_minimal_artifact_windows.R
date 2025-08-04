@@ -58,7 +58,7 @@ plot_minimal_artifact_windows <- function(df, t_peak_offset = 300) {
     geom_vline(xintercept = t_peak_offset, linetype = "dashed", color = r_t_peak_palette["T-peak"]) +
     labs(
       x = "Time (ms)",
-      y = "",
+      y = "Individual studies",
       title = "Minimal artifact window",
       subtitle = paste("n =", nrow(df_minimal), "studies"),
       color = "Reference"
@@ -76,5 +76,6 @@ plot_minimal_artifact_windows <- function(df, t_peak_offset = 300) {
           legend.text = element_text(size = 8),
           legend.margin = margin(0, 0, 0, 0),
           legend.box.margin = margin(-5, 0, 0, 0),
-          axis.title.x = element_text(hjust = 0.5))
+          axis.title.x = element_text(hjust = 0.5),
+          axis.title.y = element_text(hjust = 0.5))
 }

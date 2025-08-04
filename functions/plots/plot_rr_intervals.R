@@ -1,5 +1,5 @@
 plot_rr_intervals <- function(df, group_col = "PMID", 
-                              tmin = -150, tmax = 750, tstep = 200) {
+                              tmin = -150, tmax = 800, tstep = 200) {
   
   # Filter for distinct RR intervals
   rr_df <- df %>%

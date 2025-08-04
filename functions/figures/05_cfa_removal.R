@@ -18,10 +18,10 @@ figure_cfa_removal <- function(df, save_path, ext = "svg") {
       distinct(PMID, rejected_cardiac_ics) %>%
       filter(!is.na(rejected_cardiac_ics)), 
     "rejected_cardiac_ics",
-    x.label = "",
+    x.label = "Number of components",
     title = "Number of rejected CFA-related ICs",
     discrete = FALSE,
-    binwidth = 1
+    binwidth = 0.5
   )
   
   other_strategies_plot <- plot_other_cfa_strategy(df)

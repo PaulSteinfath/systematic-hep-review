@@ -1,24 +1,5 @@
-# Body image - handle both main directory and app directory
-current_dir <- getwd()
-
-# Try multiple possible paths for the body image
-possible_paths <- c(
-  file.path(current_dir, 'assets', 'body_lowres.png'),  # From main directory
-  file.path(dirname(current_dir), 'assets', 'body_lowres.png'),  # From app directory
-  file.path('/data/hu_steinfath/Desktop/Code/systematic-hep-review', 'assets', 'body_lowres.png')  # Absolute path as fallback
-)
-
-body_image_path <- NULL
-for (path in possible_paths) {
-  if (file.exists(path)) {
-    body_image_path <- path
-    break
-  }
-}
-
-if (is.null(body_image_path)) {
-  stop("Could not find body_lowres.png in any expected location. Tried: ", paste(possible_paths, collapse = ", "))
-}
+# Body image
+body_image_path <- file.path(getwd(), 'assets', 'body_lowres.png')
 body_image_info <- image_info(magick::image_read(body_image_path))
 aspect <- body_image_info$height / body_image_info$width
 

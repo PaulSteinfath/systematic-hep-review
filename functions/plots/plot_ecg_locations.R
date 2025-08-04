@@ -47,6 +47,8 @@ plot_ecg_locations <- function(
     return(no_valid_data_stub(message = "No usages of leads I/II/III in the selection"))
   }
   
+  n_studies <- length(unique(ecg$PMID))
+  
   # Split rows by ";" in case several ECG locations were used for different
   # subjects in the study
   locs <- lapply(ecg$ecg_locations, \(x) unlist(strsplit(x, "; ")))
@@ -60,6 +62,9 @@ plot_ecg_locations <- function(
   ecg$ecg_locations <- unlist(locs)
   
   # Make sure that two locations per row are specified
+  # NOTE: this part complains about 6 PMIDs, where multiple leads were recorded
+  # but lead II was used for the main analysis. The ECG locations were adjusted
+  # manually so that the first two locations correspond to Lead II
   ecg$num_locations <- sapply(ecg$ecg_locations, \(x) length(unlist(strsplit(x, ", "))))
   if (any(ecg$num_locations > 2)) {
     bad_pmids <- ecg$PMID[ecg$num_locations > 2]
@@ -87,6 +92,7 @@ plot_ecg_locations <- function(
     summarize(count = n())
   leads$start <- sapply(leads$setup, \(x) str_split_i(x, "; ", 1))
   leads$end <- sapply(leads$setup, \(x) str_split_i(x, "; ", 2))
+  print(leads)
   
   # Pivot longer to have two rows (start and end position) per lead for plotting
   leads <- leads %>% pivot_longer(
@@ -138,11 +144,14 @@ plot_ecg_locations <- function(
     scale_y_continuous(limits = c(0, 1)) +
     scale_color_manual(values = leads_to_plot, labels = levels(leads$type)) +
     scale_linewidth_continuous(range = c(1, 4)) +
+    labs(title = "Locations of ECG electrodes",
+         subtitle = paste("n =", n_studies, "studies")) + 
     guides(color = guide_legend(title = "ECG lead"),
            linewidth = guide_legend(title = "Number of studies")) +
     theme_void() +
     theme(aspect.ratio = aspect,
-          strip.background = element_blank())
+          strip.background = element_blank()) +
+    custom_theme()
   
   p
 }

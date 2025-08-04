@@ -7,7 +7,7 @@ no_valid_data_stub <- function(message) {
 
 clip_values <- function(values, low = 0, high = 1) {
   # Clip values to be in [low, high] range
-  pmin(high, pmax(low, values))
+  pmin(high, pmax(low, values, na.rm = T), na.rm = T)
 }
 
 
@@ -29,23 +29,78 @@ create_ecg_data <- function(x_min, x_max, n_points = 500) {
   )
 }
 
-  # Calculate cumulative counts over time intervals
-  calculate_cumulative_counts <- function(df_subset, time_vec) { 
-    if (nrow(df_subset) == 0) {
-      return(rep(0, length(time_vec)))
-    }
-    counts <- numeric(length(time_vec))
-    # Small offset to ensure intervals are checked correctly [start, end)
-    precision_offset <- (time_vec[2] - time_vec[1]) / 2 
 
-    for (i in 1:nrow(df_subset)) {
-      start_i <- df_subset$start_time[i]
-      end_i <- df_subset$end_time[i]
+# Calculate cumulative counts over time intervals
+calculate_cumulative_counts <- function(df, 
+                                        time_vec, 
+                                        by = "pipeline",
+                                        group_col = "PMID") { 
+  if (nrow(df) == 0) {
+    return(rep(0, length(time_vec)))
+  }
+  if (!by %in% c("study", "pipeline")) {
+    stop("Can only aggregate cumulative windows by study or pipeline")
+  }
+  
+  # Small offset to ensure intervals are checked correctly [start, end)
+  precision_offset <- (time_vec[2] - time_vec[1]) / 2 
+
+  # Count each pipeline separately
+  if (by == "pipeline") {
+    counts <- numeric(length(time_vec))
+    
+    for (i in 1:nrow(df)) {
+      start_i <- df$start_time[i]
+      end_i <- df$end_time[i]
       indices <- which(time_vec >= (start_i - precision_offset) & time_vec < (end_i - precision_offset))
       if (length(indices) > 0) {
         counts[indices] <- counts[indices] + 1
       }
     }
-    return(counts) 
+    
+    return(counts)
   }
+  
+  # Combine windows from all pipelines within one study
+  counts <- numeric(length(time_vec))
+  unique_ids <- unique(df[[group_col]])
+  for (pmid in unique_ids) {
+    df_pmid <- df[df[[group_col]] == pmid, ]
+    
+    used_by_study <- logical(length(time_vec))
+    for (i in 1:nrow(df_pmid)) {
+      t_start <- df_pmid$start_time[i]
+      t_end <- df_pmid$end_time[i]
+      
+      used_by_pipeline <- (time_vec >= (t_start - precision_offset)) & 
+                          (time_vec < (t_end - precision_offset))
+      used_by_study <- used_by_study | used_by_pipeline
+    }
+    
+    indices <- which(used_by_study)
+    if (length(indices) > 0) {
+      counts[indices] <- counts[indices] + 1
+    }
+  }
+  
+  return(counts) 
+}
 
+
+prepare_column_plot_data <- function(df, 
+                                     column_order, 
+                                     pipeline_steps, 
+                                     pipeline_colors) {
+  if (!("Step" %in% names(df))) {
+    df$Step <- sapply(df$Column, function(var_name) {
+      get_pipeline_step(var_name)
+    })
+  }
+  df$Step <- factor(df$Step, levels = names(pipeline_colors))
+  
+  df$Column <- factor(df$Column, 
+                      levels = column_order) 
+  levels(df$Column) <- make_readable(levels(df$Column))
+  
+  df
+}

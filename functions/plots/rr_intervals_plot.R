@@ -1,11 +1,14 @@
 rr_intervals_plot <- function(df) {
   
   rr_df <- df %>%
-    distinct(PMID, other_cfa_removal_strategy) %>%
     mutate(rr_match = str_match(tolower(other_cfa_removal_strategy), "rr at least\\s*(\\d+)\\s*ms")) %>%
     filter(!is.na(rr_match[,2])) %>%
     mutate(rr_value = as.numeric(rr_match[,2])) %>%
     filter(!is.na(rr_value), is.finite(rr_value))
+    
+  #filter for distinct RR intervals
+  rr_df <- rr_df %>%
+    distinct(PMID, rr_value) 
     
   # Early return if no data
   if (nrow(rr_df) == 0) {
@@ -38,10 +41,12 @@ rr_intervals_plot <- function(df) {
     geom_vline(xintercept = 0, linetype = "dotted", color = "gray40") +
     labs(x = "Time (ms)",
          y = "",
-         title = paste("n =", nrow(rr_df)),
-         caption = "Minimum RR Intervals") +
+         title = "Minimal RR Interval",
+         subtitle = paste("n =", nrow(rr_df), "studies"),
+        ) +
     scale_x_continuous(breaks = unique(sort(c(seq(0, x_max, by = 250), x_max)))) +
-    theme_classic(base_family = "sans") +
+    plot_theme_default +
+    custom_theme() +
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           #panel.grid.major.x = element_line(color = "gray90", linetype = "solid"),

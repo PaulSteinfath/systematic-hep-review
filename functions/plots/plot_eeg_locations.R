@@ -1,28 +1,39 @@
-get_channel_freq <- function(df, col, ch, divide.over = "n_rows") {
-  # NOTE: this function should be adjusted if we decide to normalize
-  # the study / pipeline counts differently
-  in_layout <- sapply(df$eeg_locations, 
-                      \(x) grepl(ch, x, fixed = T))
+get_channel_freq <- function(df, col, ch, 
+                             by = "pipeline", 
+                             group_col = "PMID", 
+                             divide.over = "n_rows") {
   in_selection <- sapply(df[[col]], 
-                         \(x) grepl(ch, x, fixed = T))
+                         \(x) ch %in% unlist(str_split(x, ", ")))
   
-  n_selected <- sum(in_selection)
-  n_used <- sum(in_layout)
-  n_rows <- length(in_layout)
+  if (by == "study") {
+    sel <- data.frame(group = df[[group_col]], present = in_selection)
+    
+    # NOTE: aggregating within studies -> the channel is used by the study if
+    # any pipeline uses it
+    sel <- sel %>%
+      group_by(group) %>%
+      summarise(present = any(present))
+  } else {
+    sel <- data.frame(present = in_selection)
+  }
+    
+  n_selected <- sum(sel$present)
+  n_total = nrow(sel)
+  
+  if (is.null(divide.over)) {
+    return(n_selected)
+  }
   
   if (divide.over == "n_rows") {
-    return(n_selected / n_rows)
+    return(n_selected / n_total)
+  } else {
+    stop(paste("Unsupported option for divide.over:", divide.over))
   }
-  
-  if (n_used == 0) {
-    return(0)
-  }
-  
-  n_selected / n_used
 }
 
 
-count_occurrences <- function(df, col, channels = ch_names, group_col = 'PMID', 
+count_occurrences <- function(df, col, channels = ch_names, 
+                              by = "pipeline", group_col = 'PMID', 
                               divide.over = "n_rows", add.locs = T) {
   layout <- unique(df$meeg_layout)
   if (length(layout) > 1) {
@@ -34,10 +45,13 @@ count_occurrences <- function(df, col, channels = ch_names, group_col = 'PMID',
   df_distinct <- df %>% distinct(meeg_layout, eeg_locations,
                                  !!sym(group_col), !!sym(col))
   freqs <- sapply(channels[[layout]], get_channel_freq,
-                  df = df_distinct, col = col, divide.over = divide.over)
+                  df = df_distinct, col = col, 
+                  by = by, group_col = group_col,
+                  divide.over = divide.over)
 
+  num_rows = if (by == "pipeline") nrow(df_distinct) else length(unique(df_distinct[[group_col]]))
   df_freq <- data.frame(meeg_layout = layout,
-                        num_rows = nrow(df_distinct),
+                        num_rows = num_rows,
                         electrode = channels[[layout]],
                         freq = freqs)
   
@@ -52,13 +66,17 @@ count_occurrences <- function(df, col, channels = ch_names, group_col = 'PMID',
 
 
 plot_eeg_locations_separate <- function(df, 
-                                        lim = 1.0, 
-                                        colormap = "magma") {
+                                        show_proportion,
+                                        lim = NULL, 
+                                        colormap = "Greys",
+                                        stretch_palette = 1,
+                                        show_colorbar = F) {
   # Calculate the limit automatically if not provided
   if (is.null(lim)) {
-    lim <- max(df$freq)
+    lim <- max(df$freq) * stretch_palette
   }
   
+  colorbar_title = paste(if (show_proportion) "Proportion" else "Number", "of studies")
   ggplot(df, aes(x = x,
                  y = y,
                  fill = freq,
@@ -68,11 +86,17 @@ plot_eeg_locations_separate <- function(df,
               head_size = rel(0.5),
               color = 'black',
               linetype = 'solid',
-              linewidth = rel(0.1)) + 
-    scale_fill_viridis(option = colormap,
-                       labels = scales::percent,
-                       direction = 1,
-                       limits = c(0, lim)) + 
+              linewidth = rel(0.1)) +
+    scale_fill_distiller(palette = colormap,
+                         labels = if (show_proportion) 
+                           scales::percent 
+                         else label_number(accuracy = 1),
+                         direction = 1,
+                         guide = if (show_colorbar) 
+                           guide_colorbar(title = colorbar_title) 
+                         else guide_none(),
+                         limits = c(0, lim),
+                         breaks = c(0, 0.5 * lim, lim)) + 
     facet_wrap(. ~ meeg_layout, nrow = 1) +
     theme_void() + 
     coord_equal()
@@ -104,19 +128,27 @@ get_weighted_scalpmap <- function(df, grid_res = 200, interp_limit = "skirt") {
 
 
 plot_eeg_locations_combined <- function(df, 
+                                        show_proportion,
                                         display.layout = "standard61",
-                                        lim = 1.0,
-                                        colormap = "magma") {
+                                        lim = NULL,
+                                        colormap = "Greys",
+                                        stretch_palette = 1,
+                                        show_colorbar = F) {
   # When combining topomaps, we weigh the frequencies to account for different
   # number of rows (papers/pipelines) with different layouts, preparing the weights here
   num_rows_total <- with(df %>% distinct(meeg_layout, num_rows), sum(num_rows))
-  df$weight <- df$num_rows / num_rows_total
+  if (show_proportion) {
+    df$weight <- df$num_rows / num_rows_total
+  } else {
+    df$weight <- 1.0
+  }
   
   # Calculate and combine the topomaps
+  clip_high = if (show_proportion) 1.0 else NA
   maps <- by(df, df$meeg_layout, get_weighted_scalpmap)
   maps_merged <- purrr::reduce(maps, merge, by = c('x', 'y'), sort = F) %>%
     mutate(fill.sum = rowSums(across(starts_with("fill"))),
-           fill.sum = clip_values(fill.sum))
+           fill.sum = clip_values(fill.sum, high = clip_high))
   
   # Prepare the channels that should be displayed on top of the combined topomap
   montage = if (display.layout == "biosemi128") "biosemi128" else NULL
@@ -125,17 +157,20 @@ plot_eeg_locations_combined <- function(df,
   
   # Calculate the limit automatically if not provided
   if (is.null(lim)) {
-    lim <- max(maps_merged$fill.sum)
+    lim <- max(maps_merged$fill.sum) * stretch_palette
+    
+    # Round to the nearest even number so that halfpoint between 0 and upper
+    # limit is integer
+    if (!show_proportion) {
+      lim <- 2 * ceiling(lim / 2)
+    }
   }
   
+  colorbar_title = paste(if (show_proportion) "Proportion" else "Number", "of studies")
   ggplot(data = df_display,
          aes(x = x, y = y)) + 
     geom_raster(data = maps_merged,
                 aes(fill = fill.sum)) +
-    scale_fill_viridis(option = colormap,
-                       labels = scales::percent,
-                       direction = 1,
-                       limits = c(0, lim)) +
     geom_head(linewidth = rel(0.5),
               color = "black") +
     geom_channels(size = rel(0.25),
@@ -145,6 +180,16 @@ plot_eeg_locations_combined <- function(df,
                  color = "black", 
                  linewidth = rel(0.1),
                  bins = 6) +
+    scale_fill_distiller(palette = colormap,
+                         labels = if (show_proportion) 
+                           scales::percent 
+                         else label_number(accuracy = 1),
+                         direction = 1,
+                         guide = if (show_colorbar) 
+                           guide_colorbar(title = colorbar_title) 
+                         else guide_none(),
+                         limits = c(0, lim),
+                         breaks = c(0, 0.5 * lim, lim)) + 
     theme_void() +
     coord_equal()
 }
@@ -152,42 +197,42 @@ plot_eeg_locations_combined <- function(df,
 
 plot_eeg_locations <- function(df, 
                                col,
+                               by = "pipeline",
                                group_col = 'PMID',
                                divide.over = "n_rows",
                                layouts = names(ch_names), 
-                               lim = 1.0,
-                               colormap = "magma",
+                               lim = NULL,
+                               colormap = "Greys",
+                               stretch_palette = 1,
                                show_colorbar = T,
-                               colorbar_title = "Proportion",
                                main_title = NULL,
                                combined = T,
                                display.layout = "standard61") {
   # Get the number of occurrences for each channel in each layout
   df_sel <- df[df$meeg_layout %in% layouts,]
   counts <- by(df_sel, df_sel$meeg_layout, count_occurrences,
-               col = col, group_col = group_col, divide.over = divide.over)
+               col = col, by = by, group_col = group_col, divide.over = divide.over)
   df_counts <- bind_rows(lapply(counts, as.data.frame))
   
   # Plot the results for each layout separately or combined
+  show_proportion = !is.null(divide.over)
   if (combined) {
-    p <- plot_eeg_locations_combined(df_counts, display.layout,
-                                     lim = lim, colormap = colormap)
+    p <- plot_eeg_locations_combined(df_counts, show_proportion,
+                                     display.layout,
+                                     lim = lim, colormap = colormap,
+                                     stretch_palette = stretch_palette,
+                                     show_colorbar = show_colorbar)
   } else {
-    p <- plot_eeg_locations_separate(df_counts,
-                                     lim = lim, colormap = colormap)
+    p <- plot_eeg_locations_separate(df_counts, show_proportion,
+                                     lim = lim, colormap = colormap,
+                                     stretch_palette = stretch_palette,
+                                     show_colorbar = show_colorbar)
   }
   
   if (!is.null(main_title)) {
     p <- p + 
       labs(title = main_title) + 
       theme(plot.title = element_text(hjust = 0.5))
-  }
-  
-  if (show_colorbar) {
-    p <- p + 
-      guides(fill = guide_colorbar(title = colorbar_title))
-  } else {
-    p <- p + guides(fill = guide_none())
   }
   
   p

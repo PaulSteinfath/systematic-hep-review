@@ -69,7 +69,8 @@ create_ica_usage_plot <- function(df) {
             y = "Number of Studies"
         ) +
         # Theme
-        theme_classic(base_family = "sans") +
+        plot_theme_default +
+        custom_theme() +
         theme(
             aspect.ratio = 2 / 1, # change aspect ratio to make plot taller /  narrower
             legend.position = "none",

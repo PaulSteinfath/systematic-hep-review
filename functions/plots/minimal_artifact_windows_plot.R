@@ -1,6 +1,7 @@
 minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
 
   df_minimal <- df %>%
+    distinct(PMID, other_cfa_removal_strategy, .keep_all = TRUE) %>%
     filter(str_detect(tolower(other_cfa_removal_strategy), "limit analysis to time of minimal artifact")) %>%
     select(PMID, hep_start, hep_end, hep_relative_to) %>%
     distinct()
@@ -10,14 +11,7 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
   }
     
   df_minimal <- df_minimal %>%
-    mutate(
-      # Convert to numeric and check for valid values
-      hep_start = as.numeric(hep_start),
-      hep_end = as.numeric(hep_end)
-    ) %>%
-    filter(!is.na(hep_start), !is.na(hep_end),
-           is.finite(hep_start), is.finite(hep_end)) %>%
-    mutate(
+     mutate(
       # Create T-peak indicator
       is_tpeak = tolower(hep_relative_to) == "t-peak",
       # shift T-peak
@@ -29,7 +23,6 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
   
   df_minimal <- df_minimal %>%
     arrange(reference, hep_start) %>%
-
     group_by(reference) %>%
     mutate(rank_in_group = row_number()) %>%
     ungroup()
@@ -66,12 +59,13 @@ minimal_artifact_windows_plot <- function(df, t_peak_offset = 300) {
     labs(
       x = "Time (ms)",
       y = "",
-      title = paste("n =", nrow(df_minimal)),
-      caption = "HER windows for minimal artifact",
+      title = "Minimal Artifact Window",
+      subtitle = paste("n =", nrow(df_minimal), "studies"),
       color = "Reference"
     ) +
     scale_color_manual(values = r_t_peak_palette) +
-    theme_classic(base_family = "sans") +
+    plot_theme_default +
+    custom_theme() +
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           #panel.grid.major.x = element_line(color = "gray90", linetype = "solid"),

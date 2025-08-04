@@ -14,7 +14,7 @@ summarize_cfa_criteria <- function(df) {
   # pipelines with cfa_rej_criteria
   df_filt <- df %>%
     mutate(cfa_rej_criteria = tolower(cfa_rej_criteria)) %>%
-    filter(!is.na(cfa_rej_criteria), cfa_rej_criteria != "", cfa_rej_criteria != "unknown") %>%
+    filter(cfa_rej_criteria != "", cfa_rej_criteria != "unknown") %>%
     distinct(PMID, cfa_rej_criteria) %>%
     mutate(pipeline_id = row_number())  
   
@@ -48,12 +48,14 @@ summarize_cfa_criteria <- function(df) {
   main_plot <- ggplot(main_counts, 
     aes(x = reorder(cfa_rej_criteria, count, decreasing = TRUE), y = prop)) +
     geom_bar(stat = "identity", fill = "#696969", color = "white", linewidth = 0.5) +
-    theme_classic(base_family = "sans") +
+    plot_theme_default +
+    custom_theme() +
     scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, .1))) +
     labs(
-      x = "Criteria for rejecting CFA-related ICs",
+      x = "",
       y = "Proportion of pipelines",
-      title = paste("n =", total_pipelines, "pipelines")
+      title = "CFA Rejection Criteria",
+      subtitle = paste("n =", total_pipelines, "pipelines")
     ) +
     theme(
       title = element_text(size = 9),
@@ -102,7 +104,7 @@ summarize_cfa_criteria <- function(df) {
       )
     })) +
     scale_y_continuous(expand = c(0, 0)) +
-    theme_classic(base_size = 9) +
+    plot_theme_default +
     theme(
       panel.grid = element_blank(),
       axis.text.x = element_text(angle = 45, hjust = 1, size = 9),

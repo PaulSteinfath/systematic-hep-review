@@ -59,8 +59,37 @@ column_mapping <- c(
 columns_to_drop <- c("Other.notes..unclassified.", "Motivation", "DOI", "Link", "Analyst", "Include", "Comment", "Citation", "ECG.Description", "Multiple.Comparisons")
 convert_to_numeric <- c("Year", "sample_size", "meeg_num_electrodes", "length_min", "high_pass", "low_pass", "groups", "conditions", "hep_start", "hep_end", 
                         "baseline_start_ms", "baseline_end_ms", "permutations", "significant_start_ms", "significant_end_ms")
-convert_to_factors <- c("rsHEP", "Modality", "ICA", "ica_on_epochs", "hep_relative_to", "averaging_channels", "averaging_time", "clustering", "significant_test", 
+convert_to_factors <- c("rsHEP", "modality", "ICA", "ica_on_epochs", "hep_relative_to", "averaging_channels", "averaging_time", "clustering", "significant_test", 
                         "significant_relative_to")
+
+ref_mapping <- c(
+  "Common average" = "CAR",
+  "Linked mastoids" = "LinkM",
+  "Left mastoid" = "LM",
+  "Linked earlobes" = "LinkE",
+  "Cz" = "Cz",
+  "Fz" = "Fz",
+  "FCz" = "FCz",
+  "Fpz" = "Fpz",
+  "CMS" = "CMS",
+  "Nose" = "Nose",
+  "Laplacian reference" = "LAP",
+  "REST" = "REST",
+  "Other" = "Other",
+  "na" = "N/A",
+  "unknown" = "N/M"
+)
+online_ref_categories <- c(
+  "Common average", 
+  "Linked mastoids", "Left mastoid", 
+  "Cz", "Fz", "FCz", "Fpz", 
+  "CMS", "Nose", "Linked earlobes", "Other", "unknown"
+)
+offline_ref_categories <- c(
+  "Common average", "Linked mastoids", "Linked earlobes",
+  "Laplacian reference", "REST", "Cz", "unknown", "Other"
+)
+
 
 load_data <- function(pubmed.path, manual.path) {
   # Load the data
@@ -85,6 +114,19 @@ resolve_all_except <- function(row) {
   
   kept_cols <- setdiff(all_locs, except_locs)
   paste(kept_cols, collapse = ", ")
+}
+
+
+preprocess_cleaning <- function(df) {
+  other_cleaning <- str_split(df$other_cleaning_strategy, ', ')
+  other_cleaning <- lapply(other_cleaning, \(x) tolower(trimws(x)))
+  
+  for (approach in c('noisy epochs', 'bad channels')) {
+    use_approach <- sapply(other_cleaning, \(x) approach %in% x)
+    df[[paste0("clean_", str_replace(approach, ' ', '_'))]] <- use_approach
+  }
+  
+  df
 }
 
 
@@ -120,15 +162,57 @@ preprocess_screening <- function(df_screening) {
 }
 
 
+preprocess_studies <- function(df) {
+  df_category <- df %>%
+    group_by(PMID) %>%
+    summarise(
+      has_resting = any(rsHEP == 1),
+      has_task = any(rsHEP == 0),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      study_category = case_when(
+        has_resting & has_task ~ "Both",
+        has_resting & !has_task ~ "Rest", 
+        !has_resting & has_task ~ "Task",
+        TRUE ~ "Other"
+      )
+    )
+  assert("All studies perform either task-based or resting-state analysis",
+         nrow(df_category[df_category$study_category == "Other",]) == 0)
+  
+  df_category$study_category <- factor(df_category$study_category,
+                                       levels = c("Task", "Rest", "Both"))
+  
+  df <- merge(df, df_category, by = "PMID", sort = F)
+  df
+}
+
+preprocess_reference <- function(df) {
+  df %>%
+    mutate(
+      # online
+      reference_online = tolower(reference_online),
+      reference_online = case_when(
+        reference_online %in% tolower(online_ref_categories) ~ reference_online,
+        TRUE ~ "Other"
+      ),
+      # offline
+      reference_offline = tolower(reference_offline),
+      reference_offline = case_when(
+        reference_offline %in% tolower(offline_ref_categories) ~ reference_offline,
+        TRUE ~ "Other"
+      )
+    )
+}
+
 preprocess_ecg <- function(df) {
   df %>%
     mutate(ecg_lead = recode(ecg_lead,
                              "none" = "None",
-                             "Single-channel" = "Single\nchannel",
                              "Multiple leads" = "Multiple\nleads",
-                             "Multiple leads (including lead I)" = "Multiple\nleads",
-                             "Multiple leads (including lead II)" = "Multiple\nleads",
-                             "Multiple leads (including leads I, II, III)" = "Multiple\nleads",
+                             "Multiple leads (Lead II)" = "Lead II",
+                             "Unclassified" = "N/C",
                              "unknown" = "N/M"))
 }
 
@@ -218,6 +302,40 @@ adjust_data_type <- function(df, adjust_numeric = c(), adjust_factor = c()) {
   return(df)
 }
 
+process_trial_column <- function(df, col) {
+  # Capture the name of the column as a string
+  col_name <- deparse(substitute(col))
+  new_mean_col <- paste0(col_name, "_Mean")
+  new_sd_col <- paste0(col_name, "_SD")
+  new_original_col <- paste0(col_name, "_original")
+  
+  # Process the column and return a tibble with three new columns
+  out <- df %>%
+    # Ensure the target column is character
+    mutate({{col}} := as.character({{col}})) %>%
+    transmute(
+      !!new_mean_col := case_when(
+        str_detect({{col}}, "\\[est\\d+\\]") ~ as.numeric(str_extract({{col}}, "\\d+")),
+        str_detect({{col}}, "\\d+\\+-\\d+") ~ as.numeric(str_split_fixed({{col}}, "\\+\\-", 2)[, 1]),
+        str_detect({{col}}, "^\\d+$") ~ as.numeric({{col}}),
+        is.na({{col}}) | {{col}} == "" ~ NA_real_,
+        TRUE ~ NA_real_
+      ),
+      !!new_sd_col := case_when(
+        str_detect({{col}}, "\\d+\\+-\\d+") ~ as.numeric(str_split_fixed({{col}}, "\\+\\-", 2)[, 2]),
+        TRUE ~ NA_real_
+      ),
+      !!new_original_col := case_when(
+        str_detect({{col}}, "\\[est\\d+\\]") ~ NA_real_,  # Set estimated values to NA
+        str_detect({{col}}, "\\d+\\+-\\d+") ~ as.numeric(str_split_fixed({{col}}, "\\+\\-", 2)[, 1]),  # Extract mean from SD entries
+        str_detect({{col}}, "^\\d+$") ~ as.numeric({{col}}),
+        is.na({{col}}) | {{col}} == "" ~ NA_real_,
+        TRUE ~ NA_real_
+      )
+    )
+  return(out)
+}
+
 preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data_types = T) {
   
   if (output_screening){
@@ -246,14 +364,27 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   valid_mapping <- column_mapping[column_mapping %in% names(df_included)]
   df_included <- rename(df_included, all_of(valid_mapping))
   
+  # Create baseline_defined 
+  df_included <- df_included %>%
+    mutate(
+      baseline_defined = case_when(
+        baseline_start_ms == "unknown" | baseline_end_ms == "unknown" ~ "Unknown",
+        baseline_start_ms == "none" | baseline_end_ms == "none" ~ "No",
+        !is.na(baseline_start_ms) & !is.na(baseline_end_ms) ~ "Yes",
+        TRUE ~ "No"
+      )
+    )
+  
   if (adjust_data_types){
     df_included <- adjust_data_type(df_included, convert_to_numeric, convert_to_factors)
   }
   
-  df_included <- df_included %>%
-    preprocess_ecg() %>%
-    preprocess_channels() %>%
-    preprocess_hep_significant()
+  # NOTE: apply steps one by one to get adequate messages in case of errors
+  df_included <- preprocess_studies(df_included)
+  df_included <- preprocess_ecg(df_included)
+  df_included <- preprocess_cleaning(df_included)
+  df_included <- preprocess_channels(df_included)
+  df_included <- preprocess_hep_significant(df_included)
   
   # transform included IC data
   df_included$rejected_cardiac_ics <- sapply(df_included$rejected_cardiac_ics, clean_cardiac_ics)
@@ -261,7 +392,7 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   # add Paper column (readable unique identifier)
   df_included$paper <- create_author_column(df_included)
 
-  # Add columns averaging / clustering & baseline
+  # Add columns averaging / clustering
   df_included <- df_included %>%
     mutate(
       method_category = case_when(
@@ -269,12 +400,17 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
         clustering == "1" & averaging_time == "0" ~ "Clustering",
         TRUE ~ "Other"
       ),
-      method_numeric = ifelse(method_category == "Averaging", 1, 0),
-      baseline_defined = case_when(
-        !is.na(baseline_start_ms) & !is.na(baseline_end_ms) ~ 1,
-        TRUE ~ 0
-      )
+      method_numeric = ifelse(method_category == "Averaging", 1, 0)
     )
+  
+  # process trials column
+  new_trial_cols <- process_trial_column(df_included, trials)
+  df_included <- bind_cols(df_included, new_trial_cols)
+  df_included$trials_Mean <- as.numeric(df_included$trials_Mean)
+  df_included$trials_original <- as.numeric(df_included$trials_original)
+
+  # clean up cases where additional tests follow ANOVA
+  df_included$statistics <- case_when(str_detect(df_included$Statistical.test, regex("anova", ignore_case = TRUE)) ~ "ANOVA", TRUE ~ df_included$Statistical.test)
   
   if (output_screening){
     list(df_screening, df_included)

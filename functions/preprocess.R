@@ -241,6 +241,7 @@ preprocess_ecg <- function(df) {
 
 
 preprocess_hep_significant <- function(df) {
+  # Reference event
   df_hep_reference <- df %>%
     group_by(PMID) %>%
     summarise(
@@ -263,6 +264,29 @@ preprocess_hep_significant <- function(df) {
                                        levels = c("R-peak", "T-peak", "Both"))) %>%
     select(PMID, reference_category)
   df <- safe_merge(df, df_hep_reference, by = "PMID", sort = F)
+  
+  # Baseline correction
+  baseline_correction <- df %>%
+    distinct(PMID, baseline_defined, .keep_all = TRUE) %>%
+    group_by(PMID) %>%
+    summarise(
+      has_yes = any(baseline_defined == "Yes"),
+      has_no = any(baseline_defined == "No"),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      baseline_category = case_when(
+        has_yes & has_no ~ "Both",
+        has_yes & !has_no ~ "Yes",
+        !has_yes & has_no ~ "No",
+        TRUE ~ "Unknown"
+      )
+    )
+  baseline_correction <- baseline_correction %>%
+    mutate(baseline_category = factor(baseline_category, 
+                                      levels = c("Yes", "No", "Both", "Unknown"))) %>%
+    select(PMID, baseline_category)
+  df <- safe_merge(df, baseline_correction, by = "PMID", sort = F)
   
   df$hep_approach <- factor(case_when(
     (df$averaging_time == 1) & (df$clustering == 0) ~ "Averaging", 

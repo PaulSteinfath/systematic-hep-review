@@ -516,69 +516,32 @@ hep_reference_stats <- hist_discrete(df_pipelines, "reference_category") %>%
 disp_results(hep_reference_stats, column = "reference_category", count = "n")
 ```
 
-```{r timewindows}
-# Clustering vs Averaging
-hep_determination_analysis <- df_pipelines %>%
-  group_by(PMID) %>%
-  summarise(
-    has_averaging = any(method_category == "Averaging"),
-    has_clustering = any(method_category == "Clustering"),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    determination_category = case_when(
-      has_averaging & has_clustering ~ "Both",
-      has_averaging & !has_clustering ~ "Averaging",
-      !has_averaging & has_clustering ~ "Clustering",
-      TRUE ~ "Other"
-    )
-  ) %>%
-  filter(determination_category != "Other")
+### Baseline correction
 
-hep_determination_stats <- hep_determination_analysis %>%
-  count(determination_category) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1))
+```{r baseline-correction}
+df_pipelines$baseline_correction_stated <- df_pipelines$baseline_category != "Unknown"
+baseline_correction_stated <- get_usage_studies(df_pipelines, 
+                                                "baseline_correction_stated") %>%
+  mutate(percentage = round_custom(percentage * 100))
 
-hep_determination_level <- check_studies_or_pipelines(df_pipelines, "hep_relative_to")
+baseline_correction_stats <- hist_discrete(df_pipelines %>%
+                                             filter(baseline_correction_stated),
+                                           "baseline_category") %>%
+  mutate(percentage = round_custom(percentage))
 
-# Baseline correction 
-baseline_correction_analysis <- df_pipelines %>%
-  distinct(PMID, baseline_defined, .keep_all = TRUE) %>%
-  group_by(PMID) %>%
-  summarise(
-    has_yes = any(baseline_defined == "Yes"),
-    has_no = any(baseline_defined == "No"),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    baseline_category = case_when(
-      has_yes & has_no ~ "Both",
-      has_yes & !has_no ~ "Yes",
-      !has_yes & has_no ~ "No",
-      TRUE ~ "Other"
-    )
-  ) %>%
-  filter(baseline_category != "Other") %>%
-  mutate(baseline_category = factor(baseline_category, 
-                                  levels = c("Yes", "No", "Both")))
+baseline_correction_yes <- get_row(baseline_correction_stats, "baseline_category", "Yes")
+baseline_correction_no <- get_row(baseline_correction_stats, "baseline_category", "No")
+```
 
-# % studies using baseline calculated using absolute number of studies to also include "unknown"
-baseline_correction_stats <- baseline_correction_analysis %>%
-  count(baseline_category) %>%
-  mutate(
-    percentage_within_reporting = round(n / sum(n) * 100, 1),
-    percentage_of_all_studies = round(n / total_studies * 100, 1)
-  )
+* Clearly stated: **`r baseline_correction_stated$percentage`%** (**`r baseline_correction_stated$count`** / **`r baseline_correction_stated$total`**) `r baseline_correction_stated$level`
 
-# Check if baseline correction is at study or pipeline level
-baseline_correction_level <- check_studies_or_pipelines(df_pipelines, "baseline_defined")
+* Among all reports:
 
-# Calculate overall baseline percentage for output
-baseline_pct <- baseline_correction_stats %>%
-  filter(baseline_category %in% c("Yes", "Both")) %>%
-  summarise(total_pct = sum(percentage_within_reporting)) %>%
-  pull(total_pct)
+  * Performed: **`r baseline_correction_yes$percentage`%** (**`r baseline_correction_yes$n`** / **`r baseline_correction_yes$total`**) `r baseline_correction_yes$level`
+  
+  * Did not perform: **`r baseline_correction_no$percentage`%** (**`r baseline_correction_no$n`** / **`r baseline_correction_no$total`**) `r baseline_correction_no$level`
 
+```{r baseline-correction-split-by-event}
 # Baseline correction - Studies with R-peak analysis
 baseline_rpeak_studies <- df_pipelines %>%
   filter(hep_relative_to == "R-peak") %>%
@@ -601,9 +564,9 @@ baseline_rpeak_studies <- df_pipelines %>%
 baseline_rpeak_summary <- baseline_rpeak_studies %>%
   summarise(
     total_studies = hep_reference_stats$n[hep_reference_stats$reference_category == "R-peak"] + 
-                   hep_reference_stats$n[hep_reference_stats$reference_category == "Both"],
+                    hep_reference_stats$n[hep_reference_stats$reference_category == "Both"],
     studies_with_baseline = sum(baseline_category %in% c("Yes", "Both")),
-    percentage_with_baseline = round(studies_with_baseline / total_studies * 100, 1)
+    percentage_with_baseline = round_custom(studies_with_baseline / total_studies * 100)
   )
 
 # Baseline correction - Studies with T-peak analysis  
@@ -630,34 +593,19 @@ baseline_tpeak_summary <- baseline_tpeak_studies %>%
     total_studies = hep_reference_stats$n[hep_reference_stats$reference_category == "T-peak"] + 
                    hep_reference_stats$n[hep_reference_stats$reference_category == "Both"],
     studies_with_baseline = sum(baseline_category %in% c("Yes", "Both")),
-    percentage_with_baseline = round(studies_with_baseline / total_studies * 100, 1)
+    percentage_with_baseline = round_custom(studies_with_baseline / total_studies * 100)
   )
+```
 
-# Primary vs Secondary
-  hep_window_type_analysis <- df_pipelines %>%
-  group_by(PMID) %>%
-  summarise(
-    has_primary = any(hep_window_type == "Primary"),
-    has_secondary = any(hep_window_type == "Secondary"),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    window_type_category = case_when(
-      has_primary & has_secondary ~ "Both",
-      has_primary & !has_secondary ~ "Primary",
-      !has_primary & has_secondary ~ "Secondary",
-      TRUE ~ "Other"
-    )
-  ) %>%
-  filter(window_type_category != "Other") %>%
-  mutate(window_type_category = factor(window_type_category, 
-                                      levels = c("Primary", "Secondary", "Both")))
+* Studies using baseline split by reference event:
 
+  * R-peak: **`r baseline_rpeak_summary$percentage_with_baseline`%** (**`r baseline_rpeak_summary$studies_with_baseline`** / **`r baseline_rpeak_summary$total_studies`**) studies
+  
+  * T-peak: **`r baseline_tpeak_summary$percentage_with_baseline`%** (**`r baseline_tpeak_summary$studies_with_baseline`** / **`r baseline_tpeak_summary$total_studies`**) studies
 
-hep_window_type_stats <- hep_window_type_analysis %>%
-  count(window_type_category) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1))
+### Baseline windows
 
+```{r baseline-windows}
 # baseline start / end times
 baseline_window_stats <- df_pipelines %>%
   filter(!is.na(baseline_start_ms), !is.na(baseline_end_ms))
@@ -696,6 +644,63 @@ tpeak_baseline_data <- list(
 baseline_before_qrs_stats <- list(
   percentage_before_qrs = baseline_rpeak_range$percentage_ending_before_qrs
 )
+```
+
+ * R-peak: **`r rpeak_baseline_data$start_min`** to **`r rpeak_baseline_data$end_max`** ms around R-peak
+ 
+ * R-peak, end before QRS: **`r baseline_before_qrs_stats$percentage_before_qrs`%** (**`r baseline_rpeak_range$studies_ending_before_qrs`** / **`r baseline_rpeak_range$total_studies`**) studies
+ 
+ * T-peak: **`r tpeak_baseline_data$start_min`** to **`r tpeak_baseline_data$end_max`** ms before T-wave
+
+```{r timewindows}
+# Clustering vs Averaging
+hep_determination_analysis <- df_pipelines %>%
+  group_by(PMID) %>%
+  summarise(
+    has_averaging = any(method_category == "Averaging"),
+    has_clustering = any(method_category == "Clustering"),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    determination_category = case_when(
+      has_averaging & has_clustering ~ "Both",
+      has_averaging & !has_clustering ~ "Averaging",
+      !has_averaging & has_clustering ~ "Clustering",
+      TRUE ~ "Other"
+    )
+  ) %>%
+  filter(determination_category != "Other")
+
+hep_determination_stats <- hep_determination_analysis %>%
+  count(determination_category) %>%
+  mutate(percentage = round(n / sum(n) * 100, 1))
+
+hep_determination_level <- check_studies_or_pipelines(df_pipelines, "hep_relative_to")
+
+# Primary vs Secondary
+  hep_window_type_analysis <- df_pipelines %>%
+  group_by(PMID) %>%
+  summarise(
+    has_primary = any(hep_window_type == "Primary"),
+    has_secondary = any(hep_window_type == "Secondary"),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    window_type_category = case_when(
+      has_primary & has_secondary ~ "Both",
+      has_primary & !has_secondary ~ "Primary",
+      !has_primary & has_secondary ~ "Secondary",
+      TRUE ~ "Other"
+    )
+  ) %>%
+  filter(window_type_category != "Other") %>%
+  mutate(window_type_category = factor(window_type_category, 
+                                      levels = c("Primary", "Secondary", "Both")))
+
+
+hep_window_type_stats <- hep_window_type_analysis %>%
+  count(window_type_category) %>%
+  mutate(percentage = round(n / sum(n) * 100, 1))
 
 # HEP Time of Interest windows
 hep_window_data <- df_pipelines %>%
@@ -849,28 +854,6 @@ stat_comparison_results$rpeak <- perform_peak_timing_comparison(clustering_rpeak
                                                                 n_permutations = params$peak_stats_permutations)
 stat_comparison_results$tpeak <- perform_peak_timing_comparison(clustering_tpeak, averaging_tpeak, n_permutations = params$peak_stats_permutations)
 ```
-
-### Baseline Correction
-
-**Overall baseline correction usage across all studies:**
-* Studies using baseline correction: **`r baseline_correction_stats %>% filter(baseline_category %in% c("Yes", "No", "Both")) %>% summarise(total_pct = sum(percentage_of_all_studies)) %>% pull(total_pct)`%** (`r sum(baseline_correction_stats$n[baseline_correction_stats$baseline_category %in% c("Yes", "No", "Both")])`/`r total_studies`)
-
-**Among studies that reported baseline correction information:**
-* Studies using baseline correction: **`r baseline_correction_stats %>% filter(baseline_category %in% c("Yes", "Both")) %>% summarise(total_pct = sum(percentage_within_reporting)) %>% pull(total_pct)`%** (`r sum(baseline_correction_stats$n[baseline_correction_stats$baseline_category %in% c("Yes", "Both")])`/`r sum(baseline_correction_stats$n)`)
-* Studies not using baseline correction: **`r baseline_correction_stats %>% filter(baseline_category == "No") %>% pull(percentage_within_reporting)`%** (`r baseline_correction_stats %>% filter(baseline_category == "No") %>% pull(n)`/`r sum(baseline_correction_stats$n)`)
-
-Baseline correction (`r baseline_correction_level`):
-* Pipelines using baseline correction: **`r baseline_pct`%** (`r sum(baseline_correction_stats$n[baseline_correction_stats$baseline_category %in% c("Yes", "Both")])`/`r total_studies`)
-
-### T-wave Baseline Correction
-
-* Studies using baseline: **`r tpeak_baseline_data$n_studies`** studies
-* Baseline window: **`r tpeak_baseline_data$start_min`** to **`r tpeak_baseline_data$end_max`** ms before T-wave
-
-### R-peak Baseline Correction
-
-* Baseline window range: **`r rpeak_baseline_data$start_min`** to **`r rpeak_baseline_data$end_max`** ms around R-peak
-* Studies ending baseline before QRS: **`r baseline_before_qrs_stats$percentage_before_qrs`%** (`r baseline_rpeak_range$studies_ending_before_qrs`/`r baseline_rpeak_range$total_studies`)
 
 ## 3.7. HEP Time Windows
 

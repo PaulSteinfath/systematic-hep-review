@@ -1,4 +1,25 @@
 figure_hep_estimation_summary <- function(df, save_path = NULL, ext = 'png') {
+  # Reference event
+  rt_peak_prop_plot <- hist_panel(
+    df,
+    col = "reference_category",
+    discrete = TRUE, use_proportion = TRUE,
+    title = "Reference event",
+    tilt_labels = FALSE,
+    preserve_order = TRUE
+  )
+  
+  # Baseline correction
+  baseline_def_prop_plot <- hist_panel(
+    df,
+    col = "baseline_category",
+    discrete = TRUE, 
+    use_proportion = TRUE,
+    title = "Baseline correction",
+    tilt_labels = FALSE,
+    allowed = c("Yes" = "Yes", "No" = "No", "Both" = "Both"),
+    preserve_order = TRUE
+  )
   
   #cluster / average histogram
   df_hep_determination <- df %>%
@@ -25,44 +46,6 @@ figure_hep_estimation_summary <- function(df, save_path = NULL, ext = 'png') {
     col = "determination_category",
     discrete = TRUE, use_proportion = TRUE,
     title = "Analysis approach",
-    tilt_labels = FALSE,
-    preserve_order = TRUE
-  )
-  
-  rt_peak_prop_plot <- hist_panel(
-    df,
-    col = "reference_category",
-    discrete = TRUE, use_proportion = TRUE,
-    title = "Reference event",
-    tilt_labels = FALSE,
-    preserve_order = TRUE
-  )
-  
-  #baseline correction histogram
-  df_baseline_correction <- df %>%
-    group_by(PMID) %>%
-    summarise(
-      has_yes = any(baseline_defined == "Yes"),
-      has_no = any(baseline_defined == "No"),
-      .groups = "drop"
-    ) %>%
-    mutate(
-      baseline_category = case_when(
-        has_yes & has_no ~ "Both",
-        has_yes & !has_no ~ "Yes",
-        !has_yes & has_no ~ "No",
-        TRUE ~ "Other"
-      )
-    ) %>%
-    filter(baseline_category != "Other") %>%
-    mutate(baseline_category = factor(baseline_category, 
-                                      levels = c("Yes", "No", "Both")))
-  
-  baseline_def_prop_plot <- hist_panel(
-    df_baseline_correction,
-    col = "baseline_category",
-    discrete = TRUE, use_proportion = TRUE,
-    title = "Baseline correction",
     tilt_labels = FALSE,
     preserve_order = TRUE
   )

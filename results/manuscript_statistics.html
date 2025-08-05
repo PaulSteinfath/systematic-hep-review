@@ -11,7 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
-<meta name="date" content="2025-08-04" />
+<meta name="date" content="2025-08-05" />
 
 <title>Manuscript Summary</title>
 
@@ -58,7 +58,7 @@ if (window.hljs) {
 <h1 class="title toc-ignore">Manuscript Summary</h1>
 <h3 class="subtitle">A Systematic Review of Methods Used for Studying
 Heartbeat Evoked Responses</h3>
-<h4 class="date">2025-08-04</h4>
+<h4 class="date">2025-08-05</h4>
 
 
 
@@ -113,7 +113,8 @@ time windows, or statistical approaches).</li>
 <strong>10</strong> unique values are present</li>
 <li>Power computation - significance level: <strong>5%</strong></li>
 <li>Power computation - power threshold: <strong>80%</strong></li>
-<li>Number of permutations for testing peak differences: TODO</li>
+<li>Number of permutations for testing peak differences:
+<strong>1000</strong></li>
 </ul>
 </div>
 </div>
@@ -125,15 +126,14 @@ time windows, or statistical approaches).</li>
 (<strong>1986</strong>-<strong>2024</strong>)</p>
 <p>Modality:</p>
 <ul>
-<li>EEG: <strong>123</strong> studies (<strong>93.2%</strong>)</li>
+<li>EEG: <strong>123</strong> studies (<strong>93%</strong>)</li>
 <li>MEG: <strong>9</strong> studies (<strong>6.8%</strong>)</li>
 </ul>
 <p>Study type distribution:</p>
 <ul>
-<li>Task-based: <strong>93</strong> studies
-(<strong>70.5%</strong>)</li>
+<li>Task-based: <strong>93</strong> studies (<strong>70%</strong>)</li>
 <li>Resting-state: <strong>32</strong> studies
-(<strong>24.2%</strong>)</li>
+(<strong>24%</strong>)</li>
 <li>Both: <strong>7</strong> studies (<strong>5.3%</strong>)</li>
 </ul>
 </div>
@@ -152,7 +152,6 @@ time windows, or statistical approaches).</li>
 </div>
 <div id="missing-information" class="section level3">
 <h3>Missing information</h3>
-<p>Missing information:</p>
 <ul>
 <li><p>cardiac IC rejection information (among those using CFA removal):
 <strong>71%</strong> (<strong>49</strong> /
@@ -167,32 +166,46 @@ time windows, or statistical approaches).</li>
 <thead>
 <tr class="header">
 <th align="left">Variable</th>
+<th align="right">Missing</th>
+<th align="right">Total</th>
 <th align="right">Missing (%)</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td align="left">ecg_ground</td>
+<td align="right">105</td>
+<td align="right">132</td>
 <td align="right">80</td>
 </tr>
 <tr class="even">
 <td align="left">rejected_cardiac_ics</td>
+<td align="right">49</td>
+<td align="right">69</td>
 <td align="right">71</td>
 </tr>
 <tr class="odd">
 <td align="left">length_min</td>
+<td align="right">78</td>
+<td align="right">132</td>
 <td align="right">59</td>
 </tr>
 <tr class="even">
 <td align="left">trials_original</td>
+<td align="right">73</td>
+<td align="right">132</td>
 <td align="right">55</td>
 </tr>
 <tr class="odd">
 <td align="left">baseline_end_ms</td>
+<td align="right">59</td>
+<td align="right">132</td>
 <td align="right">45</td>
 </tr>
 <tr class="even">
 <td align="left">baseline_start_ms</td>
+<td align="right">58</td>
+<td align="right">132</td>
 <td align="right">44</td>
 </tr>
 </tbody>
@@ -237,36 +250,37 @@ time windows, or statistical approaches).</li>
 <div id="types-of-rejected-ica-components" class="section level3">
 <h3>Types of rejected ICA components</h3>
 <ul>
-<li>Ocular: <strong>89%</strong> (<strong>86</strong> /
-<strong>97</strong>) pipelines</li>
-<li>CFA: <strong>72%</strong> (<strong>70</strong> /
-<strong>97</strong>) pipelines</li>
-<li>Muscle: <strong>24%</strong> (<strong>23</strong> /
-<strong>97</strong>) pipelines</li>
+<li>Ocular: <strong>89%</strong> (<strong>85</strong> /
+<strong>96</strong>) pipelines</li>
+<li>CFA: <strong>72%</strong> (<strong>69</strong> /
+<strong>96</strong>) pipelines</li>
+<li>Muscle: <strong>23%</strong> (<strong>22</strong> /
+<strong>96</strong>) pipelines</li>
 </ul>
 </div>
 </div>
 <div id="ecg-acquisition" class="section level2">
 <h2>3.4. ECG Acquisition</h2>
-<p>Studies that use ECG as a control variable: <strong>TODO</strong></p>
-<p>Studies that use 2 ECG electrodes: <strong>67.4242424</strong>%
+<p>Studies that use ECG as a control variable: <strong>45%</strong>
+(<strong>59</strong> / <strong>132</strong>) studies</p>
+<p>Studies that use 2 ECG electrodes: <strong>67</strong>%
 (<strong>89</strong> / <strong>132</strong>) studies</p>
 <p>Number of studies that use different ECG leads:</p>
 <ul>
-<li>Lead II: <strong>36.3636364%</strong> (<strong>48</strong> /
+<li>Lead II: <strong>36%</strong> (<strong>48</strong> /
 <strong>132</strong> studies)</li>
-<li>Lead I: <strong>11.3636364%</strong> (<strong>15</strong> /
+<li>Lead I: <strong>11%</strong> (<strong>15</strong> /
 <strong>132</strong> studies)</li>
-<li>Lead III: <strong>2.2727273%</strong> (<strong>3</strong> /
+<li>Lead III: <strong>2.3%</strong> (<strong>3</strong> /
 <strong>132</strong> studies)</li>
-<li>Unclassified: <strong>26.5151515%</strong> (<strong>35</strong> /
+<li>Unclassified: <strong>27%</strong> (<strong>35</strong> /
 <strong>132</strong> studies)</li>
 </ul>
 </div>
 <div id="dealing-with-cardiac-artifacts" class="section level2">
 <h2>3.5. Dealing with cardiac artifacts</h2>
-<p>Studies using any strategy for dealing with CFA: <strong>92%</strong>
-(<strong>121</strong> / <strong>132</strong>) studies</p>
+<p>Studies using any strategy for dealing with CFA: <strong>89%</strong>
+(<strong>117</strong> / <strong>132</strong>) studies</p>
 <p>ICA used to remove CFA: <strong>52%</strong> (<strong>69</strong> /
 <strong>132</strong>) studies</p>
 <div id="ica-applied-to-what-data" class="section level3">
@@ -281,6 +295,10 @@ time windows, or statistical approaches).</li>
 <div id="cfa-rejection-approach" class="section level3">
 <h3>CFA rejection approach</h3>
 <ul>
+<li><p>Reported CFA approach: <strong>86%</strong> (<strong>59</strong>
+/ <strong>69</strong>) studies</p></li>
+<li><p>Breakdown:</p>
+<ul>
 <li>Manual: <strong>54%</strong> (<strong>37</strong> /
 <strong>69</strong> studies)</li>
 <li>Automatic: <strong>19%</strong> (<strong>13</strong> /
@@ -289,6 +307,7 @@ time windows, or statistical approaches).</li>
 <strong>69</strong> studies)</li>
 <li>Semi-automatic: <strong>13%</strong> (<strong>9</strong> /
 <strong>69</strong> studies)</li>
+</ul></li>
 </ul>
 </div>
 <div id="cfa-rejection-criteria" class="section level3">
@@ -315,7 +334,8 @@ studies)</li>
 <ul>
 <li>Reported the number: <strong>29%</strong> (<strong>20</strong> /
 <strong>69</strong>) studies</li>
-<li>Range: <strong>1</strong> - <strong>3</strong>, median = 1.7</li>
+<li>Range: <strong>1</strong> - <strong>3</strong>, median =
+<strong>1.7</strong></li>
 </ul>
 </div>
 <div id="other-cfa-removal-strategies" class="section level3">
@@ -352,98 +372,94 @@ ms</li>
 </ul>
 </div>
 </div>
-<div id="baseline-correction" class="section level2">
-<h2>3.6. Baseline Correction</h2>
-<div id="general-statistics" class="section level3">
-<h3>General Statistics</h3>
-<p><strong>Overall baseline correction usage across all
-studies:</strong> * Studies using baseline correction:
-<strong>61.4%</strong> (81/132)</p>
-<p><strong>Among studies that reported baseline correction
-information:</strong> * Studies using baseline correction:
-<strong>91.4%</strong> (74/81) * Studies not using baseline correction:
-<strong>8.6%</strong> (7/81)</p>
-<p>Baseline correction (pipelines): * Pipelines using baseline
-correction: <strong>91.4%</strong> (74/132)</p>
-</div>
-<div id="t-wave-baseline-correction" class="section level3">
-<h3>T-wave Baseline Correction</h3>
+<div id="epoching-and-baseline-correction" class="section level2">
+<h2>3.6. Epoching and baseline correction</h2>
+<div id="her-reference-event" class="section level3">
+<h3>HER reference event</h3>
 <ul>
-<li>Studies using baseline: <strong>2</strong> studies</li>
-<li>Baseline window: <strong>-100</strong> to <strong>0</strong> ms
-before T-wave</li>
+<li>R-peak: <strong>93%</strong> (<strong>123</strong> /
+<strong>132</strong> studies)</li>
+<li>T-peak: <strong>4.5%</strong> (<strong>6</strong> /
+<strong>132</strong> studies)</li>
+<li>Both: <strong>2.3%</strong> (<strong>3</strong> /
+<strong>132</strong> studies)</li>
 </ul>
 </div>
-<div id="r-peak-baseline-correction" class="section level3">
-<h3>R-peak Baseline Correction</h3>
+<div id="baseline-correction" class="section level3">
+<h3>Baseline correction</h3>
 <ul>
-<li>Baseline window range: <strong>-300</strong> to <strong>50</strong>
-ms around R-peak</li>
-<li>Studies ending baseline before QRS: <strong>23.3%</strong>
-(17/73)</li>
-</ul>
-</div>
-</div>
-<div id="hep-time-windows" class="section level2">
-<h2>3.7. HEP Time Windows</h2>
-<div id="cardiac-reference-event-selection" class="section level3">
-<h3>Cardiac Reference Event Selection</h3>
-<p>HEP reference events (pipelines): * R-peak reference:
-<strong>93.2%</strong> of studies (123/132) * T-wave reference:
-<strong>4.5%</strong> of studies (6/132)</p>
-</div>
-<div id="hep-analysis-time-windows" class="section level3">
-<h3>HEP Analysis Time Windows</h3>
-<div id="t-wave-referenced-analysis" class="section level4">
-<h4>T-wave Referenced Analysis</h4>
+<li><p>Clearly stated: <strong>61%</strong> (<strong>81</strong> /
+<strong>132</strong>) studies</p></li>
+<li><p>Among all reports:</p>
 <ul>
-<li>Time range: <strong>-10</strong> to <strong>400</strong> ms after
-T-wave</li>
-<li>R-peak equivalent: approx. <strong>290</strong> to
-<strong>700</strong> ms after R-peak</li>
-</ul>
-</div>
-<div id="r-peak-referenced-analysis" class="section level4">
-<h4>R-peak Referenced Analysis</h4>
+<li><p>Performed: <strong>91%</strong> (<strong>74</strong> /
+<strong>81</strong>) studies</p></li>
+<li><p>Did not perform: <strong>8.6%</strong> (<strong>7</strong> /
+<strong>81</strong>) studies</p></li>
+</ul></li>
+<li><p>Studies using baseline split by reference event:</p>
 <ul>
-<li>Time range: <strong>-250</strong> to <strong>1000</strong> ms
-relative to R-peak</li>
-</ul>
-<p><strong>Core overlap windows by analysis method:</strong> *
-Averaging: <strong>200</strong> to <strong>595</strong> ms (395ms
-window) - Studies overlapping with core: 92.7% (102/110) - Studies fully
-including core: 2.7% (3/110) - Median window size: 138ms</p>
-<ul>
-<li>Clustering: <strong>200</strong> to <strong>600</strong> ms (400ms
-window)
-<ul>
-<li>Studies overlapping with core: 100% (65/65)</li>
-<li>Studies fully including core: 47.7% (31/65)</li>
-<li>Median window size: 400ms</li>
+<li><p>R-peak: <strong>58%</strong> (<strong>73</strong> /
+<strong>126</strong>) studies</p></li>
+<li><p>T-peak: <strong>22%</strong> (<strong>2</strong> /
+<strong>9</strong>) studies</p></li>
 </ul></li>
 </ul>
 </div>
-</div>
-<div id="significant-her-effects-time-ranges" class="section level3">
-<h3>Significant HER Effects Time Ranges</h3>
-<div id="r-peak-referenced-effects" class="section level4">
-<h4>R-peak Referenced Effects</h4>
+<div id="baseline-windows" class="section level3">
+<h3>Baseline windows</h3>
 <ul>
-<li>Significant effects range: <strong>-10</strong> to
-<strong>1000</strong> ms</li>
-</ul>
-</div>
-<div id="t-wave-referenced-effects" class="section level4">
-<h4>T-wave Referenced Effects</h4>
-<ul>
-<li>Significant effects range: <strong>50</strong> to
-<strong>389</strong> ms</li>
+<li><p>R-peak: <strong>-300</strong> to <strong>50</strong> ms around
+R-peak</p></li>
+<li><p>R-peak, end before QRS: <strong>23.3%</strong>
+(<strong>17</strong> / <strong>73</strong>) studies</p></li>
+<li><p>T-peak: <strong>-100</strong> to <strong>0</strong> ms before
+T-wave</p></li>
 </ul>
 </div>
 </div>
-<div id="statistical-analysis-methods-comparison"
-class="section level3">
-<h3>Statistical Analysis Methods Comparison</h3>
+<div id="her-time-windows" class="section level2">
+<h2>3.7. HER Time Windows</h2>
+<div id="values-used" class="section level3">
+<h3>Values used</h3>
+<ul>
+<li><p>Amplitude: <strong>128</strong> / <strong>132</strong> studies
+(<strong>97%</strong>)</p></li>
+<li><p>Latency: <strong>3</strong> / <strong>132</strong> studies
+(<strong>2.3%</strong>)</p></li>
+<li><p>Global Field Power: <strong>2</strong> / <strong>132</strong>
+studies (<strong>1.5%</strong>)</p></li>
+</ul>
+</div>
+<div id="analyzed-time-windows" class="section level3">
+<h3>Analyzed time windows</h3>
+<ul>
+<li><p>T-wave: <strong>-10</strong> to <strong>400</strong> ms after
+T-wave</p></li>
+<li><p>R-peak: <strong>-250</strong> to <strong>1000</strong> ms
+relative to R-peak</p></li>
+</ul>
+</div>
+<div id="analysis-approach" class="section level3">
+<h3>Analysis approach</h3>
+<ul>
+<li>Averaging: <strong>41%</strong> (<strong>47</strong> /
+<strong>115</strong> studies)</li>
+<li>Both: <strong>33%</strong> (<strong>38</strong> /
+<strong>115</strong> studies)</li>
+<li>Clustering: <strong>26%</strong> (<strong>30</strong> /
+<strong>115</strong> studies)</li>
+</ul>
+</div>
+<div id="significant-effects" class="section level3">
+<h3>Significant effects</h3>
+<ul>
+<li><p>R-peak: <strong>-10</strong> to <strong>1000</strong> ms</p></li>
+<li><p>T-wave: <strong>50</strong> to <strong>389</strong> ms</p></li>
+</ul>
+</div>
+<div id="comparison-of-effect-latencies" class="section level3">
+<h3>Comparison of effect latencies</h3>
 <div id="r-peak-analysis" class="section level4">
 <h4>R-peak Analysis</h4>
 <ul>
@@ -483,29 +499,25 @@ permutations)</li>
 </div>
 <div id="analysis-window-definition" class="section level3">
 <h3>Analysis Window Definition</h3>
-<p>HEP determination method (pipelines): * Studies using averaging:
-<strong>40.9%</strong> (47/115) * Studies using clustering:
-<strong>26.1%</strong> (30/115) * Studies using both approaches:
-<strong>33%</strong> (38/115)</p>
 <ul>
-<li>Studies with a-priori defined analysis windows:
-<strong>66.7%</strong> (88/132)</li>
+<li>Primary (a-priori defined) analysis windows: <strong>67%</strong>
+(<strong>88</strong> / <strong>132</strong> studies)</li>
 <li>Studies using two-step procedures (data-dependent window selection):
-<strong>%</strong> (/132)</li>
+<strong>33%</strong> (<strong>44</strong> / <strong>132</strong>
+studies)</li>
 </ul>
-</div>
-<div id="hep-dependent-variables-analysis" class="section level3">
-<h3>HEP dependent variables analysis</h3>
-<p>HEP values (pipelines): * Amplitude: <strong>127</strong> studies
-(<strong>90.1%</strong>) * Latency: <strong>3</strong> studies
-(<strong>2.1%</strong>) * Global Field Power: <strong>2</strong> studies
-(<strong>1.4%</strong>) * Other measures: <strong>9</strong> studies
-(<strong>6.3%</strong>)</p>
 </div>
 </div>
 <div id="statistical-analysis-and-power-considerations"
 class="section level2">
 <h2>3.8. Statistical analysis and power considerations</h2>
+<div id="parameters---power-estimation" class="section level3">
+<h3>Parameters - power estimation</h3>
+<ul>
+<li>Power threshold: <strong>80%</strong></li>
+<li>Significance level: <strong>5%</strong></li>
+</ul>
+</div>
 <div id="overview-1" class="section level3">
 <h3>Overview</h3>
 <p>Overview of numbers presented in Fig. 7:</p>
@@ -517,10 +529,10 @@ class="section level2">
 <li><p>Number of conditions: <strong>1</strong> - <strong>20</strong>,
 median = 1</p></li>
 <li><p>Percentage of pipelines with group or condition analysis:
-<strong>73.1707317%</strong> (<strong>300</strong> /
+<strong>73%</strong> (<strong>301</strong> /
 <strong>410</strong>)</p></li>
 <li><p>Percentage of pipelines with correlation analysis:
-<strong>26.5853659%</strong> (<strong>109</strong> /
+<strong>27%</strong> (<strong>109</strong> /
 <strong>410</strong>)</p></li>
 <li><p>Percentage of missing HEP epoch info: <strong>55%</strong>
 (<strong>73</strong> / <strong>132</strong> studies)</p></li>
@@ -529,11 +541,11 @@ median = 1</p></li>
 <strong>300</strong></p></li>
 <li><p>Most common statistical tests (top 3):</p>
 <ul>
-<li>t-test: <strong>33.3333333333333%</strong> (<strong>74</strong> /
+<li>t-test: <strong>33%</strong> (<strong>74</strong> /
 <strong>222</strong> pipelines)</li>
-<li>Correlation: <strong>27.9279279279279%</strong> (<strong>62</strong>
-/ <strong>222</strong> pipelines)</li>
-<li>ANOVA: <strong>23.4234234234234%</strong> (<strong>52</strong> /
+<li>Correlation: <strong>28%</strong> (<strong>62</strong> /
+<strong>222</strong> pipelines)</li>
+<li>ANOVA: <strong>23%</strong> (<strong>52</strong> /
 <strong>222</strong> pipelines)</li>
 </ul></li>
 </ul>
@@ -546,7 +558,7 @@ median = 1</p></li>
 <strong>0.18</strong>-<strong>2.37</strong>, median =
 <strong>0.86</strong></p></li>
 <li><p>Percent of pipelines detecting effects from Coll et
-al. (2020):</p>
+al. (2021):</p>
 <ul>
 <li>Interoceptive performance (<strong>0.35</strong>):
 <strong>0.7%</strong> (<strong>1</strong> / <strong>134</strong>
@@ -557,12 +569,12 @@ pipelines)</li>
 <li>Patients vs. healthy controls (<strong>0.49</strong>):
 <strong>8.2%</strong> (<strong>11</strong> / <strong>134</strong>
 pipelines)</li>
-<li>Arousal (<strong>0.72</strong>): <strong>32.8%</strong>
+<li>Arousal (<strong>0.72</strong>): <strong>33%</strong>
 (<strong>44</strong> / <strong>134</strong> pipelines)</li>
 </ul></li>
 <li><p>Underpowered and potentially unreliable findings:
-<strong>67.2%</strong> (<strong>90</strong> / <strong>134</strong>) to
-<strong>99.3%</strong> (<strong>133</strong> / <strong>134</strong>) of
+<strong>67%</strong> (<strong>90</strong> / <strong>134</strong>) to
+<strong>99%</strong> (<strong>133</strong> / <strong>134</strong>) of
 pipelines.</p></li>
 </ul>
 </div>
@@ -571,7 +583,7 @@ pipelines.</p></li>
 <p>Preregistrations &amp; publication bias:</p>
 <ul>
 <li><p>Percentage of pipelines with preregistration:
-<strong>3.7878788%</strong> (<strong>5</strong> / <strong>132</strong>
+<strong>3.8%</strong> (<strong>5</strong> / <strong>132</strong>
 <strong>studies</strong>)</p></li>
 <li><p>Number and percentage of studies without significant results:
 <strong>6.8%</strong> (<strong>9</strong> / <strong>132</strong>
@@ -585,11 +597,11 @@ studies)</p></li>
 <h3>Categories</h3>
 <p>Control categories:</p>
 <ul>
-<li>ECG and Heartbeat-Related Controls: <strong>65.2%</strong>
+<li>ECG and Heartbeat-Related Controls: <strong>65%</strong>
 (<strong>86</strong> / <strong>132</strong> studies)</li>
-<li>Heart Rate Variability (HRV) Controls: <strong>25.8%</strong>
+<li>Heart Rate Variability (HRV) Controls: <strong>26%</strong>
 (<strong>34</strong> / <strong>132</strong> studies)</li>
-<li>Demographic and Psychosocial Controls: <strong>18.2%</strong>
+<li>Demographic and Psychosocial Controls: <strong>18%</strong>
 (<strong>24</strong> / <strong>132</strong> studies)</li>
 <li>Physiological and Environmental Controls: <strong>7.6%</strong>
 (<strong>10</strong> / <strong>132</strong> studies)</li>
@@ -607,11 +619,11 @@ studies)</p></li>
 <h3>Variables</h3>
 <p>ECG- and heartbeat-related control variables:</p>
 <ul>
-<li>ECG: <strong>44.7%</strong> (<strong>59</strong> /
+<li>ECG: <strong>45%</strong> (<strong>59</strong> /
 <strong>132</strong> studies)</li>
-<li>RR Interval: <strong>34.1%</strong> (<strong>45</strong> /
+<li>RR Interval: <strong>34%</strong> (<strong>45</strong> /
 <strong>132</strong> studies)</li>
-<li>Surrogate Heartbeats: <strong>18.9%</strong> (<strong>25</strong> /
+<li>Surrogate Heartbeats: <strong>19%</strong> (<strong>25</strong> /
 <strong>132</strong> studies)</li>
 <li>HEP-ECG Correlation: <strong>0.8%</strong> (<strong>1</strong> /
 <strong>132</strong> studies)</li>
@@ -625,6 +637,28 @@ studies)</p></li>
 <strong>132</strong> studies)</li>
 </ul>
 </div>
+</div>
+</div>
+<div id="supplementary" class="section level1">
+<h1>Supplementary</h1>
+<div
+id="a.-estimation-of-minimal-detectable-hedges-g-across-reviewed-pipelines"
+class="section level2">
+<h2>A. Estimation of minimal detectable Hedges’ g across reviewed
+pipelines</h2>
+<ul>
+<li>Interoceptive performance (<strong>0.35</strong>):
+<strong>0.9%</strong> (<strong>2</strong> / <strong>222</strong>
+pipelines)</li>
+<li>Attention to the heart (<strong>0.37</strong>):
+<strong>2.3%</strong> (<strong>5</strong> / <strong>222</strong>
+pipelines)</li>
+<li>Patients vs. healthy controls (<strong>0.49</strong>):
+<strong>9.9%</strong> (<strong>22</strong> / <strong>222</strong>
+pipelines)</li>
+<li>Arousal (<strong>0.72</strong>): <strong>41%</strong>
+(<strong>91</strong> / <strong>222</strong> pipelines)</li>
+</ul>
 </div>
 </div>
 

@@ -36,6 +36,7 @@ source_all(config_path)
 # Preprocessing and analysis
 source(file.path(func_path, 'utils.R'))
 source(file.path(func_path, 'preprocess.R'))
+source(file.path(func_path, 'prisma.R'))
 source(file.path(func_path, 'validate.R'))
 analysis_path <- file.path(func_path, "analysis")
 source_all(analysis_path)

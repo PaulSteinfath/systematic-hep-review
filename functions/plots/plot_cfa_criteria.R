@@ -20,13 +20,6 @@ plot_cfa_criteria <- function(df) {
       y = paste("Proportion of", level),
       title = "Criteria for rejecting CFA ICs",
       subtitle = paste("n =", total_count, level)
-    ) +
-    theme(
-      title = element_text(size = 9),
-      axis.text.x = element_text(size = 8),
-      axis.text.y = element_text(size = 8),
-      axis.title.x = element_text(size = 9, margin = margin(t = 4)),
-      axis.title.y = element_text(size = 9)
     )
 
   return(main_plot)

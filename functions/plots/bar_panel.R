@@ -50,7 +50,7 @@ bar_panel <- function(df,
   
   # Set theme
   p <- p + theme_classic(base_family = "sans") +
-    plot_theme_default
+    plot_theme_default + 
     theme(
       axis.text.x = element_text(angle = if (tilt_labels) 45 else 0,
                                  hjust = if (tilt_labels) 1 else 0.5),

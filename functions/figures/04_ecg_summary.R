@@ -25,10 +25,12 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
   
   fig <- plot_grid(
     fig_AB,
+    NULL, 
     p_ecg_locations,
     nrow = 1,
-    rel_widths = c(1, 1.5),
-    labels = c("", "C")
+    rel_widths = c(1, 0.1, 1.4),
+    labels = c("", "C", ""),
+    label_x = c(0, -0.1, 0)
   )
   
   if (!is.null(save_path)) {

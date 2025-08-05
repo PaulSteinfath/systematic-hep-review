@@ -40,19 +40,18 @@ figure_cfa_removal <- function(df, save_path = NULL, ext = "svg") {
   
   # Combine subplots into rows
   top_row <- plot_grid(
-    ica_usage_plot,
     cfa_approach_plot,
     cfa_criteria_plot,
-    nrow = 1, labels = c("A", "B", "C"),
+    nrow = 1, labels = c("A", "B"),
     align = "hv",
-    rel_widths = c(0.7, 1.1, 1.9)
+    rel_widths = c(0.35, 0.65)
   )
   
   middle_row <- plot_grid(
     cardiac_ics_plot,
     other_strategies_plot,
-    nrow = 1, labels = c("D", "E"),
-    align = "hv", rel_widths = c(0.3, 0.7)
+    nrow = 1, labels = c("C", "D"),
+    align = "hv", rel_widths = c(0.35, 0.65)
   )
   
   bottom_row <- plot_grid(
@@ -61,7 +60,7 @@ figure_cfa_removal <- function(df, save_path = NULL, ext = "svg") {
     NULL,
     minimal_artifact_plot,
     nrow = 1, 
-    labels = c("F", "", "G", ""),
+    labels = c("E", "", "F", ""),
     rel_widths = c(0.05, 1, 0.05, 1),
     align = "h",
     axis = "lr"
@@ -73,27 +72,22 @@ figure_cfa_removal <- function(df, save_path = NULL, ext = "svg") {
                         ncol = 1,
                         align = "hv",
                         axis = "lr",
-                        rel_heights = c(1, 1, 1.25))
+                        rel_heights = c(1, 1, 1.4))
   
   # Add algorithm as an inset plot
   fig <- ggdraw() +
     draw_plot(combined) +
     draw_plot(cfa_algorithm_plot, 
-              x = 0.775, y = 0.85, 
-              width = 0.225, height = 0.15)
+              x = 0.725, y = 0.85, 
+              width = 0.275, height = 0.15)
   
   
   if (!is.null(save_path)) {
-    ggsave(
-      filename = file.path(save_path, paste0("fig5_cfa_removal.", ext)),
-      plot = fig,
-      width = 10,
-      height = 9,
-      units = "in",
-      dpi = 300,
-      device = ext,
-      bg = "white"
-    )
+    save_figure(fig,
+                aspect_ratio = 0.95,  # height / width
+                save_path,
+                filename = "fig5_cfa_removal",
+                ext = ext)
   }
   
   return(fig)

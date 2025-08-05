@@ -5,15 +5,15 @@
 <!-- Title: TD Pages: 1 -->
 
 <svg
-   width="538.59003pt"
-   height="495.22665pt"
-   viewBox="0 0 538.36084 495.14342"
+   width="190.00259mm"
+   height="155mm"
+   viewBox="0 0 538.36084 439.29623"
    version="1.1"
    id="svg344"
    sodipodi:docname="Fig1_PRISMA_study_overview.svg"
-   inkscape:export-filename="postprocess/Fig1_PRISMA_study_overview.png"
-   inkscape:export-xdpi="96"
-   inkscape:export-ydpi="96"
+   inkscape:export-filename="Fig1_PRISMA_study_overview.png"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300"
    inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -823,6 +823,87 @@
            transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)" />
       </g>
     </clipPath>
+    <clipPath
+       id="cpMC4wMHwxNzkuNTN8MC4wMHwxNjEuNTc=">
+      <rect
+         x="0"
+         y="0"
+         width="179.53"
+         height="161.57001"
+         id="rect2190" />
+    </clipPath>
+    <clipPath
+       id="cpMjguNDF8MTc0LjA1fDMzLjI2fDEzNC4zOA==">
+      <rect
+         x="28.41"
+         y="33.259998"
+         width="145.64"
+         height="101.12"
+         id="rect2201" />
+    </clipPath>
+    <clipPath
+       id="cpMC4wMHw1MzguNTh8MC4wMHwxNjEuNTc=">
+      <rect
+         x="0"
+         y="0"
+         width="538.58002"
+         height="161.57001"
+         id="rect2183" />
+    </clipPath>
+    <clipPath
+       id="cpMTc5LjUzfDM1OS4wNnwwLjAwfDE2MS41Nw==">
+      <rect
+         x="179.53"
+         y="0"
+         width="179.53"
+         height="161.57001"
+         id="rect2298" />
+    </clipPath>
+    <clipPath
+       id="cpMjE4LjA1fDM1My41OHwzMy4yNnwxMzQuMzg=">
+      <rect
+         x="218.05"
+         y="33.259998"
+         width="135.52"
+         height="101.12"
+         id="rect2309" />
+    </clipPath>
+    <clipPath
+       id="clipPath6372">
+      <rect
+         x="0"
+         y="0"
+         width="538.58002"
+         height="161.57001"
+         id="rect6370" />
+    </clipPath>
+    <clipPath
+       id="cpMzU5LjA2fDUzOC41OHwwLjAwfDE2MS41Nw==">
+      <rect
+         x="359.06"
+         y="0"
+         width="179.53"
+         height="161.57001"
+         id="rect2364" />
+    </clipPath>
+    <clipPath
+       id="cpMzkzLjY5fDUzMy4xMHwzMy4yNnwxMzQuMzg=">
+      <rect
+         x="393.69"
+         y="33.259998"
+         width="139.41"
+         height="101.12"
+         id="rect2375" />
+    </clipPath>
+    <clipPath
+       id="clipPath6380">
+      <rect
+         x="0"
+         y="0"
+         width="538.58002"
+         height="161.57001"
+         id="rect6378" />
+    </clipPath>
   </defs>
   <sodipodi:namedview
      id="namedview346"
@@ -835,21 +916,15 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="pt"
      showgrid="false"
-     inkscape:zoom="0.7010806"
-     inkscape:cx="150.48198"
-     inkscape:cy="370.14289"
-     inkscape:window-width="1280"
-     inkscape:window-height="1000"
-     inkscape:window-x="1920"
-     inkscape:window-y="0"
+     inkscape:zoom="0.99147769"
+     inkscape:cx="185.58158"
+     inkscape:cy="309.63884"
+     inkscape:window-width="1680"
+     inkscape:window-height="995"
+     inkscape:window-x="0"
+     inkscape:window-y="31"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg344" />
-  <polygon
-     fill="#ffffff"
-     stroke="transparent"
-     points="1170.5,-590.9 1170.5,4 -4,4 -4,-590.9 "
-     id="polygon4"
-     transform="matrix(0.45848631,0,0,0.8333397,1.6826849,492.42043)" />
   <g
      clip-path="url(#cpMC4wMHw1MzguNTh8MC4wMHwyMTYuMDA=)"
      id="g2481"
@@ -941,7 +1016,10 @@
      stroke="#000000"
      d="m 140.52197,43.968837 c 3.84257,0 7.72233,0 11.58618,0"
      id="path11"
-     style="stroke-width:0.458486" />
+     style="stroke-width:0.458486"
+     inkscape:export-filename="fig1_PRISMA_study_overview.png"
+     inkscape:export-xdpi="300"
+     inkscape:export-ydpi="300" />
   <polygon
      fill="#000000"
      stroke="#000000"
@@ -1170,7 +1248,7 @@
   <polygon
      fill="none"
      stroke="#000000"
-     points="302.5,-474.3981 302.5,-515.6019 50.5,-515.6019 50.5,-474.3981 "
+     points="50.5,-515.6019 50.5,-474.3981 302.5,-474.3981 302.5,-515.6019 "
      id="polygon152"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1194,7 +1272,7 @@
   <polygon
      fill="none"
      stroke="#000000"
-     points="590.5,-465.5986 590.5,-524.4014 338.5,-524.4014 338.5,-465.5986 "
+     points="338.5,-524.4014 338.5,-465.5986 590.5,-465.5986 590.5,-524.4014 "
      id="polygon164"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1227,7 +1305,7 @@
   <polygon
      fill="none"
      stroke="#000000"
-     points="302.5,-357.3981 302.5,-398.6019 50.5,-398.6019 50.5,-357.3981 "
+     points="50.5,-398.6019 50.5,-357.3981 302.5,-357.3981 302.5,-398.6019 "
      id="polygon178"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1251,7 +1329,7 @@
   <polygon
      fill="none"
      stroke="#000000"
-     points="590.5,-357.3981 590.5,-398.6019 338.5,-398.6019 338.5,-357.3981 "
+     points="338.5,-398.6019 338.5,-357.3981 590.5,-357.3981 590.5,-398.6019 "
      id="polygon190"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1275,7 +1353,7 @@
   <polygon
      fill="none"
      stroke="#000000"
-     points="302.5,-285.3981 302.5,-326.6019 50.5,-326.6019 50.5,-285.3981 "
+     points="50.5,-326.6019 50.5,-285.3981 302.5,-285.3981 302.5,-326.6019 "
      id="polygon202"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1299,7 +1377,7 @@
   <polygon
      fill="none"
      stroke="#000000"
-     points="590.5,-285.3981 590.5,-326.6019 338.5,-326.6019 338.5,-285.3981 "
+     points="338.5,-326.6019 338.5,-285.3981 590.5,-285.3981 590.5,-326.6019 "
      id="polygon214"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1323,7 +1401,7 @@
   <polygon
      fill="none"
      stroke="#000000"
-     points="302.5,-177.3981 302.5,-218.6019 50.5,-218.6019 50.5,-177.3981 "
+     points="50.5,-218.6019 50.5,-177.3981 302.5,-177.3981 302.5,-218.6019 "
      id="polygon226"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1347,7 +1425,7 @@
   <polygon
      fill="#ffffff"
      stroke="#000000"
-     points="590.5,-143.6998 590.5,-252.3002 338.5,-252.3002 338.5,-143.6998 "
+     points="338.5,-252.3002 338.5,-143.6998 590.5,-143.6998 590.5,-252.3002 "
      id="polygon238"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1407,7 +1485,7 @@
   <polygon
      fill="none"
      stroke="#000000"
-     points="302.5,-18 302.5,-72 50.5,-72 50.5,-18 "
+     points="50.5,-72 50.5,-18 302.5,-18 302.5,-72 "
      id="polygon258"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1446,7 +1524,7 @@
   <polygon
      fill="#dcdcdc"
      stroke="#dcdcdc"
-     points="878.5,-474.3981 878.5,-515.6019 626.5,-515.6019 626.5,-474.3981 "
+     points="626.5,-515.6019 626.5,-474.3981 878.5,-474.3981 878.5,-515.6019 "
      id="polygon280"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1470,7 +1548,7 @@
   <polygon
      fill="#dcdcdc"
      stroke="#dcdcdc"
-     points="878.5,-285.3981 878.5,-326.6019 626.5,-326.6019 626.5,-285.3981 "
+     points="626.5,-326.6019 626.5,-285.3981 878.5,-285.3981 878.5,-326.6019 "
      id="polygon292"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1494,7 +1572,7 @@
   <polygon
      fill="#dcdcdc"
      stroke="#dcdcdc"
-     points="1166.5,-285.3981 1166.5,-326.6019 914.5,-326.6019 914.5,-285.3981 "
+     points="914.5,-326.6019 914.5,-285.3981 1166.5,-285.3981 1166.5,-326.6019 "
      id="polygon304"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1518,7 +1596,7 @@
   <polygon
      fill="#dcdcdc"
      stroke="#dcdcdc"
-     points="878.5,-177.3981 878.5,-218.6019 626.5,-218.6019 626.5,-177.3981 "
+     points="626.5,-218.6019 626.5,-177.3981 878.5,-177.3981 878.5,-218.6019 "
      id="polygon316"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1542,7 +1620,7 @@
   <polygon
      fill="#dcdcdc"
      stroke="#dcdcdc"
-     points="1166.5,-177.3981 1166.5,-218.6019 914.5,-218.6019 914.5,-177.3981 "
+     points="914.5,-218.6019 914.5,-177.3981 1166.5,-177.3981 1166.5,-218.6019 "
      id="polygon328"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1566,7 +1644,7 @@
   <polygon
      fill="none"
      stroke="#ffffff"
-     points="753,-44.5 753,-45.5 752,-45.5 752,-44.5 "
+     points="752,-45.5 752,-44.5 753,-44.5 753,-45.5 "
      id="polygon340"
      transform="matrix(0.45848631,0,0,0.45848631,1.6826849,270.91956)" />
   <text
@@ -1576,694 +1654,663 @@
      textLength="9.4099998"
      lengthAdjust="spacingAndGlyphs"
      id="text2587-3"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,-1.54535)">A</text>
-  <rect
-     x="-0.15126027"
-     y="279.17975"
-     width="538.4895"
-     height="215.9637"
-     id="rect1430"
-     style="stroke-width:0.999832"
-     clip-path="url(#clipPath4247)" />
-  <rect
-     x="0"
-     y="279.17975"
-     width="179.49983"
-     height="215.9637"
-     style="fill:#ffffff;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
-     id="rect2488"
-     clip-path="url(#clipPath1624)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="28.405226"
-     y="311.49432"
-     width="145.61552"
-     height="155.21391"
-     style="fill:#ffffff;stroke:none;stroke-width:1.06982;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
-     id="rect2499"
-     clip-path="url(#clipPath1424)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="35.024113"
-     y="462.159"
-     width="6.6188874"
-     height="4.5492353"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2501"
-     clip-path="url(#clipPath1418)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="48.261887"
-     y="457.60977"
-     width="6.6188874"
-     height="9.0984707"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2505"
-     clip-path="url(#clipPath1412)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="54.880775"
-     y="462.159"
-     width="6.6188874"
-     height="4.5492353"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2507"
-     clip-path="url(#clipPath1406)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="68.118546"
-     y="457.60977"
-     width="6.6188874"
-     height="9.0984707"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2511"
-     clip-path="url(#clipPath1400)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="74.737434"
-     y="462.159"
-     width="6.6188874"
-     height="4.5492353"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2513"
-     clip-path="url(#clipPath1394)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="81.356323"
-     y="462.159"
-     width="6.6188874"
-     height="4.5492353"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2515"
-     clip-path="url(#clipPath1388)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="94.594101"
-     y="448.50128"
-     width="6.6188874"
-     height="18.206938"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2519"
-     clip-path="url(#clipPath1382)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="101.21299"
-     y="457.60977"
-     width="6.6188874"
-     height="9.0984707"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2521"
-     clip-path="url(#clipPath1376)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="114.45076"
-     y="457.60977"
-     width="6.6188874"
-     height="9.0984707"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2525"
-     clip-path="url(#clipPath1370)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="121.06964"
-     y="453.05051"
-     width="6.6188874"
-     height="13.657704"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2527"
-     clip-path="url(#clipPath1364)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="127.68854"
-     y="421.19586"
-     width="6.6188874"
-     height="45.512348"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2529"
-     clip-path="url(#clipPath1358)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="134.30742"
-     y="407.53818"
-     width="6.6188874"
-     height="59.170055"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2531"
-     clip-path="url(#clipPath1352)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="140.9263"
-     y="393.88046"
-     width="6.6188874"
-     height="72.827751"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2533"
-     clip-path="url(#clipPath1346)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="147.54521"
-     y="348.3681"
-     width="6.6188874"
-     height="118.34011"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2535"
-     clip-path="url(#clipPath1340)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="154.16409"
-     y="325.61194"
-     width="6.6188874"
-     height="141.09628"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2537"
-     clip-path="url(#clipPath1334)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="160.78297"
-     y="389.33124"
-     width="6.6188874"
-     height="77.376991"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2539"
-     clip-path="url(#clipPath1328)"
-     transform="translate(-0.15126027)" />
-  <polyline
-     points="28.41,187.56 28.41,32.32 "
-     style="fill:none;stroke:#000000;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2543"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1712)" />
-  <text
-     x="23.48"
-     y="190.06"
-     text-anchor="end"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="4"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2545"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">0</text>
-  <text
-     x="23.48"
-     y="144.53999"
-     text-anchor="end"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="8.0100002"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2547"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">10</text>
-  <text
-     x="23.48"
-     y="99.019997"
-     text-anchor="end"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="8.0100002"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2549"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">20</text>
-  <text
-     x="23.48"
-     y="53.490002"
-     text-anchor="end"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="8.0100002"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2551"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">30</text>
-  <polyline
-     points="25.67,187.56 28.41,187.56 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2553"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1706)" />
-  <polyline
-     points="25.67,142.04 28.41,142.04 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2555"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1700)" />
-  <polyline
-     points="25.67,96.51 28.41,96.51 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2557"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1694)" />
-  <polyline
-     points="25.67,50.99 28.41,50.99 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2559"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1688)" />
-  <polyline
-     points="28.41,187.56 174.05,187.56 "
-     style="fill:none;stroke:#000000;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2561"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1682)" />
-  <polyline
-     points="51.58,190.30 51.58,187.56 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2563"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1676)" />
-  <polyline
-     points="84.68,190.30 84.68,187.56 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2565"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1670)" />
-  <polyline
-     points="117.78,190.30 117.78,187.56 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2567"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1664)" />
-  <polyline
-     points="150.88,190.30 150.88,187.56 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2569"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1658)" />
-  <text
-     x="51.580002"
-     y="197.5"
-     text-anchor="middle"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="16.01"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2571"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">1990</text>
-  <text
-     x="84.68"
-     y="197.5"
-     text-anchor="middle"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="16.01"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2573"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">2000</text>
-  <text
-     x="117.78"
-     y="197.5"
-     text-anchor="middle"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="16.01"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2575"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">2010</text>
-  <text
-     x="150.88"
-     y="197.5"
-     text-anchor="middle"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="16.01"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2577"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">2020</text>
-  <text
-     x="101.23"
-     y="208.75999"
-     text-anchor="middle"
-     style="font-size:8px;font-family:Arial;white-space:pre"
-     textLength="16.83"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2579"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">Year</text>
-  <text
-     transform="matrix(0,-0.99983193,0.99983193,0,11.046858,389.10127)"
-     text-anchor="middle"
-     style="font-size:8px;font-family:Arial;white-space:pre"
-     textLength="70.550003"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2581">Number of Studies</text>
-  <text
-     x="28.41"
-     y="25.09"
-     style="font-size:8px;font-family:Arial;white-space:pre"
-     textLength="56.5"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2583"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">n = 132 studies</text>
-  <text
-     x="28.41"
-     y="11.91"
-     style="font-size:9px;font-family:Arial;white-space:pre"
-     textLength="67.919998"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2585"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">Publication year</text>
-  <text
-     x="4.71"
-     y="15"
-     style="font-weight:bold;font-size:14px;font-family:Arial;white-space:pre"
-     textLength="9.4099998"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2587"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">B</text>
-  <rect
-     x="179.49983"
-     y="279.17975"
-     width="179.49983"
-     height="215.9637"
-     style="fill:#ffffff;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
-     id="rect2596"
-     clip-path="url(#clipPath1613)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="218.01335"
-     y="311.49432"
-     width="135.49722"
-     height="155.21391"
-     style="fill:#ffffff;stroke:none;stroke-width:1.06982;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
-     id="rect2607"
-     clip-path="url(#clipPath1602)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="227.25179"
-     y="325.61194"
-     width="55.430679"
-     height="141.09628"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2609"
-     clip-path="url(#clipPath1596)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="288.84146"
-     y="456.38995"
-     width="55.430679"
-     height="10.328264"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2611"
-     clip-path="url(#clipPath1590)"
-     transform="translate(-0.15126027)" />
-  <polyline
-     points="218.05,187.56 218.05,32.32 "
-     style="fill:none;stroke:#000000;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2615"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1566)" />
-  <text
-     x="213.12"
-     y="190.06"
-     text-anchor="end"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="9.8199997"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2617"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">0%</text>
-  <text
-     x="213.12"
-     y="152.2"
-     text-anchor="end"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="13.82"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2619"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">25%</text>
-  <text
-     x="213.12"
-     y="114.34"
-     text-anchor="end"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="13.82"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2621"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">50%</text>
-  <text
-     x="213.12"
-     y="76.480003"
-     text-anchor="end"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="13.82"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2623"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">75%</text>
-  <text
-     x="213.12"
-     y="38.610001"
-     text-anchor="end"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="17.83"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2625"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">100%</text>
-  <polyline
-     points="215.31,187.56 218.05,187.56 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2627"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1560)" />
-  <polyline
-     points="215.31,149.70 218.05,149.70 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2629"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1554)" />
-  <polyline
-     points="215.31,111.84 218.05,111.84 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2631"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1548)" />
-  <polyline
-     points="215.31,73.97 218.05,73.97 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2633"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1542)" />
-  <polyline
-     points="215.31,36.11 218.05,36.11 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2635"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1536)" />
-  <polyline
-     points="218.05,187.56 353.58,187.56 "
-     style="fill:none;stroke:#000000;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2637"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1530)" />
-  <polyline
-     points="255.01,190.30 255.01,187.56 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2639"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1524)" />
-  <polyline
-     points="316.62,190.30 316.62,187.56 "
-     style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2641"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1518)" />
-  <text
-     x="255.00999"
-     y="197.5"
-     text-anchor="middle"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="12.89"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2643"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">EEG</text>
-  <text
-     x="316.62"
-     y="197.5"
-     text-anchor="middle"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="15.34"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2645"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">MEG</text>
-  <text
-     transform="matrix(0,-0.99983193,0.99983193,0,190.53669,389.10127)"
-     text-anchor="middle"
-     style="font-size:8px;font-family:Arial;white-space:pre"
-     textLength="80.089996"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2647">Proportion of Studies</text>
-  <text
-     x="218.05"
-     y="25.09"
-     style="font-size:8px;font-family:Arial;white-space:pre"
-     textLength="56.5"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2649"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">n = 132 studies</text>
-  <text
-     x="218.05"
-     y="11.91"
-     style="font-size:9px;font-family:Arial;white-space:pre"
-     textLength="74.760002"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2651"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">Imaging modality</text>
-  <text
-     x="183.99001"
-     y="15"
-     style="font-weight:bold;font-size:14px;font-family:Arial;white-space:pre"
-     textLength="8.9200001"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2653"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">C</text>
-  <rect
-     x="358.99966"
-     y="279.17975"
-     width="179.49983"
-     height="215.9637"
-     style="fill:#ffffff;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
-     id="rect2662"
-     clip-path="url(#clipPath1577)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="393.62384"
-     y="311.49432"
-     width="139.38657"
-     height="155.21391"
-     style="fill:#ffffff;stroke:none;stroke-width:1.06982;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
-     id="rect2673"
-     clip-path="url(#clipPath1297)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="400.15274"
-     y="325.61194"
-     width="39.203407"
-     height="141.09628"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2675"
-     clip-path="url(#clipPath1291)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="443.71542"
-     y="418.1564"
-     width="39.203407"
-     height="48.551842"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2677"
-     clip-path="url(#clipPath1285)"
-     transform="translate(-0.15126027)" />
-  <rect
-     x="487.27808"
-     y="456.09003"
-     width="39.203407"
-     height="10.618215"
-     style="fill:#696969;stroke:#ffffff;stroke-width:1.06982;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
-     id="rect2679"
-     clip-path="url(#clipPath1279)"
-     transform="translate(-0.15126027)" />
-  <text
-     x="388.76001"
-     y="190.06"
-     text-anchor="end"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="9.8199997"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2685"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">0%</text>
-  <text
-     x="388.76001"
-     y="150"
-     text-anchor="end"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="13.82"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2687"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">20%</text>
-  <text
-     x="388.76001"
-     y="109.94"
-     text-anchor="end"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="13.82"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2689"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">40%</text>
-  <text
-     x="388.76001"
-     y="69.879997"
-     text-anchor="end"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="13.82"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2691"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">60%</text>
-  <polyline
-     points="393.69,187.56 533.10,187.56 "
-     style="fill:none;stroke:#000000;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
-     id="polyline2701"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)"
-     clip-path="url(#clipPath1465)" />
-  <text
-     x="419.82999"
-     y="197.5"
-     text-anchor="middle"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="30.67"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2709"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">Task only</text>
-  <text
-     x="463.39999"
-     y="197.5"
-     text-anchor="middle"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="43.16"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2711"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">Resting-state</text>
-  <text
-     x="463.39999"
-     y="205.06"
-     text-anchor="middle"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="13.94"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2713"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">only</text>
-  <text
-     x="506.95999"
-     y="197.5"
-     text-anchor="middle"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="21.860001"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2715"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">Task &amp;</text>
-  <text
-     x="506.95999"
-     y="205.06"
-     text-anchor="middle"
-     style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
-     textLength="41.700001"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2717"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">resting-state</text>
-  <text
-     transform="matrix(0,-0.99983193,0.99983193,0,370.03651,389.10127)"
-     text-anchor="middle"
-     style="font-size:8px;font-family:Arial;white-space:pre"
-     textLength="80.089996"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2719">Proportion of Studies</text>
-  <text
-     x="393.69"
-     y="25.09"
-     style="font-size:8px;font-family:Arial;white-space:pre"
-     textLength="56.5"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2721"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">n = 132 studies</text>
-  <text
-     x="393.69"
-     y="11.91"
-     style="font-size:9px;font-family:Arial;white-space:pre"
-     textLength="87.75"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2723"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">Experimental setting</text>
-  <text
-     x="364.23999"
-     y="15"
-     style="font-weight:bold;font-size:14px;font-family:Arial;white-space:pre"
-     textLength="10.36"
-     lengthAdjust="spacingAndGlyphs"
-     id="text2725"
-     transform="matrix(0.99983193,0,0,0.99983193,-0.15126027,279.17975)">D</text>
+     transform="matrix(0.99983193,0,0,0.99983193,1.5936055,-1.54535)">A</text>
+  <g
+     clip-path="url(#cpMC4wMHwxNzkuNTN8MC4wMHwxNjEuNTc=)"
+     id="g2197"
+     transform="matrix(0.99983193,0,0,0.99983193,1.4123074,279.44591)">
+    <rect
+       x="0"
+       y="-2.8000001e-14"
+       width="179.53"
+       height="161.57001"
+       style="fill:#ffffff;stroke:#ffffff;stroke-width:1.07;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
+       id="rect2195" />
+  </g>
+  <g
+     clip-path="url(#cpMjguNDF8MTc0LjA1fDMzLjI2fDEzNC4zOA==)"
+     id="g2248"
+     transform="matrix(0.99983193,0,0,0.99983193,1.4123074,279.44591)">
+    <rect
+       x="28.41"
+       y="33.259998"
+       width="145.64"
+       height="101.12"
+       style="fill:#ffffff;stroke:none;stroke-width:1.07;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
+       id="rect2206" />
+    <rect
+       x="35.029999"
+       y="131.42"
+       width="6.6199999"
+       height="2.97"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2208" />
+    <rect
+       x="41.650002"
+       y="134.38"
+       width="6.6199999"
+       height="0"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2210" />
+    <rect
+       x="48.27"
+       y="128.45"
+       width="6.6199999"
+       height="5.9299998"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2212" />
+    <rect
+       x="54.889999"
+       y="131.42"
+       width="6.6199999"
+       height="2.97"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2214" />
+    <rect
+       x="61.509998"
+       y="134.38"
+       width="6.6199999"
+       height="0"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2216" />
+    <rect
+       x="68.129997"
+       y="128.45"
+       width="6.6199999"
+       height="5.9299998"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2218" />
+    <rect
+       x="74.75"
+       y="131.42"
+       width="6.6199999"
+       height="2.97"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2220" />
+    <rect
+       x="81.370003"
+       y="131.42"
+       width="6.6199999"
+       height="2.97"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2222" />
+    <rect
+       x="87.989998"
+       y="134.38"
+       width="6.6199999"
+       height="0"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2224" />
+    <rect
+       x="94.610001"
+       y="122.52"
+       width="6.6199999"
+       height="11.86"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2226" />
+    <rect
+       x="101.23"
+       y="128.45"
+       width="6.6199999"
+       height="5.9299998"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2228" />
+    <rect
+       x="107.85"
+       y="134.38"
+       width="6.6199999"
+       height="0"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2230" />
+    <rect
+       x="114.47"
+       y="128.45"
+       width="6.6199999"
+       height="5.9299998"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2232" />
+    <rect
+       x="121.09"
+       y="125.48"
+       width="6.6199999"
+       height="8.8999996"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2234" />
+    <rect
+       x="127.71"
+       y="104.73"
+       width="6.6199999"
+       height="29.66"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2236" />
+    <rect
+       x="134.33"
+       y="95.830002"
+       width="6.6199999"
+       height="38.549999"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2238" />
+    <rect
+       x="140.95"
+       y="86.93"
+       width="6.6199999"
+       height="47.450001"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2240" />
+    <rect
+       x="147.57001"
+       y="57.279999"
+       width="6.6199999"
+       height="77.099998"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2242" />
+    <rect
+       x="154.19"
+       y="42.450001"
+       width="6.6199999"
+       height="91.93"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2244" />
+    <rect
+       x="160.81"
+       y="83.970001"
+       width="6.6199999"
+       height="50.41"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2246" />
+  </g>
+  <g
+     clip-path="url(#cpMC4wMHw1MzguNTh8MC4wMHwxNjEuNTc=)"
+     id="g2296"
+     transform="matrix(0.99983193,0,0,0.99983193,1.4123074,279.44591)">
+    <polyline
+       points="28.41,134.38 28.41,33.26 "
+       style="fill:none;stroke:#000000;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2250" />
+    <text
+       x="23.48"
+       y="136.88"
+       text-anchor="end"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="4"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2252">0</text>
+    <text
+       x="23.48"
+       y="107.23"
+       text-anchor="end"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="8.0100002"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2254">10</text>
+    <text
+       x="23.48"
+       y="77.57"
+       text-anchor="end"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="8.0100002"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2256">20</text>
+    <text
+       x="23.48"
+       y="47.919998"
+       text-anchor="end"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="8.0100002"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2258">30</text>
+    <polyline
+       points="25.67,134.38 28.41,134.38 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2260" />
+    <polyline
+       points="25.67,104.73 28.41,104.73 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2262" />
+    <polyline
+       points="25.67,75.07 28.41,75.07 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2264" />
+    <polyline
+       points="25.67,45.42 28.41,45.42 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2266" />
+    <polyline
+       points="28.41,134.38 174.05,134.38 "
+       style="fill:none;stroke:#000000;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2268" />
+    <polyline
+       points="51.58,137.12 51.58,134.38 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2270" />
+    <polyline
+       points="84.68,137.12 84.68,134.38 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2272" />
+    <polyline
+       points="117.78,137.12 117.78,134.38 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2274" />
+    <polyline
+       points="150.88,137.12 150.88,134.38 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2276" />
+    <text
+       x="51.580002"
+       y="144.32001"
+       text-anchor="middle"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="16.01"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2278">1990</text>
+    <text
+       x="84.68"
+       y="144.32001"
+       text-anchor="middle"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="16.01"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2280">2000</text>
+    <text
+       x="117.78"
+       y="144.32001"
+       text-anchor="middle"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="16.01"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2282">2010</text>
+    <text
+       x="150.88"
+       y="144.32001"
+       text-anchor="middle"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="16.01"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2284">2020</text>
+    <text
+       x="101.23"
+       y="154.34"
+       text-anchor="middle"
+       style="font-size:8px;font-family:Arial;white-space:pre"
+       textLength="16.83"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2286">Year</text>
+    <text
+       transform="rotate(-90,47.51,36.31)"
+       text-anchor="middle"
+       style="font-size:8px;font-family:Arial;white-space:pre"
+       textLength="69.980003"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2288">Number of studies</text>
+    <text
+       x="28.41"
+       y="26.02"
+       style="font-size:8px;font-family:Arial;white-space:pre"
+       textLength="56.5"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2290">n = 132 studies</text>
+    <text
+       x="28.41"
+       y="12.62"
+       style="font-size:10px;font-family:Arial;white-space:pre"
+       textLength="75.43"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2292">Publication year</text>
+    <text
+       x="4.71"
+       y="15"
+       style="font-weight:bold;font-size:14px;font-family:Arial;white-space:pre"
+       textLength="9.4099998"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2294">B</text>
+  </g>
+  <g
+     clip-path="url(#cpMTc5LjUzfDM1OS4wNnwwLjAwfDE2MS41Nw==)"
+     id="g2305"
+     transform="matrix(0.99983193,0,0,0.99983193,1.4123074,279.44591)">
+    <rect
+       x="179.53"
+       y="-2.8000001e-14"
+       width="179.53"
+       height="161.57001"
+       style="fill:#ffffff;stroke:#ffffff;stroke-width:1.07;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
+       id="rect2303" />
+  </g>
+  <g
+     clip-path="url(#cpMjE4LjA1fDM1My41OHwzMy4yNnwxMzQuMzg=)"
+     id="g2320"
+     transform="matrix(0.99983193,0,0,0.99983193,1.4123074,279.44591)">
+    <rect
+       x="218.05"
+       y="33.259998"
+       width="135.52"
+       height="101.12"
+       style="fill:#ffffff;stroke:none;stroke-width:1.07;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
+       id="rect2314" />
+    <rect
+       x="227.28999"
+       y="42.450001"
+       width="55.439999"
+       height="91.93"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2316" />
+    <rect
+       x="288.89001"
+       y="127.65"
+       width="55.439999"
+       height="6.73"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2318" />
+  </g>
+  <g
+     clip-path="url(#cpMC4wMHw1MzguNTh8MC4wMHwxNjEuNTc=)"
+     id="g2362"
+     transform="matrix(0.99983193,0,0,0.99983193,1.4123074,279.44591)">
+    <polyline
+       points="218.05,134.38 218.05,33.26 "
+       style="fill:none;stroke:#000000;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2322" />
+    <text
+       x="213.12"
+       y="136.88"
+       text-anchor="end"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="9.8199997"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2324">0%</text>
+    <text
+       x="213.12"
+       y="112.22"
+       text-anchor="end"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="13.82"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2326">25%</text>
+    <text
+       x="213.12"
+       y="87.550003"
+       text-anchor="end"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="13.82"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2328">50%</text>
+    <text
+       x="213.12"
+       y="62.889999"
+       text-anchor="end"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="13.82"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2330">75%</text>
+    <text
+       x="213.12"
+       y="38.23"
+       text-anchor="end"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="17.83"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2332">100%</text>
+    <polyline
+       points="215.31,134.38 218.05,134.38 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2334" />
+    <polyline
+       points="215.31,109.72 218.05,109.72 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2336" />
+    <polyline
+       points="215.31,85.05 218.05,85.05 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2338" />
+    <polyline
+       points="215.31,60.39 218.05,60.39 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2340" />
+    <polyline
+       points="215.31,35.72 218.05,35.72 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2342" />
+    <polyline
+       points="218.05,134.38 353.58,134.38 "
+       style="fill:none;stroke:#000000;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2344" />
+    <polyline
+       points="255.01,137.12 255.01,134.38 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2346" />
+    <polyline
+       points="316.62,137.12 316.62,134.38 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2348" />
+    <text
+       x="255.00999"
+       y="144.32001"
+       text-anchor="middle"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="12.89"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2350">EEG</text>
+    <text
+       x="316.62"
+       y="144.32001"
+       text-anchor="middle"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="15.34"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2352">MEG</text>
+    <text
+       transform="rotate(-90,137.27,-53.45)"
+       text-anchor="middle"
+       style="font-size:8px;font-family:Arial;white-space:pre"
+       textLength="79.519997"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2354">Proportion of studies</text>
+    <text
+       x="218.05"
+       y="26.02"
+       style="font-size:8px;font-family:Arial;white-space:pre"
+       textLength="56.5"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2356">n = 132 studies</text>
+    <text
+       x="218.05"
+       y="12.62"
+       style="font-size:10px;font-family:Arial;white-space:pre"
+       textLength="83.019997"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2358">Imaging modality</text>
+    <text
+       x="183.99001"
+       y="15"
+       style="font-weight:bold;font-size:14px;font-family:Arial;white-space:pre"
+       textLength="8.9200001"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2360">C</text>
+  </g>
+  <g
+     clip-path="url(#cpMzU5LjA2fDUzOC41OHwwLjAwfDE2MS41Nw==)"
+     id="g2371"
+     transform="matrix(0.99983193,0,0,0.99983193,1.4123074,279.44591)">
+    <rect
+       x="359.06"
+       y="-2.8000001e-14"
+       width="179.53"
+       height="161.57001"
+       style="fill:#ffffff;stroke:#ffffff;stroke-width:1.07;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
+       id="rect2369" />
+  </g>
+  <g
+     clip-path="url(#cpMzkzLjY5fDUzMy4xMHwzMy4yNnwxMzQuMzg=)"
+     id="g2388"
+     transform="matrix(0.99983193,0,0,0.99983193,1.4123074,279.44591)">
+    <rect
+       x="393.69"
+       y="33.259998"
+       width="139.41"
+       height="101.12"
+       style="fill:#ffffff;stroke:none;stroke-width:1.07;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
+       id="rect2380" />
+    <rect
+       x="400.22"
+       y="42.450001"
+       width="39.209999"
+       height="91.93"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2382" />
+    <rect
+       x="443.79001"
+       y="102.75"
+       width="39.209999"
+       height="31.629999"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2384" />
+    <rect
+       x="487.35999"
+       y="127.46"
+       width="39.209999"
+       height="6.9200001"
+       style="fill:#696969;stroke:#ffffff;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10"
+       id="rect2386" />
+  </g>
+  <g
+     clip-path="url(#cpMC4wMHw1MzguNTh8MC4wMHwxNjEuNTc=)"
+     id="g2434"
+     transform="matrix(0.99983193,0,0,0.99983193,1.4123074,279.44591)">
+    <polyline
+       points="393.69,134.38 393.69,33.26 "
+       style="fill:none;stroke:#000000;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2390" />
+    <text
+       x="388.76001"
+       y="136.88"
+       text-anchor="end"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="9.8199997"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2392">0%</text>
+    <text
+       x="388.76001"
+       y="110.79"
+       text-anchor="end"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="13.82"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2394">20%</text>
+    <text
+       x="388.76001"
+       y="84.690002"
+       text-anchor="end"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="13.82"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2396">40%</text>
+    <text
+       x="388.76001"
+       y="58.59"
+       text-anchor="end"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="13.82"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2398">60%</text>
+    <polyline
+       points="390.95,134.38 393.69,134.38 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2400" />
+    <polyline
+       points="390.95,108.28 393.69,108.28 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2402" />
+    <polyline
+       points="390.95,82.19 393.69,82.19 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2404" />
+    <polyline
+       points="390.95,56.09 393.69,56.09 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2406" />
+    <polyline
+       points="393.69,134.38 533.10,134.38 "
+       style="fill:none;stroke:#000000;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2408" />
+    <polyline
+       points="419.83,137.12 419.83,134.38 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2410" />
+    <polyline
+       points="463.40,137.12 463.40,134.38 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2412" />
+    <polyline
+       points="506.96,137.12 506.96,134.38 "
+       style="fill:none;stroke:#333333;stroke-width:1.07;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10"
+       id="polyline2414" />
+    <text
+       x="419.82999"
+       y="144.32001"
+       text-anchor="middle"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="30.67"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2416">Task only</text>
+    <text
+       x="463.39999"
+       y="144.32001"
+       text-anchor="middle"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="43.16"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2418">Resting-state</text>
+    <text
+       x="463.39999"
+       y="151.88"
+       text-anchor="middle"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="13.94"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2420">only</text>
+    <text
+       x="506.95999"
+       y="144.32001"
+       text-anchor="middle"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="21.860001"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2422">Task &amp;</text>
+    <text
+       x="506.95999"
+       y="151.88"
+       text-anchor="middle"
+       style="font-size:7px;font-family:Arial;white-space:pre;fill:#4d4d4d"
+       textLength="41.700001"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2424">resting-state</text>
+    <text
+       transform="rotate(-90,227.035,-143.215)"
+       text-anchor="middle"
+       style="font-size:8px;font-family:Arial;white-space:pre"
+       textLength="79.519997"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2426">Proportion of studies</text>
+    <text
+       x="393.69"
+       y="26.02"
+       style="font-size:8px;font-family:Arial;white-space:pre"
+       textLength="56.5"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2428">n = 132 studies</text>
+    <text
+       x="393.69"
+       y="12.62"
+       style="font-size:10px;font-family:Arial;white-space:pre"
+       textLength="97.449997"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2430">Experimental setting</text>
+    <text
+       x="364.23999"
+       y="15"
+       style="font-weight:bold;font-size:14px;font-family:Arial;white-space:pre"
+       textLength="10.36"
+       lengthAdjust="spacingAndGlyphs"
+       id="text2432">D</text>
+  </g>
 </svg>

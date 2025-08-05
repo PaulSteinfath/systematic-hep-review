@@ -83,21 +83,16 @@ figure_stats <- function(df, save_path = NULL, ext = 'png') {
   # Add 3% space between rows
   spacer <- plot_grid(NULL)
   
-  p <- plot_grid(first_row, spacer, second_row,
-                 ncol = 1, rel_heights = c(1, 0.1, 1.3))
+  fig <- plot_grid(first_row, spacer, second_row,
+                   ncol = 1, rel_heights = c(1, 0.1, 1.3))
   
   if (!is.null(save_path)) {
-    ggsave(
-      filename = file.path(save_path, paste0("fig7_stats.", ext)),
-      plot = p,
-      width = 190,
-      height = 160,
-      units = "mm",
-      dpi = 300,
-      device = ext,
-      bg = "white"
-    )
+    save_figure(fig,
+                aspect_ratio = 0.84,  # height / width
+                save_path,
+                filename = "fig7_stats",
+                ext = ext)
   }
   
-  return(p)
+  return(fig)
 }

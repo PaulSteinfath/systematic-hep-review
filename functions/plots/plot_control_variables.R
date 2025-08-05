@@ -26,9 +26,7 @@ plot_control_variables <- function(df) {
     labs(fill = "Category",
          subtitle = paste0("n = ", total_count, " studies")) +
     theme(
-      legend.position = c(0.65, 0.5),  
-      legend.title = element_text(size = 10),
-      legend.text = element_text(size = 8),
+      legend.position = c(0.4, 0.5),
       panel.grid.major.x = element_line(color = common_colors$grid_lines),
       panel.grid.minor = element_blank()
     )

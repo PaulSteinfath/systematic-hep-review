@@ -130,8 +130,8 @@ plot_ecg_locations <- function(
     guides(color = guide_legend(title = "ECG lead"),
            linewidth = guide_legend(title = "Number of studies")) +
     theme_void() +
-    theme(title = element_text(size = font_setup$title),
-          subtitle = element_text(size = font_setup$subtitle),
+    theme(plot.title = element_text(size = font_setup$title),
+          plot.subtitle = element_text(size = font_setup$subtitle),
           legend.title = element_text(size = font_setup$legend.title),
           legend.text = element_text(size = font_setup$legend.text))
     theme(aspect.ratio = aspect,

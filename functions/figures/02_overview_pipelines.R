@@ -66,29 +66,24 @@ figure_overview_pipelines <- function(df, save_path = NULL, ext = 'svg') {
                   x_lab = "",
                   y_lab = "Proportion of studies",
                   y_ticks = F,
-                  show_legend = T)
+                  show_legend = F)
   
   # Combine plots
-  fig <- plot_grid(p1, NULL, p2, NULL, p3,
-                   ncol = 5,
+  fig <- plot_grid(NULL, p1, NULL, p2, NULL, p3,
+                   nrow = 1,
                    align = "h",
                    axis = "l",
-                   labels = c("A", "", "B", "", "C"),
-                   label_x = c(0.35, NA, -0.13, NA, -0.1), 
-                   label_y = c(1, NA, 1, NA, 1),  
-                   rel_widths = c(1, 0.025, 0.7, 0.025, 1))
+                   labels = c("", "A", "", "B", "", "C"),
+                   label_x = c(NA, 0.35, NA, -0.13, NA, -0.1), 
+                   label_y = c(NA, 1, NA, 1, NA, 1),  
+                   rel_widths = c(0.1, 1.1, 0.025, 0.6, 0.025, 0.6))
   
   if (!is.null(save_path)) {
-    ggsave(
-      filename = file.path(save_path, paste0("fig2_pipelines_overview.", ext)),
-      plot = fig,
-      width = 10,
-      height = 11,
-      units = "in",
-      dpi = 300,
-      device = ext,
-      bg = "white"
-    )
+    save_figure(fig,
+              aspect_ratio = 1.1,  # height / width
+              save_path,
+              filename = "fig2_overview_pipelines",
+              ext = ext)
   }
   
   return(fig)

@@ -4,9 +4,9 @@ figure_additional_hedges_g <- function(df, save_path, ext = 'svg') {
   ggsave(
     filename = file.path(save_path, paste0("figS1_additional_hedges_g.", ext)),
     plot = fig,
-    width = 7,
-    height = 5,
-    units = "in",
+    width = 133,
+    height = 100,
+    units = "mm",
     dpi = 300,
     device = ext,
     bg = "white"

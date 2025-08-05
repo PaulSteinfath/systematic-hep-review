@@ -72,7 +72,7 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
                  color = 'white', linewidth = 0.5)
     } else {
       p <- p + 
-        geom_bar(stat = "identity", fill = plot_fill_default_single, 
+        geom_bar(stat = "identity", fill = common_colors$fill_default, 
                  color = 'white', linewidth = 0.5)
     }
     
@@ -85,7 +85,7 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
         else 
           after_stat(count)
         ),
-        fill = plot_fill_default_single, 
+        fill = common_colors$fill_default, 
         color = 'white', 
         linewidth = 0.5, 
         binwidth = binwidth, 
@@ -95,7 +95,7 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
   
   # Get label type once for both title and y-axis
   n_total <- nrow(df_distinct)
-  label_type <- if (multiple_rows_per_group) "Pipelines" else "Studies"
+  label_type <- if (multiple_rows_per_group) "pipelines" else "studies"
   
   # Set a custom title if provided
   datapoint_count <- paste("n =", n_total, tolower(label_type))
@@ -108,16 +108,11 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
   }
   
   p <- p +
+    plot_theme_default +
     theme(
-      axis.text.x = element_text(size = 8, 
-                                 angle = if (tilt_labels) 45 else 0, 
+      axis.text.x = element_text(angle = if (tilt_labels) 45 else 0, 
                                  hjust = if (tilt_labels) 1 else 0.5),
-      axis.text.y = element_text(size = 8),
-      axis.title.x = element_text(size = 9, 
-                                  margin = margin(t = 4)),  # Adjust this value to move label closer
-      axis.title.y = element_text(size = 9)
-    ) +
-    custom_theme()
+    )
   
   if (!is.null(x.label)) {
     p <- p + xlab(x.label)

@@ -66,14 +66,12 @@ plot_minimal_artifact_windows <- function(df, t_peak_offset = 300) {
     scale_color_manual(name = "Reference event",
                        values = r_t_peak_palette) +
     plot_theme_default +
-    custom_theme() +
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           title = element_text(hjust = 0, size = 9), 
           plot.caption = element_text(hjust = 0.5, size = 9, margin = margin(t = 10)),
           legend.position = "top",
-          legend.title = element_text(size = 9),
-          legend.text = element_text(size = 8),
+          legend.title = element_text(size = 8),
           legend.margin = margin(0, 0, 0, 0),
           legend.box.margin = margin(-5, 0, 0, 0),
           axis.title.x = element_text(hjust = 0.5),

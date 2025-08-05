@@ -23,8 +23,10 @@ plot_hedges_g <- function(df, with_clustering=FALSE, with_regression=FALSE){
     theme(legend.position = c(1, 1),
           legend.justification = c("right", "top"),
           legend.margin = margin(0, 0, 0, 0),
-          legend.box.margin = margin(-5, 0, 0, 0))
-  
+          legend.box.margin = margin(-5, 0, 0, 0),
+          legend.title = element_text(size = 8),
+          legend.text = element_text(size = 7))
+
   return(p)
   
 }

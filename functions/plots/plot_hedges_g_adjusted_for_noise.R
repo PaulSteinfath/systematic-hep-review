@@ -10,7 +10,9 @@ plot_hedges_g_adjusted_for_noise <- function(df,
                                           sample_size_col = sample_size, 
                                           groups_col = groups, 
                                           conditions_col = conditions)
-  df <- bind_cols(df, hedges_column)
+  if (!"hedges_g" %in% colnames(df)) {
+    df <- bind_cols(df, hedges_column)
+  }
   
   if (!with_clustering) {df <- df[df$clustering==0,]}
   if (!with_regression) {df <- df[df$statistics!='Regression',]}
@@ -25,8 +27,8 @@ plot_hedges_g_adjusted_for_noise <- function(df,
                                sigma_t = sigma_t_vals) %>% 
     mutate(
       r     = sigma_s / sigma_t,
-      g_adj = hedges_g * sqrt(1 + 1 / (r^2 * trials_Mean)),
-      r_lbl = sprintf("σs/σt=%.2f", r)
+      g_adj = hedges_g * trial_correction(r, trials_Mean),
+      r_lbl = sprintf("r=%.2f", r)
     )
   
   # 2. apply optional ratio-threshold filter -------------------------------
@@ -45,7 +47,7 @@ plot_hedges_g_adjusted_for_noise <- function(df,
   # 4. combine & set factor order ------------------------------------------
   r_levels <- c(
     "original",
-    paste0("σs/σt=", sprintf("%.2f", sort(unique(df_adj$r))))
+    paste0("r=", sprintf("%.2f", sort(unique(df_adj$r))))
   )
   
   df_all <- bind_rows(df_raw, df_adj) %>% 
@@ -60,12 +62,13 @@ plot_hedges_g_adjusted_for_noise <- function(df,
       bandwidth = 0.1,
       color           = "white"
     ) +
+    scale_x_continuous(expand = expansion(mult = c(0, .1))) +
     scale_fill_viridis(name = "Effect size", option = "A") +
     labs(
       x     = "Hedges’ g (adjusted)",
       y     = NULL,
-      title = "Original vs. trial-adjusted minimal-detectable g\nacross noise-ratio scenarios"
-    ) 
+      title = "Adjusted minimal detectable effect sizes"
+    ) + plot_theme_default
 
   return(p)
 }

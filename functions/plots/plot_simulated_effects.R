@@ -112,6 +112,8 @@ plot_simulated_effects <- function(
     facet_grid(r ~ facet_label, labeller = labeller(
       r = function(x) paste0("σs/σt = ", x)
     )) +
+    scale_x_log10() +
+    scale_y_log10() +
     scale_fill_viridis(name = legend_title, option = 'A') +
     labs(
       x     = 'Number of participants (N)',
@@ -123,7 +125,7 @@ plot_simulated_effects <- function(
       panel.grid.minor = element_blank(),
       strip.background = element_rect(fill = '#EEEEEE'),
       strip.text       = element_text(face = 'bold')
-    )
+    ) + plot_theme_default
   
   return(p)
 }

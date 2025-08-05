@@ -6,8 +6,8 @@ figure_epoch_simulation <- function(df, save_path, ext = "png") {
                                         r_thresh = 4)
   b <- plot_simulated_effects(d_type = 'g', 
                               plot_type = 'pure', 
-                              Ns = seq(10, 300, 10), 
-                              ks = seq(10, 300, 10), 
+                              Ns = 10^(seq(log10(10), log10(300), length.out = 20)), 
+                              ks = 10^(seq(log10(10), log10(300), length.out = 50)), 
                               sigma_ratio = c(0.1, 0.25, 0.5, 1, 2))
  
   p <- plot_grid(

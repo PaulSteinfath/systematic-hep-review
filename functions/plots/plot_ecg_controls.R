@@ -29,7 +29,7 @@ plot_ecg_controls <- function(df, tilt_labels = FALSE) {
                  column_col = "variable", 
                  flip = T, 
                  percentages = T,
-                 title = "ECG- and heartbeat-related controls",
+                 title = "ECG- and heartbeat-related control variables",
                  x_lab = "",
                  y_lab = "Proportion of studies") +
     labs(subtitle = paste0("n = ", total_count, " studies"))

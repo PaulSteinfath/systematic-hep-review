@@ -23,6 +23,20 @@ round_custom <- function(x) {
 }
 
 
+save_figure <- function(fig, aspect_ratio, save_path, filename, ext) {
+  ggsave(
+    filename = file.path(save_path, paste0(filename, ".", ext)),
+    plot = fig,
+    width = figure_setup$width,
+    height = aspect_ratio * figure_setup$width,
+    units = figure_setup$units,
+    dpi = figure_setup$dpi,
+    device = ext,
+    bg = "white"
+  )
+}
+
+
 safe_merge <- function(df1, df2, by, sort) {
   # Merge and check that the number of rows didn't change in the process - 
   # no data was lost

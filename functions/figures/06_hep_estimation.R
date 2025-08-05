@@ -55,7 +55,8 @@ figure_hep_estimation_summary <- function(df, save_path = NULL, ext = 'png') {
     ncol = 4,
     labels = c("A", "B", "C", "D"),
     align = "hv",
-    axis = "tblr"
+    axis = "tblr",
+    rel_widths = c(0.9, 0.9, 1.1, 0.9)
   )
   
   # Main HEP time windows plots
@@ -68,8 +69,8 @@ figure_hep_estimation_summary <- function(df, save_path = NULL, ext = 'png') {
     reference_values = c("R-peak", "T-peak"),
     by = "study",
     debug_inset = F
-  )
-  
+  ) 
+
   hep_cluster_plot <- create_single_ecg_plot(
     df,
     avg_value = "Clustering",
@@ -79,8 +80,8 @@ figure_hep_estimation_summary <- function(df, save_path = NULL, ext = 'png') {
     reference_values = c("R-peak", "T-peak"),
     by = "study",
     debug_inset = F
-  )
-  
+  ) 
+
   hep_comparison_row <- plot_grid(
     hep_average_plot, 
     hep_cluster_plot,
@@ -90,7 +91,7 @@ figure_hep_estimation_summary <- function(df, save_path = NULL, ext = 'png') {
     labels = c('E', 'F')
   )
   
-  hep_time_windows_combined <- plot_grid(
+  fig <- plot_grid(
     first_row_histograms,
     NULL,
     hep_comparison_row,
@@ -99,17 +100,12 @@ figure_hep_estimation_summary <- function(df, save_path = NULL, ext = 'png') {
   )
   
   if (!is.null(save_path)) {
-    ggsave(
-      filename = file.path(save_path, paste0("fig6_hep_estimation.", ext)),
-      plot = hep_time_windows_combined,
-      width = 10, 
-      height = 9,
-      units = "in",
-      dpi = 300,
-      device = ext,
-      bg = "white"
-    )
+    save_figure(fig,
+                aspect_ratio = 1.1,  # height / width
+                save_path,
+                filename = "fig6_hep_estimation",
+                ext = ext)
   }
   
-  return(hep_time_windows_combined)
+  return(fig)
 }

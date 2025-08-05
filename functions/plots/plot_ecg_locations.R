@@ -109,17 +109,17 @@ plot_ecg_locations <- function(
   )
   
   # Plot the leads and positions on top of the body image
-  p <- ggplot(leads, aes(x = x, y = y)) +
-    geom_image(data = data.frame(x = 0.5, y = 0.5),
+  p <- ggplot(leads, aes(x = x, y = y)) + 
+        geom_image(data = data.frame(x = 0.5, y = 0.5),
                aes(image = body_image_path),
                size = 0.865) +    # more or less a magic number found 
                                   # through trial and error :(
     geom_line(aes(group = setup, color = ecg_lead, linewidth = count)) +
     geom_segment(data = pos_actual[pos_actual$label == "LL",], 
                  mapping = aes(x = x, y = y, xend = x, yend = 0),
-                 linewidth = 1, color = plot_fill_default_single,
+                 linewidth = 1, color = common_colors$fill_default,
                  arrow = arrow(length = unit(0.25, "cm"))) + 
-    geom_point(data = pos_actual, size = 8, color = plot_fill_default_single) +
+    geom_point(data = pos_actual, size = 8, color = common_colors$fill_default) +
     geom_text(data = pos_actual, aes(label = label), color="white", size = 3) +
     scale_x_continuous(limits = c(0, 1)) +
     scale_y_continuous(limits = c(0, 1)) +
@@ -130,9 +130,12 @@ plot_ecg_locations <- function(
     guides(color = guide_legend(title = "ECG lead"),
            linewidth = guide_legend(title = "Number of studies")) +
     theme_void() +
+    theme(plot.title = element_text(size = font_setup$title),
+          plot.subtitle = element_text(size = font_setup$subtitle),
+          legend.title = element_text(size = font_setup$legend.title),
+          legend.text = element_text(size = font_setup$legend.text))
     theme(aspect.ratio = aspect,
-          strip.background = element_blank()) +
-    custom_theme()
-  
-  p
+          strip.background = element_blank())
+           
+  p 
 }

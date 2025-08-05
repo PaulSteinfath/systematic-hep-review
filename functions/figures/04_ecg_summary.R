@@ -1,4 +1,4 @@
-figure_ecg_summary <- function(df, save_path, ext = 'png') {
+figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
   # Map "unknown" to 9 so that it isn't lost during conversion to numeric and
   # is positioned nicely
   df <- df %>%
@@ -31,9 +31,13 @@ figure_ecg_summary <- function(df, save_path, ext = 'png') {
     labels = c("", "C")
   )
   
-  save_figure(fig,
-              aspect_ratio = 0.5,  # height / width
-              save_path,
-              filename = "fig4_ecg_summary",
-              ext = ext)
+  if (!is.null(save_path)) {
+    save_figure(fig,
+                aspect_ratio = 0.5,  # height / width
+                save_path,
+                filename = "fig4_ecg_summary",
+                ext = ext)
+  }
+  
+  return(fig)
 }

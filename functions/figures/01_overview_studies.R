@@ -1,4 +1,4 @@
-figure_overview_studies <- function(df, save_path, ext = "svg") {
+figure_overview_studies <- function(df, save_path = NULL, ext = "svg") {
   p_year <- hist_panel(df, "Year", force.numeric = T, 
                        title = "Publication year", 
                        x.label = "Year", 
@@ -18,9 +18,13 @@ figure_overview_studies <- function(df, save_path, ext = "svg") {
                    nrow = 1, labels = c("B", "C", "D"), align = "h",
                    axis = "bt")
   
-  save_figure(fig,
-              aspect_ratio = 0.3,  # height / width
-              save_path,
-              filename = "fig1_overview_studies",
-              ext = ext)
+  if (!is.null(save_path)) {
+    save_figure(fig,
+                aspect_ratio = 0.3,  # height / width
+                save_path,
+                filename = "fig1_overview_studies",
+                ext = ext)
+  }
+  
+  return(fig)
 }

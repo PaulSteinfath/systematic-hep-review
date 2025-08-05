@@ -1,4 +1,4 @@
-figure_meeg_acq_prep <- function(df, save_path, ext = 'png') {
+figure_meeg_acq_prep <- function(df, save_path = NULL, ext = 'png') {
   # NOTE: during preprocessing, some references merge into Other category,
   # which affects other measures such as entropy. Therefore, the 
   # preprocessing is performed right before making the plots
@@ -70,9 +70,13 @@ figure_meeg_acq_prep <- function(df, save_path, ext = 'png') {
     vjust = 1
   )
   
-  save_figure(fig, 
+  if (!is.null(save_path)) {
+    save_figure(fig, 
               aspect_ratio = 1.0,  # height / width
               save_path = save_path,
               filename = "fig3_meeg_acq_prep",
               ext = ext)
+  }
+  
+  return(fig)
 }

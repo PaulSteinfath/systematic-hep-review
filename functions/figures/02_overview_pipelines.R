@@ -1,4 +1,4 @@
-figure_overview_pipelines <- function(df, save_path, ext = 'svg') {
+figure_overview_pipelines <- function(df, save_path = NULL, ext = 'svg') {
   # Consider columns from all categories
   target_columns <- unlist(pipeline_steps, use.names = FALSE)
   
@@ -78,9 +78,13 @@ figure_overview_pipelines <- function(df, save_path, ext = 'svg') {
                    label_y = c(1, NA, 1, NA, 1),  
                    rel_widths = c(1.1, 0.025, 0.7, 0.025, 0.7))
   
-  save_figure(fig,
+  if (!is.null(save_path)) {
+    save_figure(fig,
               aspect_ratio = 1.1,  # height / width
               save_path,
               filename = "fig2_overview_pipelines",
               ext = ext)
+  }
+  
+  return(fig)
 }

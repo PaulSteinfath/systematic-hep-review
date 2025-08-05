@@ -35,3 +35,15 @@ save_figure <- function(fig, aspect_ratio, save_path, filename, ext) {
     bg = "white"
   )
 }
+
+
+safe_merge <- function(df1, df2, by, sort) {
+  # Merge and check that the number of rows didn't change in the process - 
+  # no data was lost
+  n_before <- nrow(df1)
+  df_merged <- merge(df1, df2, by = by, sort = sort)
+  n_after <- nrow(df_merged)
+  
+  assert("number of rows should not change due to merge", n_before == n_after)
+  df_merged
+}

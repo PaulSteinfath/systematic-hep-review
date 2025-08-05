@@ -29,28 +29,8 @@ figure_hep_estimation_summary <- function(df, save_path = NULL, ext = 'png') {
     preserve_order = TRUE
   )
   
-  #R-/T-peak histogram
-  df_hep_reference <- df %>%
-    group_by(PMID) %>%
-    summarise(
-      has_rpeak = any(hep_relative_to == "R-peak"),
-      has_tpeak = any(hep_relative_to == "T-peak"),
-      .groups = "drop"
-    ) %>%
-    mutate(
-      reference_category = case_when(
-        has_rpeak & has_tpeak ~ "Both",
-        has_rpeak & !has_tpeak ~ "R-peak",
-        !has_rpeak & has_tpeak ~ "T-peak",
-        TRUE ~ "Other"
-      )
-    ) %>%
-    filter(reference_category != "Other") %>%
-    mutate(reference_category = factor(reference_category, 
-                                       levels = c("R-peak", "T-peak", "Both")))
-  
   rt_peak_prop_plot <- hist_panel(
-    df_hep_reference,
+    df,
     col = "reference_category",
     discrete = TRUE, use_proportion = TRUE,
     title = "Reference event",

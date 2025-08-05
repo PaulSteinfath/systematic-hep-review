@@ -241,6 +241,29 @@ preprocess_ecg <- function(df) {
 
 
 preprocess_hep_significant <- function(df) {
+  df_hep_reference <- df %>%
+    group_by(PMID) %>%
+    summarise(
+      has_rpeak = any(hep_relative_to == "R-peak"),
+      has_tpeak = any(hep_relative_to == "T-peak"),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      reference_category = case_when(
+        has_rpeak & has_tpeak ~ "Both",
+        has_rpeak & !has_tpeak ~ "R-peak",
+        !has_rpeak & has_tpeak ~ "T-peak",
+        TRUE ~ "Other"
+      )
+    )
+  assert("Expected R-/T-peak or both", 
+         sum(df_hep_reference$reference_category == "Other") == 0)
+  df_hep_reference <- df_hep_reference %>%
+    mutate(reference_category = factor(reference_category, 
+                                       levels = c("R-peak", "T-peak", "Both"))) %>%
+    select(PMID, reference_category)
+  df <- safe_merge(df, df_hep_reference, by = "PMID", sort = F)
+  
   df$hep_approach <- factor(case_when(
     (df$averaging_time == 1) & (df$clustering == 0) ~ "Averaging", 
     (df$clustering == 1) & (df$averaging_time == 0) ~ "Clustering"

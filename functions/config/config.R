@@ -5,7 +5,8 @@ params <- list(
   hedges_sig_level = 0.05,
   hedges_power_level = 0.8,
   r_peak_offset = 0,
-  t_peak_offset = 300
+  t_peak_offset = 300,
+  peak_stats_permutations = 1000
 )
 
 t_peak_offset <- 300

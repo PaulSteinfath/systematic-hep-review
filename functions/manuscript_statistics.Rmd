@@ -722,21 +722,24 @@ approach_stats <- hist_discrete(df_included %>%
 disp_results(approach_stats, column = "determination_category", count = "n")
 ```
 
-### Significant HER Effects Time Ranges
+### Significant effects
 
-```{r timewindows}
-# HEP Time of Interest windows
-
-
+```{r significant-effects}
 # Significant effects 
 df_signif <- df_pipelines %>% filter(significant_test == 1)
 
 # Create merged start/end/ref columns 
 df_signif <- df_signif %>%
   mutate(
-    merged_start = if_else(averaging_time == "1", as.character(hep_start), as.character(significant_start_ms)),
-    merged_end   = if_else(averaging_time == "1", as.character(hep_end), as.character(significant_end_ms)),
-    merged_ref   = if_else(averaging_time == "1", hep_relative_to, significant_relative_to)
+    merged_start = if_else(averaging_time == "1", 
+                           as.character(hep_start), 
+                           as.character(significant_start_ms)),
+    merged_end   = if_else(averaging_time == "1", 
+                           as.character(hep_end), 
+                           as.character(significant_end_ms)),
+    merged_ref   = if_else(averaging_time == "1", 
+                           hep_relative_to, 
+                           significant_relative_to)
   )
 
 significant_effects_data <- df_signif %>%
@@ -770,44 +773,48 @@ sig_tpeak_range <- significant_effects_data %>%
     end_min = min(end_time),
     end_max = max(end_time)
   )
+```
 
-# Compare peak of significant effects for clustering vs averaging 
+* R-peak: **`r sig_rpeak_range$start_min`** to **`r sig_rpeak_range$end_max`** ms
 
+* T-wave: **`r sig_tpeak_range$start_min`** to **`r sig_tpeak_range$end_max`** ms
+
+### Comparison of effect latencies
+
+```{r effect-latency-comparison}
 # R-peak analysis
 clustering_rpeak <- significant_effects_data %>%
-  filter(method_category == "Clustering", reference == "R-peak") %>%
+  filter(method_category == "Clustering", 
+         reference == "R-peak") %>%
   filter(!is.na(start_time), !is.na(end_time))
 
 averaging_rpeak <- significant_effects_data %>%
-  filter(method_category == "Averaging", reference == "R-peak") %>%
+  filter(method_category == "Averaging", 
+         reference == "R-peak") %>%
   filter(!is.na(start_time), !is.na(end_time))
 
 # T-peak analysis
 clustering_tpeak <- significant_effects_data %>%
-  filter(method_category == "Clustering", reference == "T-peak") %>%
+  filter(method_category == "Clustering", 
+         reference == "T-peak") %>%
   filter(!is.na(start_time), !is.na(end_time))
 
 averaging_tpeak <- significant_effects_data %>%
-  filter(method_category == "Averaging", reference == "T-peak") %>%
+  filter(method_category == "Averaging", 
+         reference == "T-peak") %>%
   filter(!is.na(start_time), !is.na(end_time))
 
 # Perform the statistical comparisons
 stat_comparison_results <- list()
-stat_comparison_results$rpeak <- perform_peak_timing_comparison(clustering_rpeak,
-                                                                averaging_rpeak,
-                                                                n_permutations = params$peak_stats_permutations)
-stat_comparison_results$tpeak <- perform_peak_timing_comparison(clustering_tpeak, averaging_tpeak, n_permutations = params$peak_stats_permutations)
+stat_comparison_results$rpeak <- perform_peak_timing_comparison(
+  clustering_rpeak, averaging_rpeak,
+  n_permutations = params$peak_stats_permutations
+)
+stat_comparison_results$tpeak <- perform_peak_timing_comparison(
+  clustering_tpeak, averaging_tpeak, 
+  n_permutations = params$peak_stats_permutations
+)
 ```
-
-#### R-peak Referenced Effects
-
-* Significant effects range: **`r sig_rpeak_range$start_min`** to **`r sig_rpeak_range$end_max`** ms
-
-#### T-wave Referenced Effects
-
-* Significant effects range: **`r sig_tpeak_range$start_min`** to **`r sig_tpeak_range$end_max`** ms
-
-### Statistical Analysis Methods Comparison
 
 #### R-peak Analysis
 

@@ -21,28 +21,13 @@ figure_hep_estimation_summary <- function(df, save_path = NULL, ext = 'png') {
     preserve_order = TRUE
   )
   
-  #cluster / average histogram
-  df_hep_determination <- df %>%
-    group_by(PMID) %>%
-    summarise(
-      has_averaging = any(method_category == "Averaging"),
-      has_clustering = any(method_category == "Clustering"),
-      .groups = "drop"
-    ) %>%
-    mutate(
-      determination_category = case_when(
-        has_averaging & has_clustering ~ "Both",
-        has_averaging & !has_clustering ~ "Averaging",
-        !has_averaging & has_clustering ~ "Clustering",
-        TRUE ~ "Other"
-      )
-    ) %>%
-    filter(determination_category != "Other") %>%
+  # Averaging vs. clustering
+  df_deter <- df %>% 
+    filter(determination_category != "None") %>%
     mutate(determination_category = factor(determination_category, 
                                            levels = c("Averaging", "Clustering", "Both")))
-  
   avg_cluster_prop_plot <- hist_panel(
-    df_hep_determination,
+    df_deter,
     col = "determination_category",
     discrete = TRUE, use_proportion = TRUE,
     title = "Analysis approach",
@@ -50,32 +35,15 @@ figure_hep_estimation_summary <- function(df, save_path = NULL, ext = 'png') {
     preserve_order = TRUE
   )
   
-  #primary / secondary histogram
-  df_hep_window_type <- df %>%
-    group_by(PMID) %>%
-    summarise(
-      has_primary = any(hep_window_type == "Primary"),
-      has_secondary = any(hep_window_type == "Secondary"),
-      .groups = "drop"
-    ) %>%
-    mutate(
-      window_type_category = case_when(
-        has_primary & has_secondary ~ "Primary &\nsecondary",
-        has_primary & !has_secondary ~ "Primary",
-        !has_primary & has_secondary ~ "Secondary",
-        TRUE ~ "Other"
-      )
-    ) %>%
-    filter(window_type_category != "Other") %>%
-    mutate(window_type_category = factor(window_type_category, 
-                                         levels = c("Primary", "Secondary", "Primary &\nsecondary")))
-  
+  # Primary vs. secondary
   hep_type_prop_plot <- hist_panel(
-    df_hep_window_type,
+    df,
     col = "window_type_category",
     discrete = TRUE, use_proportion = TRUE,
     title = "Time window type",
     tilt_labels = FALSE,
+    custom_labels = c("Primary" = "Primary",
+                      "Both" = "Primary &\nsecondary"),
     preserve_order = TRUE
   )
   

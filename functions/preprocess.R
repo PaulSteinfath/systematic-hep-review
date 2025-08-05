@@ -288,14 +288,34 @@ preprocess_hep_significant <- function(df) {
     select(PMID, baseline_category)
   df <- safe_merge(df, baseline_correction, by = "PMID", sort = F)
   
+  # Analysis approach: averaging vs. clustering
+  hep_determination_analysis <- df %>%
+    group_by(PMID) %>%
+    summarise(
+      has_averaging = any(method_category == "Averaging"),
+      has_clustering = any(method_category == "Clustering"),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      determination_category = case_when(
+        has_averaging & has_clustering ~ "Both",
+        has_averaging & !has_clustering ~ "Averaging",
+        !has_averaging & has_clustering ~ "Clustering",
+        TRUE ~ "None"
+      )
+    )
+  hep_determination_analysis <- hep_determination_analysis %>%
+    mutate(determination_category = factor(determination_category, 
+                                           levels = c("Averaging", "Clustering", "Both", "None"))) %>%
+    select(PMID, determination_category)
+  df <- safe_merge(df, hep_determination_analysis, by = "PMID", sort = F)
+  
   df$hep_approach <- factor(case_when(
     (df$averaging_time == 1) & (df$clustering == 0) ~ "Averaging", 
     (df$clustering == 1) & (df$averaging_time == 0) ~ "Clustering"
   ))
   
-  # Fill in significant channels and time points for pipelines with averaging
-  # TODO: move the time window logic here, for now handling channels only
-  df %>%
+  df <- df %>%
     mutate(
       significant_channels = if_else(
         df$hep_approach == "Averaging" & df$significant_test == 1, 
@@ -304,6 +324,32 @@ preprocess_hep_significant <- function(df) {
         missing = df$significant_channels
       )
     )
+  
+  # Window type
+  df_hep_window_type <- df %>%
+    group_by(PMID) %>%
+    summarise(
+      has_primary = any(hep_window_type == "Primary"),
+      has_secondary = any(hep_window_type == "Secondary"),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      window_type_category = case_when(
+        has_primary & has_secondary ~ "Both",
+        has_primary & !has_secondary ~ "Primary",
+        !has_primary & has_secondary ~ "Secondary",
+        TRUE ~ "Other"
+      )
+    )
+  assert("Expected at least primary or secondary", 
+         sum(df_hep_window_type$window_type_category == "Other") == 0)
+  df_hep_window_type <- df_hep_window_type %>%
+    mutate(window_type_category = factor(window_type_category, 
+                                         levels = c("Primary", "Secondary", "Both"))) %>%
+    select(PMID, window_type_category)
+  df <- safe_merge(df, df_hep_window_type, by = "PMID", sort = F)
+  
+  df
 }
 
 
@@ -445,6 +491,17 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
       )
     )
   
+  # Add columns averaging / clustering
+  df_included <- df_included %>%
+    mutate(
+      method_category = case_when(
+        averaging_time == "1" & clustering == "0" ~ "Averaging",
+        clustering == "1" & averaging_time == "0" ~ "Clustering",
+        TRUE ~ "Other"
+      ),
+      method_numeric = ifelse(method_category == "Averaging", 1, 0)
+    )
+  
   if (adjust_data_types){
     df_included <- adjust_data_type(df_included, convert_to_numeric, convert_to_factors)
   }
@@ -463,17 +520,6 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   
   # add Paper column (readable unique identifier)
   df_included$paper <- create_author_column(df_included)
-
-  # Add columns averaging / clustering
-  df_included <- df_included %>%
-    mutate(
-      method_category = case_when(
-        averaging_time == "1" & clustering == "0" ~ "Averaging",
-        clustering == "1" & averaging_time == "0" ~ "Clustering",
-        TRUE ~ "Other"
-      ),
-      method_numeric = ifelse(method_category == "Averaging", 1, 0)
-    )
   
   # process trials column
   new_trial_cols <- process_trial_column(df_included, trials)

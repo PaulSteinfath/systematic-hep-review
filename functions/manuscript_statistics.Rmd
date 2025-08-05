@@ -652,57 +652,32 @@ baseline_before_qrs_stats <- list(
  
  * T-peak: **`r tpeak_baseline_data$start_min`** to **`r tpeak_baseline_data$end_max`** ms before T-wave
 
-```{r timewindows}
-# Clustering vs Averaging
-hep_determination_analysis <- df_pipelines %>%
-  group_by(PMID) %>%
-  summarise(
-    has_averaging = any(method_category == "Averaging"),
-    has_clustering = any(method_category == "Clustering"),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    determination_category = case_when(
-      has_averaging & has_clustering ~ "Both",
-      has_averaging & !has_clustering ~ "Averaging",
-      !has_averaging & has_clustering ~ "Clustering",
-      TRUE ~ "Other"
-    )
-  ) %>%
-  filter(determination_category != "Other")
+## 3.7. HER Time Windows
 
-hep_determination_stats <- hep_determination_analysis %>%
-  count(determination_category) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1))
+### Values used
 
-hep_determination_level <- check_studies_or_pipelines(df_pipelines, "hep_relative_to")
+```{r her-values}
+total_studies <- length(unique(df_pipelines$PMID))
+hep_value_studies <- df_pipelines %>%
+  filter(value != "none") %>%
+  distinct(PMID, value) %>%
+  count(value, sort = TRUE) %>%
+  mutate(total = total_studies,
+         percentage = round_custom(n / total * 100))
 
-# Primary vs Secondary
-  hep_window_type_analysis <- df_pipelines %>%
-  group_by(PMID) %>%
-  summarise(
-    has_primary = any(hep_window_type == "Primary"),
-    has_secondary = any(hep_window_type == "Secondary"),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    window_type_category = case_when(
-      has_primary & has_secondary ~ "Both",
-      has_primary & !has_secondary ~ "Primary",
-      !has_primary & has_secondary ~ "Secondary",
-      TRUE ~ "Other"
-    )
-  ) %>%
-  filter(window_type_category != "Other") %>%
-  mutate(window_type_category = factor(window_type_category, 
-                                      levels = c("Primary", "Secondary", "Both")))
+# Check if HEP values are at study or pipeline level
+hep_value_level <- check_studies_or_pipelines(df_pipelines, "value")
+```
 
+* `r hep_value_studies$value[1]`: **`r hep_value_studies$n[1]`** / **`r total_studies`** studies (**`r hep_value_studies$percentage[1]`%**)
 
-hep_window_type_stats <- hep_window_type_analysis %>%
-  count(window_type_category) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1))
+* `r hep_value_studies$value[2]`: **`r hep_value_studies$n[2]`** / **`r total_studies`** studies (**`r hep_value_studies$percentage[2]`%**)
 
-# HEP Time of Interest windows
+* `r hep_value_studies$value[3]`: **`r hep_value_studies$n[3]`** / **`r total_studies`** studies (**`r hep_value_studies$percentage[3]`%**)
+
+### Analyzed time windows
+
+```{r her-analyzed-windows}
 hep_window_data <- df_pipelines %>%
   filter(!hep_start %in% c("none", "unknown"),
          !hep_end %in% c("none", "unknown")) %>%
@@ -713,7 +688,6 @@ hep_window_data <- df_pipelines %>%
   filter(!is.na(start_time), !is.na(end_time)) %>%
   distinct(PMID, hep_start, hep_end, hep_relative_to, .keep_all = TRUE)
 
-# T-peak and R-peak window ranges
 tpeak_window_stats <- hep_window_data %>%
   filter(hep_relative_to == "T-peak") %>%
   summarise(
@@ -721,11 +695,6 @@ tpeak_window_stats <- hep_window_data %>%
     start_max = max(start_time),
     end_min = min(end_time),
     end_max = max(end_time),
-    # Convert to R-peak equivalent timing (T-peak ~300ms after R-peak)
-    rpeak_equiv_start_min = start_min + 300,
-    rpeak_equiv_start_max = start_max + 300,
-    rpeak_equiv_end_min = end_min + 300,
-    rpeak_equiv_end_max = end_max + 300
   )
 
 rpeak_window_stats <- hep_window_data %>%
@@ -736,52 +705,27 @@ rpeak_window_stats <- hep_window_data %>%
     end_min = min(end_time),
     end_max = max(end_time)
   )
+```
 
-  # Find the overlap region for R-peak studies using cumsum-based inflection points
-  # Split by averaging vs clustering approaches
-  rpeak_overlap_analysis <- hep_window_data %>%
-    filter(hep_relative_to == "R-peak") %>%
-    split(.$method_category) %>%
-    map(function(data) {
-      if (nrow(data) == 0) return(NULL)
-      
-      all_edges <- sort(unique(c(data$start_time, data$end_time)))
-      start_counts <- tabulate(match(data$start_time, all_edges), nbins = length(all_edges))
-      end_counts <- tabulate(match(data$end_time, all_edges), nbins = length(all_edges))
-      starts_cumsum <- cumsum(start_counts)
-      ends_cumsum <- cumsum(end_counts)
-      start_diffs <- diff(starts_cumsum)
-      core_start_idx <- which.max(start_diffs) + 1
-      core_start <- all_edges[core_start_idx]
-      end_diffs <- diff(ends_cumsum)
-      core_end_idx <- which.max(end_diffs) + 1
-      core_end <- all_edges[core_end_idx]
-      
-      # Count studies that overlap with the core window (any overlap)
-      studies_overlapping_core <- data %>%
-        filter(!(end_time < core_start | start_time > core_end)) %>%
-        nrow()
-      
-      # Keep the original "fully including" calculation for comparison
-      studies_fully_including_core <- data %>%
-        filter(start_time <= core_start & end_time >= core_end) %>%
-        nrow()
-      
-      list(
-        core_start = round(core_start, 0),
-        core_end = round(core_end, 0),
-        # Use overlap as primary metric (more meaningful)
-        core_percentage = round(studies_overlapping_core / nrow(data) * 100, 1),
-        core_count = studies_overlapping_core,
-        total_rpeak = nrow(data),
-        # Additional info
-        fully_including_percentage = round(studies_fully_including_core / nrow(data) * 100, 1),
-        fully_including_count = studies_fully_including_core,
-        median_window_size = round(median(data$end_time - data$start_time), 0),
-        core_window_size = round(core_end - core_start, 0)
-      )
-    }) %>%
-    compact()  # Remove NULL entries
+* T-wave: **`r tpeak_window_stats$start_min`** to **`r tpeak_window_stats$end_max`** ms after T-wave
+
+* R-peak: **`r rpeak_window_stats$start_min`** to **`r rpeak_window_stats$end_max`** ms relative to R-peak
+
+### Analysis approach
+
+```{r her-analysis-approach}
+approach_stats <- hist_discrete(df_included %>%
+                                  filter(determination_category != "None"), 
+                                "determination_category") %>%
+  mutate(percentage = round_custom(percentage))
+
+disp_results(approach_stats, column = "determination_category", count = "n")
+```
+
+### Significant HER Effects Time Ranges
+
+```{r timewindows}
+# HEP Time of Interest windows
 
 
 # Significant effects 
@@ -855,32 +799,6 @@ stat_comparison_results$rpeak <- perform_peak_timing_comparison(clustering_rpeak
 stat_comparison_results$tpeak <- perform_peak_timing_comparison(clustering_tpeak, averaging_tpeak, n_permutations = params$peak_stats_permutations)
 ```
 
-## 3.7. HEP Time Windows
-
-### HEP Analysis Time Windows
-
-#### T-wave Referenced Analysis
-
-* Time range: **`r tpeak_window_stats$start_min`** to **`r tpeak_window_stats$end_max`** ms after T-wave
-* R-peak equivalent: approx. **`r tpeak_window_stats$rpeak_equiv_start_min`** to **`r tpeak_window_stats$rpeak_equiv_end_max`** ms after R-peak
-
-#### R-peak Referenced Analysis
-
-* Time range: **`r rpeak_window_stats$start_min`** to **`r rpeak_window_stats$end_max`** ms relative to R-peak
-
-**Core overlap windows by analysis method:**
-`r if("Averaging" %in% names(rpeak_overlap_analysis)) paste0("* Averaging: **", rpeak_overlap_analysis$Averaging$core_start, "** to **", rpeak_overlap_analysis$Averaging$core_end, "** ms (", rpeak_overlap_analysis$Averaging$core_window_size, "ms window)")` 
-`r if("Averaging" %in% names(rpeak_overlap_analysis)) paste0("  - Studies overlapping with core: ", rpeak_overlap_analysis$Averaging$core_percentage, "% (", rpeak_overlap_analysis$Averaging$core_count, "/", rpeak_overlap_analysis$Averaging$total_rpeak, ")")` 
-`r if("Averaging" %in% names(rpeak_overlap_analysis)) paste0("  - Studies fully including core: ", rpeak_overlap_analysis$Averaging$fully_including_percentage, "% (", rpeak_overlap_analysis$Averaging$fully_including_count, "/", rpeak_overlap_analysis$Averaging$total_rpeak, ")")` 
-`r if("Averaging" %in% names(rpeak_overlap_analysis)) paste0("  - Median window size: ", rpeak_overlap_analysis$Averaging$median_window_size, "ms")` 
-
-`r if("Clustering" %in% names(rpeak_overlap_analysis)) paste0("* Clustering: **", rpeak_overlap_analysis$Clustering$core_start, "** to **", rpeak_overlap_analysis$Clustering$core_end, "** ms (", rpeak_overlap_analysis$Clustering$core_window_size, "ms window)")` 
-`r if("Clustering" %in% names(rpeak_overlap_analysis)) paste0("  - Studies overlapping with core: ", rpeak_overlap_analysis$Clustering$core_percentage, "% (", rpeak_overlap_analysis$Clustering$core_count, "/", rpeak_overlap_analysis$Clustering$total_rpeak, ")")` 
-`r if("Clustering" %in% names(rpeak_overlap_analysis)) paste0("  - Studies fully including core: ", rpeak_overlap_analysis$Clustering$fully_including_percentage, "% (", rpeak_overlap_analysis$Clustering$fully_including_count, "/", rpeak_overlap_analysis$Clustering$total_rpeak, ")")` 
-`r if("Clustering" %in% names(rpeak_overlap_analysis)) paste0("  - Median window size: ", rpeak_overlap_analysis$Clustering$median_window_size, "ms")`
-
-### Significant HER Effects Time Ranges
-
 #### R-peak Referenced Effects
 
 * Significant effects range: **`r sig_rpeak_range$start_min`** to **`r sig_rpeak_range$end_max`** ms
@@ -915,33 +833,16 @@ stat_comparison_results$tpeak <- perform_peak_timing_comparison(clustering_tpeak
 
 ### Analysis Window Definition
 
-HEP determination method (`r hep_determination_level`):
-* Studies using averaging: **`r hep_determination_stats$percentage[hep_determination_stats$determination_category == "Averaging"]`%** (`r hep_determination_stats$n[hep_determination_stats$determination_category == "Averaging"]`/`r sum(hep_determination_stats$n)`)
-* Studies using clustering: **`r hep_determination_stats$percentage[hep_determination_stats$determination_category == "Clustering"]`%** (`r hep_determination_stats$n[hep_determination_stats$determination_category == "Clustering"]`/`r sum(hep_determination_stats$n)`)
-* Studies using both approaches: **`r hep_determination_stats$percentage[hep_determination_stats$determination_category == "Both"]`%** (`r hep_determination_stats$n[hep_determination_stats$determination_category == "Both"]`/`r sum(hep_determination_stats$n)`)
+```{r her-window-type}
+window_type_stats <- hist_discrete(df_included, "window_type_category") %>%
+  mutate(percentage = round_custom(percentage))
 
-* Studies with a-priori defined analysis windows: **`r hep_window_type_stats$percentage[hep_window_type_stats$window_type_category == "Primary"]`%** (`r hep_window_type_stats$n[hep_window_type_stats$window_type_category == "Primary"]`/`r sum(hep_window_type_stats$n)`)
-* Studies using two-step procedures (data-dependent window selection): **`r hep_window_type_stats$percentage[hep_window_type_stats$window_type_category == "Secondary"]`%** (`r hep_window_type_stats$n[hep_window_type_stats$window_type_category == "Secondary"]`/`r sum(hep_window_type_stats$n)`)
-
-### HEP dependent variables analysis
-
-```{r hep-values}
-hep_value_studies <- df_pipelines %>%
-  filter(value != "none") %>%
-  distinct(PMID, value) %>%
-  count(value, sort = TRUE) %>%
-  mutate(percentage = round(n / sum(n) * 100, 1))
-
-# Check if HEP values are at study or pipeline level
-hep_value_level <- check_studies_or_pipelines(df_pipelines, "value")
+window_type_primary <- get_row(window_type_stats, "window_type_category", "Primary")
+window_type_both <- get_row(window_type_stats, "window_type_category", "Both")
 ```
 
-HEP values (`r hep_value_level`):
-* `r hep_value_studies$value[1]`: **`r hep_value_studies$n[1]`** studies (**`r hep_value_studies$percentage[1]`%**)
-* `r hep_value_studies$value[2]`: **`r hep_value_studies$n[2]`** studies (**`r hep_value_studies$percentage[2]`%**)
-* `r hep_value_studies$value[3]`: **`r hep_value_studies$n[3]`** studies (**`r hep_value_studies$percentage[3]`%**)
-* Other measures: **`r sum(hep_value_studies$n[4:nrow(hep_value_studies)])`** studies (**`r sum(hep_value_studies$percentage[4:nrow(hep_value_studies)])`%**)
-
+* Primary (a-priori defined) analysis windows: **`r window_type_primary$percentage`%** (**`r window_type_primary$n`** / **`r window_type_primary$total`** `r window_type_primary$level`)
+* Studies using two-step procedures (data-dependent window selection): **`r window_type_both$percentage`%** (**`r window_type_both$n`** / **`r window_type_both$total`** `r window_type_both$level`)
 
 ## 3.8. Statistical analysis and power considerations
 

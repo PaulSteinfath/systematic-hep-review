@@ -1,3 +1,13 @@
+hedges_correction <- function (df) {
+  exp(lgamma(df/2) - log(sqrt(df/2)) - lgamma((df - 1)/2))
+}
+
+trial_correction <- function(r, k) {
+  # r - between-subject / within-subject variability ratio
+  # k - number of epochs
+  sqrt(1 + 1 / (r^2 * k))
+}
+
 compute_min_detectable_g <- function(test_type, 
                                      sample_size, 
                                      groups, 
@@ -66,7 +76,7 @@ compute_min_detectable_g <- function(test_type,
   if (df < 1) return(NA_real_)
   
   # 3. Exact Hedges' J correction
-  J <- exp(lgamma(df/2) - log(sqrt(df/2)) - lgamma((df - 1)/2))
+  J <- hedges_correction(df)
   
   # 4. Compute minimal-detectable raw d
   raw_d <- switch(test_type,

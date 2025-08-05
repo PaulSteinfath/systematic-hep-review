@@ -968,15 +968,9 @@ detect_effect <- function(df, effect_size, name) {
     )
 }
 
-<<<<<<< HEAD
 detecting_df <- map2_dfr(effect_sizes_Coll2021$value, 
                          effect_sizes_Coll2021$kind,
                          detect_effect) %>%
-=======
-detecting_df <- map2_dfr(effect_sizes_Coll2020$value, 
-                         effect_sizes_Coll2020$kind,
-                         detect_effect, df = hedges_df) %>%
->>>>>>> main
   arrange(percentage)
 detecting_df$missing <- detecting_df$total - detecting_df$count
 detecting_df$missing_percent <- round_custom(100 - detecting_df$percentage)

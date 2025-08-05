@@ -970,7 +970,7 @@ detect_effect <- function(df, effect_size, name) {
 
 detecting_df <- map2_dfr(effect_sizes_Coll2021$value, 
                          effect_sizes_Coll2021$kind,
-                         detect_effect) %>%
+                         detect_effect, df = hedges_df) %>%
   arrange(percentage)
 detecting_df$missing <- detecting_df$total - detecting_df$count
 detecting_df$missing_percent <- round_custom(100 - detecting_df$percentage)
@@ -1084,8 +1084,8 @@ hedges_df_full <- bind_cols(df_pipelines, hedges_column) %>%
                     distinct(PMID, hedges_g, .keep_all = TRUE) %>%
                     drop_na(hedges_g)
 
-detecting_df_full <- map2_dfr(effect_sizes_Coll2020$value, 
-                              effect_sizes_Coll2020$kind,
+detecting_df_full <- map2_dfr(effect_sizes_Coll2021$value, 
+                              effect_sizes_Coll2021$kind,
                               detect_effect, df = hedges_df_full) %>%  
   arrange(percentage)
 ```

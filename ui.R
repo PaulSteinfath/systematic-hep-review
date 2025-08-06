@@ -4,7 +4,28 @@ library(DT)
 ui <- page_navbar(
   nav_panel(
     "About",
-    "Some notes about our project"
+    div(
+      class = "container-fluid",
+      h2("Heartbeat-evoked responses in M/EEG: A systematic review of methods with suggestions for analysis and reporting"),
+      
+      div(
+        class = "alert alert-info",
+        style = "margin: 20px 0;",
+        h4("🚧 Work in Progress"),
+        p("This systematic review and web application are under development. 
+          Data and analyses may be updated as the review progresses.")
+      ),
+      
+      h3("Overview"),
+      p("This systematic review examines methodological approaches in heartbeat-evoked responses (HER) research 
+        using EEG and MEG. The interactive visualizations allow exploration of data acquisition, 
+        preprocessing, analysis methods, and reporting practices across studies."),
+      
+      hr(),
+      p(class = "text-muted", 
+        em("Citation information will be provided upon publication. Last updated: "), 
+        format(Sys.Date(), "%B %Y"))
+    )
   ),
   nav_panel(
     "Data",

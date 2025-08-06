@@ -3,19 +3,11 @@ library(dplyr)
 library(ggplot2)
 library(shiny)
 
-# Source required functions and load data
-# Set working directory to project root before sourcing
-old_wd <- getwd()
-setwd("..")
+# Source the project initialization
 source("init_workspace.R")
-setwd(old_wd)
 
-# Load the data if not already available
-if (!exists("df_included")) {
-  df_full <- load_data("../data/HEP - Pubmed Results.csv", "../data/HEP - Manual.csv")
-  c(df_screening, df_included) %<-% preprocess(df_full)
-}
-
+# Load the data 
+df_included <- read.csv("data/derivatives/included.csv", stringsAsFactors = FALSE)
 
 function(input, output) {
   output$table <- renderDT(

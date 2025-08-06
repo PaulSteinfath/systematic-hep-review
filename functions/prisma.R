@@ -37,7 +37,7 @@ generate_prisma <- function(df_screening, template_path, derivatives_path,
   num_pubmed <- nrow(df_screening[df_screening$source == "pubmed",])
   num_screened <- num_pubmed - num_preprints - num_duplicates
   num_manual <- nrow(df_screening[df_screening$source == "manual",])
-  num_included <- nrow(df_screening[df_screening$Include == 1,])
+  num_included <- nrow(df_screening[df_screening$include == 1,])
   
   # Fill in the template PRISMA CSV file
   df_prisma <- read.csv(template_path)

@@ -56,6 +56,7 @@ plot_segments <- function(
          y = y_label,
          title = "Filter cutoffs", 
          subtitle = paste("n =", nrow(df), "studies")) +
+    theme_classic(base_family = "sans") +
     plot_theme_default +
     theme(    
       axis.title.x = element_blank(),
@@ -92,6 +93,7 @@ plot_segments <- function(
       breaks = scales::pretty_breaks(n = 4)
     ) +
     labs(x = x_label, y = "", fill = "Number of studies") +
+    theme_classic(base_family = "sans") +
     plot_theme_default +
     theme(
       axis.text.y = element_blank(),

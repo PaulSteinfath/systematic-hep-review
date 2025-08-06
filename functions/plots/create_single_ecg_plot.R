@@ -41,6 +41,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
         t_peak_offset = t_peak_offset,
         x_limits = shared_limits
       ) + 
+      theme_classic(base_family = "sans") +
       plot_theme_default + 
       theme_aligned_middle + 
       theme(
@@ -107,6 +108,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
       t_peak_offset = 300,
       x_limits = shared_limits
     ) +
+      theme_classic(base_family = "sans") +
       plot_theme_default + 
       theme_aligned_middle + 
       theme(plot.title = element_text(margin = margin(b = 5)))
@@ -150,6 +152,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
 
   ecg_plot <- ecg_plot +
     labs(x = x_label_main, y = "Amplitude") +
+    theme_classic(base_family = "sans") +
     plot_theme_default +
     theme(
       axis.text.y = element_blank(),
@@ -171,7 +174,8 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   # --- Modify Plots for Alignment ---
 
   baseline_plot_aligned <- baseline_plot +
-  plot_theme_default +
+    theme_classic(base_family = "sans") +
+    plot_theme_default +
     theme(
       legend.position = "inside",
       legend.position.inside = c(0.98, 1.5), 

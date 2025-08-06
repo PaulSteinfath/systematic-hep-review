@@ -42,6 +42,7 @@ plot_rr_intervals <- function(df, group_col = "PMID",
          subtitle = paste("n =", nrow(rr_df), level),
         ) +
     scale_x_continuous(breaks = unique(sort(c(seq(0, tmax, by = tstep), tmax)))) +
+    theme_classic(base_family = "sans") +
     plot_theme_default +
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),

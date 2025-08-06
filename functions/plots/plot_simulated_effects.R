@@ -110,7 +110,7 @@ plot_simulated_effects <- function(
   p <- ggplot(grid, aes(x = N, y = k, fill = fill_val)) +
     geom_tile() +
     facet_grid(r ~ facet_label, labeller = labeller(
-      r = function(x) paste0("σs/σt = ", x)
+      r = function(x) paste0("r = ", x)
     )) +
     scale_x_log10() +
     scale_y_log10() +
@@ -120,12 +120,14 @@ plot_simulated_effects <- function(
       y     = 'Epochs per participant (k)',
       title = paste0('Minimal detectable ', d_type)
     ) +
+    theme_classic(base_family = "sans") +
     theme(
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
       strip.background = element_rect(fill = '#EEEEEE'),
       strip.text       = element_text(face = 'bold')
-    ) + plot_theme_default
+    ) + 
+    plot_theme_default
   
   return(p)
 }

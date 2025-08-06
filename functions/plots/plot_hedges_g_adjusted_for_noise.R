@@ -68,7 +68,9 @@ plot_hedges_g_adjusted_for_noise <- function(df,
       x     = "Hedges’ g (adjusted)",
       y     = NULL,
       title = "Adjusted minimal detectable effect sizes"
-    ) + plot_theme_default
+    ) + 
+    theme_classic(base_family = "sans") +
+    plot_theme_default
 
   return(p)
 }

@@ -18,6 +18,7 @@ plot_rejected_components <- function(df) {
       title = "Types of rejected ICA components",
       subtitle = paste("n =", total_count, level)
     ) +
+    theme_classic(base_family = "sans") +
     plot_theme_default
 
   return(p)

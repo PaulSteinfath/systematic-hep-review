@@ -22,6 +22,7 @@ plot_cfa_algorithm <- function(df) {
          y = "Number of\nstudies",
          title = "Algorithm") +
     scale_y_continuous(expand = c(0, 0)) +
+    theme_classic(base_family = "sans") +
     plot_theme_default +
     theme(
       title = element_text(size = 11),

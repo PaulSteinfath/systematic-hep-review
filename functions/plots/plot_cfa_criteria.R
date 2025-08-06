@@ -12,6 +12,7 @@ plot_cfa_criteria <- function(df) {
              fill = common_colors$fill_default, 
              color = "white", 
              linewidth = 0.5) +
+    theme_classic(base_family = "sans") +
     plot_theme_default +
     scale_y_continuous(labels = scales::percent, 
                        expand = expansion(mult = c(0, .1))) +

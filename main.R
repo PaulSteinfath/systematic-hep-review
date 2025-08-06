@@ -14,7 +14,6 @@ dir.create(derivatives_path, showWarnings = F)
 dir.create(results_path, showWarnings = F)
 
 # Load and preprocess the data
-# TODO: download the data from OSF / wherever we put it?
 df_full <- load_data(pubmed_path, manual_path)
 c(df_screening, df_included) %<-% preprocess(df_full)
 errors <- validate_preprocessed(df_included)

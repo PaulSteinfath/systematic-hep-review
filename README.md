@@ -4,20 +4,41 @@
 
 * `app` - UI and server functions for the Shiny app.
 * `assets` - required static files that are not created based on the data.
-* `data` - all data is expected to be stored in this folder.
-  * `derivatives` - all produced data can be stored here.
-  * `exports` - CSV files as exported from Pubmed.
-  * `HEP - Pubmed Results.csv` - the CSV file of our table (Pubmed tab).
-  * `HEP - Manual.csv` - the CSV file of our table (Manual tab).
+* `data` - all project data are stored in this folder.
+  * `exports` - original CSVs that were exported from Pubmed
+  * `raw` - data that was extracted from all reviewed studies
+    * `pubmed.csv` - data from studies that were retrieved via Pubmed
+    * `manual.csv` - data from studies that were retrieved manually
+    * `codebook.csv` - codebook that was used for validating the data
+    * `PRISMA_template.csv` - template file for the PRISMA diagram
+  * `derivatives` - output files of the analysis scripts
+    * `screening.csv` - screening information for all reviewed studies
+    * `included.csv` - extracted information for all studies included in the review
+    * `PRISMA.csv` - data used to generate the PRISMA diagram
 * `functions` - helper functions for different parts of the analysis.
-* `results` - all plots can be stored here (this folder is ignored by Git).
+* `results` - all output plots.
 * `tests` - if needed, tests for our functions.
+* `init_workspace.R` - project dependencies.
+* `main.R` - main entry point of the analysis.
+* `validate.py` - script that validates the raw tables (`pubmed.csv` / `manual.csv`) against the codebook (`codebook.csv`)
 
 ## Development
 
-Validating the table against the codebook: run the `validate.py` script.
+Main analysis: run the `main.R` script.
 
-Main analysis: run the `main.R` script. 
+Validating the table against the codebook (requires `numpy` and `pandas` packages, tested with Python 3.11.5):
+
+  * for studies retrieved from Pubmed:
+
+  ```
+  python ./validate.py
+  ```
+
+  * for studies added manually:
+
+  ```
+  python ./validate.py --manual
+  ```
 
 Web application: run `runApp("app")` from the root directory.
 

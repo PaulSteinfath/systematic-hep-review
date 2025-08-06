@@ -100,9 +100,9 @@ screening_pubmed <- df_screening[df_screening$source == "pubmed",]
 screening_manual <- df_screening[df_screening$source == "manual",]
 
 total_retrieved_pubmed <- nrow(screening_pubmed)
-total_included_pubmed <- nrow(screening_pubmed[screening_pubmed$Include == 1,])
+total_included_pubmed <- nrow(screening_pubmed[screening_pubmed$include == 1,])
 total_retrieved_manual <- nrow(screening_manual)
-total_included_manual <- nrow(screening_manual[screening_manual$Include == 1,])
+total_included_manual <- nrow(screening_manual[screening_manual$include == 1,])
 ```
 
 Exported from Pubmed:
@@ -136,8 +136,8 @@ total_studies <- nrow(df_studies)
 
 # Year range (based on unique studies)
 year_range <- df_studies %>% 
-  summarise(min_year = min(Year, na.rm = TRUE), 
-            max_year = max(Year, na.rm = TRUE))
+  summarise(min_year = min(year, na.rm = TRUE), 
+            max_year = max(year, na.rm = TRUE))
 
 # Modality breakdown (unique studies)
 modality_counts <- df_studies %>%
@@ -999,9 +999,9 @@ for (i in 1:nrow(detecting_df)) {
 * Underpowered and potentially unreliable findings: **`r underpowered_min$missing_percent`%** (**`r underpowered_min$missing`** / **`r underpowered_min$total`**) to **`r underpowered_max$missing_percent`%** (**`r underpowered_max$missing`** / **`r underpowered_max$total`**) of pipelines.
 
 ```{r preregistation}
-prereg_df <- hist_discrete(df_pipelines, "Preregistration") %>%
+prereg_df <- hist_discrete(df_pipelines, "preregistration") %>%
   mutate(percentage = round_custom(percentage))
-have_prereg <- get_row(prereg_df, "Preregistration", 1)
+have_prereg <- get_row(prereg_df, "preregistration", 1)
 
 non_sig_results <- df_pipelines %>%
   group_by(PMID) %>%

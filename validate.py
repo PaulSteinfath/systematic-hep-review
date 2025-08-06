@@ -1,21 +1,12 @@
 """
 Validation of the review table against the codebook.
 
-Prerequisites:
-1. The following command installs all necessary Python packages 
-   in the environment:
-
-pip install numpy pandas
-
-How to use:
-1. Save the script somewhere on your computer.
-2. Create a folder 'data' in the same folder where the script is.
-3. Run the script as shown below.
+prerequisites: pip install numpy pandas
 
 usage: python ./validate.py [-h] 
            [--coverage] [--debug] [--no-cols NO_COLS] [--no-rows NO_ROWS]
            [--only-cols ONLY_COLS] [--only-rows ONLY_ROWS] [--manual] 
-           [--show SHOW] [--update]
+           [--show SHOW]
 
 Codebook-based validation of the review table
 
@@ -35,8 +26,6 @@ options:
                         should be listed as a,b,c without spaces)
   --manual              Validate the table with manually added papers
   --show SHOW           Maximal number of error report rows to show
-  --update              Download the latest version of codebook 
-                        and table before validating
 """
 
 import argparse
@@ -48,7 +37,6 @@ import warnings
 
 from dataclasses import dataclass
 from functools import partial
-from urllib.request import urlretrieve
 
 
 # Configure logging
@@ -67,14 +55,11 @@ pd.set_option('max_colwidth', None)
 EXPORT1_CSV_PATH = 'data/exports/20240115_pubmed_query1.csv'
 EXPORT2_CSV_PATH = 'data/exports/20240805_pubmed_query2.csv'
 EXPORT3_CSV_PATH = 'data/exports/20240805_pubmed_query3.csv'
-TABLE_PUBMED_CSV_URL = 'https://docs.google.com/spreadsheets/d/17iQwJ36F4KCTuSRoLa7sXqZUSSO2lyHELonZgAQoxAw/export?format=csv'
-TABLE_PUBMED_CSV_PATH = 'data/HEP - Pubmed Results.csv'
-TABLE_MANUAL_CSV_URL = 'https://docs.google.com/spreadsheets/d/17iQwJ36F4KCTuSRoLa7sXqZUSSO2lyHELonZgAQoxAw/export?format=csv&gid=1671894873'
-TABLE_MANUAL_CSV_PATH = 'data/HEP - Manual.csv'
-TABLE_CODEBOOK_CSV_URL = 'https://docs.google.com/spreadsheets/d/17iQwJ36F4KCTuSRoLa7sXqZUSSO2lyHELonZgAQoxAw/export?format=csv&gid=1303473741'
-TABLE_CODEBOOK_CSV_PATH = 'data/Codebook.csv'
-EXCEL_OFFSET = 3  # correct line numbers to match Excel rows
-                  # 2 rows were used for header
+TABLE_PUBMED_CSV_PATH = 'data/raw/pubmed.csv'
+TABLE_MANUAL_CSV_PATH = 'data/raw/manual.csv'
+TABLE_CODEBOOK_CSV_PATH = 'data/raw/codebook.csv'
+EXCEL_OFFSET = 2  # correct line numbers to match CSV rows
+                  # 1 rows were used for header
                   # 1 row difference because of 0-indexing in Python
 
 ## Command-line arguments
@@ -105,25 +90,6 @@ parser.add_argument('--manual', action='store_true',
                     help='Validate the table with manually added papers')
 parser.add_argument('--show', type=int, default=20,
                     help='Maximal number of error report rows to show')
-parser.add_argument('--update', action='store_true',
-                    help='Download the latest version of codebook and table'\
-                         ' before validating')
-
-
-## Update codebook and table
-
-def update(table_csv_url, table_csv_path):
-    """
-    Download the latest version of the codebook and the table
-    from Google Drive.
-    """
-    logger.info('Updating the codebook...')
-    urlretrieve(TABLE_CODEBOOK_CSV_URL, TABLE_CODEBOOK_CSV_PATH)
-    logger.info('Done')
-
-    logger.info('Updating the table...')
-    urlretrieve(table_csv_url, table_csv_path)
-    logger.info('Done')
 
 
 ## Codebook
@@ -143,7 +109,7 @@ def load_codebook(codebook_path):
         Codebook table
     """
 
-    df_codebook = pd.read_csv(codebook_path, header=1)
+    df_codebook = pd.read_csv(codebook_path)
     df_codebook["run_checks"] = df_codebook["run_checks"].fillna(False)
     df_codebook["checks"] = df_codebook["checks"].fillna("")
     return df_codebook
@@ -212,7 +178,12 @@ def get_original_data():
     df_original = df_original.loc[resolved.values(), :].sort_values('PMID', ascending=False)
 
     # Match the columns to our format
-    df_original.rename(columns={'Publication Year': 'Year'}, inplace=True)
+    df_original.rename(columns={
+        'Title': 'title',
+        'Authors': 'authors',
+        'Citation': 'citation',
+        'Publication Year': 'year'
+    }, inplace=True)
     df_original.drop(columns=['First Author', 'Journal/Book', 'Create Date', 'PMCID', 'NIHMS ID'],
                      inplace=True)
     
@@ -309,15 +280,11 @@ def number_or_range(x):
         return is_numeric(x)
 
 
-def validate_analyst(x):
-    return x in ['Paul', 'Maria', 'Nick']
-
-
 ## Multi-column validation rules
 
 
 def csd_as_reference(row, col, idx):
-    csd_applied = any(x in str(row['Other CFA removal strategy'])
+    csd_applied = any(x in str(row['other_cfa_removal_strategy'])
                       for x in ['CSD', 'Laplacian', 'Laplace', 'Hjorth'])
     lap_reference = row[col] == 'Laplacian reference'
     if csd_applied and not lap_reference:
@@ -333,7 +300,7 @@ def csd_as_reference(row, col, idx):
 
 
 def ica_details_for_cfa_only(row, col, idx):
-    cfa_ica_removed = 'CFA' in str(row['Rejected components'])
+    cfa_ica_removed = 'CFA' in str(row['rejected_components'])
 
     if cfa_ica_removed:
         return []
@@ -353,21 +320,21 @@ def ica_details_for_cfa_only(row, col, idx):
 
 def significant_info(row, col, idx):
     significant_cols = [
-        "Significant / Channels",
-        "Significant / Relative to",
-        "Significant / Start (ms)",
-        "Significant / End (ms)",
+        "significant_channels",
+        "significant_relative_to",
+        "significant_start_ms",
+        "significant_end_ms",
     ]
-    permuted = int(row['Cluster-based Permutation'])
+    permuted = int(row['clustering'])
     try:
-        test_significant = int(row['Significant test'])
+        test_significant = int(row['significant_test'])
     except:
         test_significant = False  # ['nan', 'none', 'unknown']
     
     cluster_expected = permuted and test_significant
     has_significant = any(not pd.isna(row[col]) for col in significant_cols)
     missing = any(pd.isna(row[col]) for col in significant_cols)
-    assert col in (significant_cols + ['Cluster-based Permutation'])
+    assert col in (significant_cols + ['clustering'])
 
     if not (cluster_expected or has_significant):
         return []
@@ -420,9 +387,9 @@ def locations_belong_to_layout(row, col, idx, allow_all=False):
 
     pattern = None
     for k, v in layout_regex.items():
-        if k in row["Layout"]:
+        if k in row["meeg_layout"]:
             pattern = v
-    assert pattern is not None, f"Could not find regex for layout {row['Layout']}"
+    assert pattern is not None, f"Could not find regex for layout {row['meeg_layout']}"
 
     # Empty pattern - no validation required
     if not pattern:
@@ -444,7 +411,7 @@ def locations_belong_to_layout(row, col, idx, allow_all=False):
     # For 10-20 and derivatives, check T3/T7 and so on
     names_1020 = set(chunks) & set(["T3", "T4", "T5", "T6"])
     names_1010 = set(chunks) & set(["T7", "T8", "P7", "P8"])
-    if row["Layout"] == "standard19" and names_1010:
+    if row["meeg_layout"] == "standard19" and names_1010:
         errors.append({
             'line': idx,
             'column': col,
@@ -452,7 +419,7 @@ def locations_belong_to_layout(row, col, idx, allow_all=False):
             'failure_case': ', '.join(names_1010),
             'codebook': ''
         })
-    if row["Layout"] != "standard19" and names_1020:
+    if row["meeg_layout"] != "standard19" and names_1020:
         errors.append({
             'line': idx,
             'column': col,
@@ -497,132 +464,127 @@ assert not should_be_0_or_1(10)
 assert not should_be_0_or_1('2')
 assert not should_be_0_or_1('a')
 
-assert validate_analyst('Paul')
-assert validate_analyst('Maria')
-assert validate_analyst('Nick')
-assert not validate_analyst('XYZ')
-
 assert not csd_as_reference({
-    'Reference (offline)': 'Laplacian reference',
-    'Other CFA removal strategy': 'CSD transformation'
-}, 'Reference (offline)', 0)
+    'reference_offline': 'Laplacian reference',
+    'other_cfa_removal_strategy': 'CSD transformation'
+}, 'reference_offline', 0)
 assert not csd_as_reference({
-    'Reference (offline)': 'Common average',
-    'Other CFA removal strategy': ''
-}, 'Reference (offline)', 0)
+    'reference_offline': 'Common average',
+    'other_cfa_removal_strategy': ''
+}, 'reference_offline', 0)
 assert len(csd_as_reference({
-    'Reference (offline)': 'Common average',
-    'Other CFA removal strategy': 'CSD transformation'
-}, 'Reference (offline)', 0)) == 1
+    'reference_offline': 'Common average',
+    'other_cfa_removal_strategy': 'CSD transformation'
+}, 'reference_offline', 0)) == 1
 assert len(csd_as_reference({
-    'Reference (offline)': 'Common average',
-    'Other CFA removal strategy': 'Laplacian transformation'
-}, 'Reference (offline)', 0)) == 1
+    'reference_offline': 'Common average',
+    'other_cfa_removal_strategy': 'Laplacian transformation'
+}, 'reference_offline', 0)) == 1
 
 assert not ica_details_for_cfa_only({
-    'Rejected components': 'CFA',
-    'CFA Rej. Approach': 'Manual',
-    'CFA Rej. Criteria': 'Topography',
-    '# rejected cardiac ICs': 2.03
-}, 'CFA Rej. Approach', 0)
+    'rejected_components': 'CFA',
+    'cfa_rej_approach': 'Manual',
+    'cfa_rej_criteria': 'Topography',
+    'rejected_cardiac_ics': 2.03
+}, 'cfa_rej_approach', 0)
 assert not ica_details_for_cfa_only({
-    'Rejected components': 'Blinks',
-    'CFA Rej. Approach': pd.NA,
-    'CFA Rej. Criteria': pd.NA,
-    '# rejected cardiac ICs': ''
-}, 'CFA Rej. Approach', 0)
+    'rejected_components': 'Blinks',
+    'cfa_rej_approach': pd.NA,
+    'cfa_rej_criteria': pd.NA,
+    'rejected_cardiac_ics': ''
+}, 'cfa_rej_approach', 0)
 assert len(ica_details_for_cfa_only({
-    'Rejected components': 'Blinks',
-    'CFA Rej. Approach': 'Manual',
-    'CFA Rej. Criteria': 'Topography',
-    '# rejected cardiac ICs': 2.03
-}, '# rejected cardiac ICs', 0)) == 1
+    'rejected_components': 'Blinks',
+    'cfa_rej_approach': 'Manual',
+    'cfa_rej_criteria': 'Topography',
+    'rejected_cardiac_ics': 2.03
+}, 'rejected_cardiac_ics', 0)) == 1
 
 assert not locations_belong_to_layout({
-    "Layout": "standard61",
-    "EEG Locations": "layout"
-}, "EEG Locations", 0)
+    "meeg_layout": "standard61",
+    "eeg_locations": "layout"
+}, "eeg_locations", 0)
 assert not locations_belong_to_layout({
-    "Layout": "standard32",
-    "EEG Locations": "Fp1, T8, P10, FCz, Cz, Iz"
-}, "EEG Locations", 0)
+    "meeg_layout": "standard32",
+    "eeg_locations": "Fp1, T8, P10, FCz, Cz, Iz"
+}, "eeg_locations", 0)
 assert locations_belong_to_layout({
-    "Layout": "standard19",
-    "EEG Locations": "Fp1,T8,P10,FCz,Cz,Iz"
-}, "EEG Locations", 0)
+    "meeg_layout": "standard19",
+    "eeg_locations": "Fp1,T8,P10,FCz,Cz,Iz"
+}, "eeg_locations", 0)
 assert not locations_belong_to_layout({
-    "Layout": "biosemi128",
-    "EEG Locations": "A4, B8, C12, D16"
-}, "EEG Locations", 0)
+    "meeg_layout": "biosemi128",
+    "eeg_locations": "A4, B8, C12, D16"
+}, "eeg_locations", 0)
 assert locations_belong_to_layout({
-    "Layout": "biosemi128",
-    "EEG Locations": "E12"
-}, "EEG Locations", 0)
+    "meeg_layout": "biosemi128",
+    "eeg_locations": "E12"
+}, "eeg_locations", 0)
 assert not locations_belong_to_layout({
-    "Layout": "GSN-HydroCel-65",
-    "EEG Locations": "Cz, E1, E16, E64"
-}, "EEG Locations", 0)
+    "meeg_layout": "GSN-HydroCel-65",
+    "eeg_locations": "Cz, E1, E16, E64"
+}, "eeg_locations", 0)
 assert locations_belong_to_layout({
-    "Layout": "GSN-HydroCel-129",
-    "EEG Locations": "F123"
-}, "EEG Locations", 0)
+    "meeg_layout": "GSN-HydroCel-129",
+    "eeg_locations": "F123"
+}, "eeg_locations", 0)
 assert not locations_belong_to_layout({
-    "Layout": "easycap-M10",
-    "EEG Locations": "2, 4, 8, 16"
-}, "EEG Locations", 0)
+    "meeg_layout": "easycap-M10",
+    "eeg_locations": "2, 4, 8, 16"
+}, "eeg_locations", 0)
 assert locations_belong_to_layout({
-    "Layout": "easycap-M10",
-    "EEG Locations": "B12"
-}, "EEG Locations", 0)
+    "meeg_layout": "easycap-M10",
+    "eeg_locations": "B12"
+}, "eeg_locations", 0)
 assert not locations_belong_to_layout({
-    "Layout": "easycap-M10",
-    "Channels selected": "All"
-}, "Channels selected", 0, allow_all=True)
+    "meeg_layout": "easycap-M10",
+    "hep_channels_selected": "All"
+}, "hep_channels_selected", 0, allow_all=True)
 assert locations_belong_to_layout({
-    "Layout": "easycap-M10",
-    "Channels selected": "All"
-}, "Channels selected", 0, allow_all=False)
+    "meeg_layout": "easycap-M10",
+    "hep_channels_selected": "All"
+}, "hep_channels_selected", 0, allow_all=False)
 
 assert len(significant_info({
-    "Cluster-based Permutation": 1,
-    "Significant test": 1,
-    "Significant / Channels": pd.NA,
-    "Significant / Relative to": "R-peak",
-    "Significant / Start (ms)": 100,
-    "Significant / End (ms)": 200
-}, "Significant / Channels", 0)) == 1
+    "clustering": 1,
+    "significant_test": 1,
+    "significant_channels": pd.NA,
+    "significant_relative_to": "R-peak",
+    "significant_start_ms": 100,
+    "significant_end_ms": 200
+}, "significant_channels", 0)) == 1
 assert not significant_info({
-    "Cluster-based Permutation": 1,
-    "Significant test": 1,
-    "Significant / Channels": "Ch1, Ch2",
-    "Significant / Relative to": "R-peak",
-    "Significant / Start (ms)": 100,
-    "Significant / End (ms)": 200
-}, "Significant / Start (ms)", 0)
+    "clustering": 1,
+    "significant_test": 1,
+    "significant_channels": "Ch1, Ch2",
+    "significant_relative_to": "R-peak",
+    "significant_start_ms": 100,
+    "significant_end_ms": 200
+}, "significant_start_ms", 0)
 assert len(significant_info({
-    "Cluster-based Permutation": 1,
-    "Significant test": 1,
-    "Significant / Channels": "Ch1, Ch2",
-    "Significant / Relative to": pd.NA,
-    "Significant / Start (ms)": pd.NA,
-    "Significant / End (ms)": pd.NA
-}, "Significant / End (ms)", 0)) == 1
+    "clustering": 1,
+    "significant_test": 1,
+    "significant_channels": "Ch1, Ch2",
+    "significant_relative_to": pd.NA,
+    "significant_start_ms": pd.NA,
+    "significant_end_ms": pd.NA
+}, "significant_end_ms", 0)) == 1
 assert not significant_info({
-    "Cluster-based Permutation": 1,
-    "Significant test": 0,
-    "Significant / Channels": pd.NA,
-    "Significant / Relative to": pd.NA,
-    "Significant / Start (ms)": pd.NA,
-    "Significant / End (ms)": pd.NA
-}, "Significant / Channels", 0)
+    "clustering": 1,
+    "significant_test": 0,
+    "significant_channels": pd.NA,
+    "significant_relative_to": pd.NA,
+    "significant_start_ms": pd.NA,
+    "significant_end_ms": pd.NA
+}, "significant_channels", 0)
 assert len(significant_info({
-    "Cluster-based Permutation": 1,
-    "Significant test": 1,
-    "Significant / Channels": pd.NA,
-    "Significant / Relative to": pd.NA,
-    "Significant / Start (ms)": pd.NA,
-    "Significant / End (ms)": pd.NA
-}, "Significant / Channels", 0)) == 1
+    "clustering": 1,
+    "significant_test": 1,
+    "significant_channels": pd.NA,
+    "significant_relative_to": pd.NA,
+    "significant_start_ms": pd.NA,
+    "significant_end_ms": pd.NA
+}, "significant_channels", 0)) == 1
 
 
 ## Mapping of validation functions to the codebook names
@@ -643,12 +605,6 @@ CHECK_MAPPING = {
     ),
     'should be a number or a range': Check(
         fun=number_or_range, 
-        single_column=True,
-        needs_codebook=False,
-        needs_original=False
-    ),
-    'analyst': Check(
-        fun=validate_analyst, 
         single_column=True,
         needs_codebook=False,
         needs_original=False
@@ -889,39 +845,37 @@ def load_data(data_path):
     Load and preprocess the table
     """
     dtype = {}
-    dtype['# rejected cardiac ICs'] = str
-    dtype['#Channels'] = str
-    dtype['Multiple Comparisons'] = str
-    df = pd.read_csv(data_path, header=1, dtype=dtype)
+    dtype['rejected_cardiac_ics'] = str
+    dtype['meeg_num_electrodes'] = str
+    df = pd.read_csv(data_path, dtype=dtype)
 
     # Fill in the columns that need to be validated with multiple options
-    df['#Channels'] = df['#Channels'].fillna('')
-    df['Channels selected'] = df['Channels selected'].fillna('')
-    df.Topic = df.Topic.fillna('')
-    df['Rejected components'] = df['Rejected components'].fillna('')
-    df['CFA Rej. Criteria'] = df['CFA Rej. Criteria'].fillna('')
-    df.Controls = df.Controls.fillna('')
+    df['meeg_num_electrodes'] = df['meeg_num_electrodes'].fillna('')
+    df['hep_channels_selected'] = df['hep_channels_selected'].fillna('')
+    df['rejected_components'] = df['rejected_components'].fillna('')
+    df['cfa_rej_criteria'] = df['cfa_rej_criteria'].fillna('')
+    df.controls = df.controls.fillna('')
 
-    # Check that every paper has either 0 or 1 in Include column but not both 
+    # Check that every paper has either 0 or 1 in include column but not both 
     # (ignoring empty cells for now)
-    include_check = df.loc[df.Include.notna(), ['PMID', 'Include']]\
+    include_check = df.loc[df.include.notna(), ['PMID', 'include']]\
             .value_counts()\
             .reset_index()
     bad_id = include_check['count'].argmax() # only makes sense if max > 1
     assert include_check['count'].max() == 1, f"A paper was both included "\
         f"and not included: {include_check.loc[bad_id, 'PMID']}"
     
-    # Check that Include is set for all papers
+    # Check that include is set for all papers
     include_missing = set(df.PMID.values) - set(include_check.PMID.values)
     if include_missing:
         logger.error(f"The following PMIDs were not screened: {include_missing}")
 
-    # Print all combinations of Include and Comment values
+    # Print all combinations of include and comment values
     # (weird ones should be fixed)
-    include_comment = df.loc[df.Include.notna(), ['Include', 'Comment']]\
+    include_comment = df.loc[df.include.notna(), ['include', 'comment']]\
                         .value_counts()\
                         .reset_index()
-    logger.info('Unique combinations of Include and Comment in the table:')
+    logger.info('Unique combinations of include and comment in the table:')
     print(include_comment)
     print(f"{include_comment['count'].sum()} / {len(set(df.PMID.values))}")
 
@@ -931,13 +885,13 @@ def load_data(data_path):
 def filter_rows(df_full, included=True):
     """
     Filter rows to be validated by conditions:
-     - paper was included in the further analysis (Include == 1)
+     - paper was included in the further analysis (include == 1)
     """
     df = df_full.copy()
 
     # Pick only the included papers
     if included:
-        pmids_included = list(df.PMID[df.Include == 1])
+        pmids_included = list(df.PMID[df.include == 1])
         df = df[df.PMID.isin(pmids_included)]
 
     return df
@@ -998,14 +952,9 @@ def validate_own(df, df_all, df_original, codebook,
 
 
 def main(args):
-    table_csv_url = TABLE_PUBMED_CSV_URL
     table_csv_path = TABLE_PUBMED_CSV_PATH
     if args.manual:
-        table_csv_url = TABLE_MANUAL_CSV_URL
         table_csv_path = TABLE_MANUAL_CSV_PATH
-
-    if args.update:
-        update(table_csv_url, table_csv_path)
 
     codebook = load_codebook(TABLE_CODEBOOK_CSV_PATH)
     df_full = load_data(table_csv_path)

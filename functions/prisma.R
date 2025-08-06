@@ -10,10 +10,10 @@ reasons_to_exclude <- function(df_excluded) {
  
   reasons <- df_excluded %>%
     filter(Freq > 0) %>%
-    filter(!(Comment %in% ignore)) %>%
-    select(c("Comment", "Freq")) %>%
+    filter(!(comment %in% ignore)) %>%
+    select(c("comment", "Freq")) %>%
     arrange(-Freq, decreasing = T) %>%
-    mutate(Desc = paste0(Comment, ", ", Freq))
+    mutate(Desc = paste0(comment, ", ", Freq))
   
   paste(reasons$Desc, collapse = "; ") 
 }
@@ -22,16 +22,16 @@ reasons_to_exclude <- function(df_excluded) {
 generate_prisma <- function(df_screening, template_path, derivatives_path, 
                             plot_path, ext = 'svg') {
   # Process all reasons to exclude
-  comments <- with(df_screening, as.data.frame(table(source, Comment, Include)))
-  excluded <- comments[comments$Include == 0,]
+  comments <- with(df_screening, as.data.frame(table(source, comment, include)))
+  excluded <- comments[comments$include == 0,]
   excluded_pubmed <- excluded[excluded$source == "pubmed",]
   excluded_manual <- excluded[excluded$source == "manual",]
   reasons_pubmed <- reasons_to_exclude(excluded_pubmed)
   reasons_manual <- reasons_to_exclude(excluded_manual)
   
   # NOTE: duplicates and preprints only appear in Pubmed results
-  num_duplicates <- excluded_pubmed$Freq[excluded_pubmed$Comment == "Duplicate"]
-  num_preprints <- excluded_pubmed$Freq[excluded_pubmed$Comment == "Preprint"]
+  num_duplicates <- excluded_pubmed$Freq[excluded_pubmed$comment == "Duplicate"]
+  num_preprints <- excluded_pubmed$Freq[excluded_pubmed$comment == "Preprint"]
   
   # Prepare all numbers
   num_pubmed <- nrow(df_screening[df_screening$source == "pubmed",])

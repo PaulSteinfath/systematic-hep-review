@@ -414,10 +414,6 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
       mutate(across(all_of(columns_to_drop), ~ NULL))
   }
   
-  # Rename the columns
-  valid_mapping <- column_mapping[column_mapping %in% names(df_included)]
-  df_included <- rename(df_included, all_of(valid_mapping))
-  
   # Create baseline_defined 
   df_included <- df_included %>%
     mutate(

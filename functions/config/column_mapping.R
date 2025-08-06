@@ -43,7 +43,7 @@ column_mapping_readable <- c(
   "Length (min)" = "length_min", 
   "Modality (EEG/MEG)" = "modality",
   "EEG Locations" = "eeg_locations",
-  "Resting-state HER" = "rsHEP",
+  "Resting-state HER" = "setting",
   "Number of Trials" = "trials_original"
 )
 

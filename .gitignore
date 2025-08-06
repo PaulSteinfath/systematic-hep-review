@@ -1,9 +1,3 @@
-data/derivatives
-data/Codebook.csv
-data/HEP Literature - Normalization.docx
-data/HEP - Pubmed Results.csv
-data/HEP - Manual.csv
-
 # Track only PNGs, not SVGs
 results/*.svg
 

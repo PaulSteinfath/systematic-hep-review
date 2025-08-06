@@ -4,7 +4,7 @@ pipeline_steps <- list(
     "groups", 
     "conditions", 
     "length_min", 
-    "rsHEP", 
+    "setting", 
     "sample_size", 
     "trials_original"
   ),

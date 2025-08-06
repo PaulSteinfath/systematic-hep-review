@@ -1,5 +1,5 @@
 figure_overview_studies <- function(df, save_path = NULL, ext = "svg") {
-  p_year <- hist_panel(df, "Year", force.numeric = T, 
+  p_year <- hist_panel(df, "year", force.numeric = T, 
                        title = "Publication year", 
                        x.label = "Year", 
                        binwidth = 2, use_proportion = F)

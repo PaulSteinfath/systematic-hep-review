@@ -1,4 +1,4 @@
-# Systematic review of methods used in HEP research 
+# Systematic review of methods used in HER research 
 
 ## Folder structure
 

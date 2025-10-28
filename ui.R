@@ -52,9 +52,14 @@ ui <- page_navbar(
     plotOutput("ecgSummaryPlot", height = "600px")
   ),
   nav_panel(
-    "HEP Estimation",
-    h3("HEP Estimation Methods"),
-    plotOutput("hepEstimationPlot", height = "800px")
+    "CFA approaches",
+    h3("CFA Approaches"),
+    plotOutput("cfaApproachesPlot", height = "600px")
+  ),
+  nav_panel(
+    "HER Estimation",
+    h3("HER Estimation Methods"),
+    plotOutput("herEstimationPlot", height = "800px")
   ),
   nav_panel(
     "Statistics",
@@ -66,5 +71,5 @@ ui <- page_navbar(
     h3("Control Variables Analysis"),
     plotOutput("controlsPlot", height = "800px")
   ),
-  title = "Methods in HEP research"
+  title = "Methods in HER research"
 )

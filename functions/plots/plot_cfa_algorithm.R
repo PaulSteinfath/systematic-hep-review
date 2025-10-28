@@ -1,19 +1,22 @@
 plot_cfa_algorithm <- function(df) {
   # Create algorithm inset data
-  algo_counts <- cfa_criteria_counts(df, 
-                                     mapping = c("iclabel" = "ICLabel", 
-                                                 "sasica" = "SASICA", 
-                                                 "corrmap" = "CORRMAP"))
+  algo_counts <- tryCatch(
+    cfa_criteria_counts(df, 
+                       mapping = c("iclabel" = "ICLabel", 
+                                   "sasica" = "SASICA", 
+                                   "corrmap" = "CORRMAP")),
+    error = function(e) data.frame()
+  )
   
   # Exit immediately if not enough info for algo_plot
   if (nrow(algo_counts) == 0) {
-    return(main_plot)
+    return(ggplot() + theme_void())
   }
   
   # Create algorithm inset plot
   algo_plot <- ggplot(algo_counts, 
-                      aes(x = reorder(cfa_rej_criteria, count, decreasing = TRUE), 
-                          y = count)) +
+         aes(x = reorder(cfa_rej_criteria, count, decreasing = TRUE), 
+             y = count)) +
     geom_bar(stat = "identity", 
              fill = common_colors$fill_default, 
              color = "white", 

@@ -65,10 +65,23 @@ function(input, output) {
     })
   }, res = 96)
   
-  # HEP Estimation Summary Plot
-  output$hepEstimationPlot <- renderPlot({
+
+  # CFA Approaches Plot
+  output$cfaApproachesPlot <- renderPlot({
     tryCatch({
-      figure_hep_estimation_summary(df_selected(), save_path = NULL)
+      figure_cfa_removal(df_selected(), save_path = NULL)
+    }, error = function(e) {
+      ggplot() + 
+        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
+        theme_void()
+    })
+  }, res = 96)
+  
+
+  # HER Estimation Summary Plot
+  output$herEstimationPlot <- renderPlot({
+    tryCatch({
+      figure_her_estimation_summary(df_selected(), save_path = NULL)
     }, error = function(e) {
       ggplot() + 
         geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +

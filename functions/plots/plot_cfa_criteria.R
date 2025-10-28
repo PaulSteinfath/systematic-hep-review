@@ -1,13 +1,22 @@
 plot_cfa_criteria <- function(df) {
-  main_counts <- cfa_criteria_counts(df_included, 
-                                     mapping = allowed$cfa_criteria)
+  # Get counts and handle errors
+  main_counts <- tryCatch(
+    cfa_criteria_counts(df, mapping = allowed$cfa_criteria),
+    error = function(e) data.frame()
+  )
+  
+  # Return empty plot if no data
+  if (nrow(main_counts) == 0) {
+    return(ggplot() + theme_void())
+  }
+  
   level <- unique(main_counts$level)
   total_count <- unique(main_counts$total)
   
   # Create main plot
   main_plot <- ggplot(main_counts, 
-                      aes(x = reorder(cfa_rej_criteria, count, decreasing = TRUE), 
-                          y = percentage)) +
+         aes(x = reorder(cfa_rej_criteria, count, decreasing = TRUE), 
+             y = percentage)) +
     geom_bar(stat = "identity", 
              fill = common_colors$fill_default, 
              color = "white", 

@@ -1,8 +1,7 @@
-# Systematic review of methods used in HEP research 
+# Systematic review of methods used in HER research 
 
 ## Folder structure
 
-* `app` - UI and server functions for the Shiny app.
 * `assets` - required static files that are not created based on the data.
 * `data` - all project data are stored in this folder.
   * `exports` - original CSVs that were exported from Pubmed
@@ -17,9 +16,12 @@
     * `PRISMA.csv` - data used to generate the PRISMA diagram
 * `functions` - helper functions for different parts of the analysis.
 * `results` - all output plots.
+* `rsconnect` - configuration files for the Shiny app.
 * `tests` - if needed, tests for our functions.
 * `init_workspace.R` - project dependencies.
 * `main.R` - main entry point of the analysis.
+* `server.R` - backend of the Shiny app.
+* `ui.R` - frontend of the Shiny app.
 * `validate.py` - script that validates the raw tables (`pubmed.csv` / `manual.csv`) against the codebook (`codebook.csv`)
 
 ## Development

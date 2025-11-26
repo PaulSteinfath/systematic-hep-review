@@ -59,7 +59,7 @@ plot_minimal_artifact_windows <- function(df, t_peak_offset = 300) {
     labs(
       x = "Time (ms)",
       y = "Individual studies",
-      title = "Minimal artifact window",
+      title = "Variable definitions of minimal CFA window",
       subtitle = paste("n =", nrow(df_minimal), "studies"),
       color = "Reference"
     ) +

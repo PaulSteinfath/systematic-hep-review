@@ -53,4 +53,4 @@ rmarkdown::render(file.path(func_path, 'manuscript_statistics.Rmd'),
                   output_dir = results_path)
 
 # Extract journal information
-extract_journals(df_full)
+count_journals(df_included, results_path)

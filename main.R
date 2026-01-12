@@ -51,3 +51,6 @@ rmarkdown::render(file.path(func_path, 'manuscript_statistics.Rmd'),
                   knit_root_dir = getwd(),
                   output_format = 'html_document',
                   output_dir = results_path)
+
+# Extract journal information
+count_journals(df_included, results_path)

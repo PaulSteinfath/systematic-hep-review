@@ -409,6 +409,9 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   df_included <- df_full %>%
     filter(PMID %in% included_pmids)
   
+  # Add journal columns
+  df_included <- add_journal_column(df_included)
+  
   if (drop_cols){
     df_included <- df_included %>%
       mutate(across(all_of(columns_to_drop), ~ NULL))
@@ -466,7 +469,7 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
     str_detect(df_included$statistics, regex("anova", ignore_case = TRUE)) ~ "ANOVA", 
     TRUE ~ df_included$statistics
   )
-  
+
   if (output_screening){
     list(df_screening, df_included)
   } else {

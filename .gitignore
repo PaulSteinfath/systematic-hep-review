@@ -1,4 +1,5 @@
-# Track only PNGs, not SVGs
+# Track only PNGs, not SVGs or PDFs
+results/*.pdf
 results/*.svg
 
 # Supporting files (CSS styles, JS) for the HTML report

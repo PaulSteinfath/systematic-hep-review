@@ -1,6 +1,6 @@
 # Dependencies
 library(cowplot)
-library(dplyr)
+library(dplyr)         # %>%, mutate, etc. 
 library(eegUtils)
 library(grid)
 library(gridExtra)
@@ -14,11 +14,11 @@ library(PRISMA2020)
 library(purrr)
 library(pwr)
 library(scales)
-library(stringr)
+library(stringr)       # str_split
 library(testit)
 library(tidyr)
 library(viridis)
-library(zeallot)
+library(zeallot)       # %<-%
 
 source_all <- function(folder) {
   for (f in list.files(path = folder, pattern="*.R")) {

@@ -270,11 +270,21 @@ def match_original(x, original, col):
 
 def number_or_range(x):
     """
-    Supported formats: XX-YY, XX+-YY
+    Supported formats: XX-YY, XX+-YY, XX[YY] and a list of those
     """
-    if '-' in str(x) or '+-' in str(x):
-        delim = '+-' if '+-' in str(x) else '-'
-        chunks = x.split(delim)
+    # Recursive call in case a list of ranges is provided
+    x_str = str(x)
+    if ',' in x_str:
+        chunks = x_str.split(', ')
+        return all(number_or_range(ch) for ch in chunks)
+
+    if '-' in x_str or '+-' in x_str:
+        delim = '+-' if '+-' in x_str else '-'
+        chunks = x_str.split(delim)
+        return len(chunks) == 2 and is_numeric(chunks[0]) and is_numeric(chunks[1])
+    elif '[' in x_str and ']' in x_str:
+        assert x_str[-1] == ']'
+        chunks = x_str[:-1].split('[')
         return len(chunks) == 2 and is_numeric(chunks[0]) and is_numeric(chunks[1])
     else:
         return is_numeric(x)
@@ -320,7 +330,7 @@ def ica_details_for_cfa_only(row, col, idx):
 
 def significant_info(row, col, idx):
     significant_cols = [
-        "significant_channels",
+        "significant_eeg_channels",
         "significant_relative_to",
         "significant_start_ms",
         "significant_end_ms",
@@ -455,8 +465,12 @@ assert not validate_list('a, d', ['a', 'b', 'c'], col='test')
 assert number_or_range('200')
 assert number_or_range('200-210')
 assert number_or_range('200+-20')
+assert number_or_range('200[10]')
+assert number_or_range('200-210, 200+-20, 200[10]')
 assert not number_or_range('200+-')
 assert not number_or_range('200-')
+assert not number_or_range('200+-, 200')
+assert not number_or_range('[200]')
 
 assert should_be_0_or_1(0)
 assert should_be_0_or_1('1')
@@ -538,25 +552,25 @@ assert locations_belong_to_layout({
 }, "eeg_locations", 0)
 assert not locations_belong_to_layout({
     "meeg_layout": "easycap-M10",
-    "hep_channels_selected": "All"
-}, "hep_channels_selected", 0, allow_all=True)
+    "hep_eeg_channels_selected": "All"
+}, "hep_eeg_channels_selected", 0, allow_all=True)
 assert locations_belong_to_layout({
     "meeg_layout": "easycap-M10",
-    "hep_channels_selected": "All"
-}, "hep_channels_selected", 0, allow_all=False)
+    "hep_eeg_channels_selected": "All"
+}, "hep_eeg_channels_selected", 0, allow_all=False)
 
 assert len(significant_info({
     "clustering": 1,
     "significant_test": 1,
-    "significant_channels": pd.NA,
+    "significant_eeg_channels": pd.NA,
     "significant_relative_to": "R-peak",
     "significant_start_ms": 100,
     "significant_end_ms": 200
-}, "significant_channels", 0)) == 1
+}, "significant_eeg_channels", 0)) == 1
 assert not significant_info({
     "clustering": 1,
     "significant_test": 1,
-    "significant_channels": "Ch1, Ch2",
+    "significant_eeg_channels": "Ch1, Ch2",
     "significant_relative_to": "R-peak",
     "significant_start_ms": 100,
     "significant_end_ms": 200
@@ -564,7 +578,7 @@ assert not significant_info({
 assert len(significant_info({
     "clustering": 1,
     "significant_test": 1,
-    "significant_channels": "Ch1, Ch2",
+    "significant_eeg_channels": "Ch1, Ch2",
     "significant_relative_to": pd.NA,
     "significant_start_ms": pd.NA,
     "significant_end_ms": pd.NA
@@ -572,19 +586,19 @@ assert len(significant_info({
 assert not significant_info({
     "clustering": 1,
     "significant_test": 0,
-    "significant_channels": pd.NA,
+    "significant_eeg_channels": pd.NA,
     "significant_relative_to": pd.NA,
     "significant_start_ms": pd.NA,
     "significant_end_ms": pd.NA
-}, "significant_channels", 0)
+}, "significant_eeg_channels", 0)
 assert len(significant_info({
     "clustering": 1,
     "significant_test": 1,
-    "significant_channels": pd.NA,
+    "significant_eeg_channels": pd.NA,
     "significant_relative_to": pd.NA,
     "significant_start_ms": pd.NA,
     "significant_end_ms": pd.NA
-}, "significant_channels", 0)) == 1
+}, "significant_eeg_channels", 0)) == 1
 
 
 ## Mapping of validation functions to the codebook names
@@ -712,6 +726,21 @@ def validate_row(row, idx, ignore_cols, missing_cols, codebook, original):
                     'line': idx,
                     'column': col,
                     'error': 'should not be unknown', 
+                    'failure_case': value,
+                    'codebook': ''
+                })
+            else:
+                logger.debug(f'Skipping checks: col={col} | value={value}')
+            continue
+
+        # Check if 'na' is allowed (e.g., for EEG-related fields in case MEG is used)
+        if value == "na":
+            if not codebook_col.allow_na:
+                logger.debug(f'Should not be na: col={col} | value={value}')
+                errors.append({
+                    'line': idx,
+                    'column': col,
+                    'error': 'should not be na', 
                     'failure_case': value,
                     'codebook': ''
                 })
@@ -851,7 +880,7 @@ def load_data(data_path):
 
     # Fill in the columns that need to be validated with multiple options
     df['meeg_num_electrodes'] = df['meeg_num_electrodes'].fillna('')
-    df['hep_channels_selected'] = df['hep_channels_selected'].fillna('')
+    df['hep_eeg_channels_selected'] = df['hep_eeg_channels_selected'].fillna('')
     df['rejected_components'] = df['rejected_components'].fillna('')
     df['cfa_rej_criteria'] = df['cfa_rej_criteria'].fillna('')
     df.controls = df.controls.fillna('')

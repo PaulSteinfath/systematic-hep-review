@@ -70,6 +70,8 @@ parser.add_argument('--coverage', action='store_true',
                     help="Check coverage of the codebook")
 parser.add_argument('--debug', action='store_true',
                     help="Enable debug output")
+parser.add_argument('--fail', action='store_true',
+                    help="Raise an error if validation fails")
 parser.add_argument('--no-cols', type=str, default='',
                     help="Hide all errors for the specified columns"\
                          " (multiple values should be listed as a,b,c"\
@@ -929,7 +931,7 @@ def filter_rows(df_full, included=True):
 def validate_own(df, df_all, df_original, codebook, 
                  ignore_rows=[], ignore_cols=[], 
                  only_rows=[], only_cols=[],
-                 n=20, manual=False, coverage=False, debug=False):
+                 n=20, manual=False, coverage=False, debug=False, fail_on_error=False):
     logger.info('Validating the table...')
     errors_df_included = validate(df, df_original, codebook, ignore_cols, manual=manual, included=True)
     errors_df_all = validate(df_all, df_original, codebook, ignore_cols, manual=manual, included=False)
@@ -969,7 +971,7 @@ def validate_own(df, df_all, df_original, codebook,
     errors_non_ignored = len(report_disp)
     report_disp = report_disp[['line', 'PMID',
                                'column', 'failure_case',
-                               'error', 'codebook']]\
+                               'error']]\
                         .head(n=n)
     
     logger.info(f'{errors_total} errors total ({errors_non_ignored} for non-ignored columns)')
@@ -978,6 +980,9 @@ def validate_own(df, df_all, df_original, codebook,
     for _, row in report_disp.iterrows():
         print()
         print(row.to_string())
+
+    if fail_on_error and errors_total:
+        raise RuntimeError("Codebook validation failed")
 
 
 def main(args):
@@ -1033,7 +1038,7 @@ def main(args):
 
     validate_own(df, df_all, df_original, codebook, ignore_rows,
                  ignore_cols, only_rows, only_cols,
-                 args.show, args.manual, args.coverage, args.debug)
+                 args.show, args.manual, args.coverage, args.debug, args.fail)
 
 
 if __name__ == "__main__":

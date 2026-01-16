@@ -1,0 +1,46 @@
+# Make sure that the dataset can be validated against the codebook
+
+name: codebook
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - data/raw/codebook.csv
+      - data/raw/manual.csv
+      - data/raw/pubmed.csv
+      - validate.py
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - data/raw/codebook.csv
+      - data/raw/manual.csv
+      - data/raw/pubmed.csv
+      - validate.py
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy mandas
+
+      - name: Validate Pubmed export
+        run: |
+          python ./validate.py --fail
+      
+      - name: Validate manually added papers
+        run: |
+          python ./validate.py --manual --fail

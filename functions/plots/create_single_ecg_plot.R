@@ -50,7 +50,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
       )
 
     selected_channels <- plot_eeg_locations(df_filtered, 
-                                            "hep_channels_selected", 
+                                            "hep_eeg_channels_selected", 
                                             by = "study",
                                             divide.over = NULL,
                                             combined = T,
@@ -113,21 +113,21 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
       theme_aligned_middle + 
       theme(plot.title = element_text(margin = margin(b = 5)))
     
-    significant_channels <- plot_eeg_locations(df_filtered, 
-                                               "significant_channels", 
-                                               by = "study",
-                                               divide.over = NULL,
-                                               combined = T,
-                                               colormap = "Greys",
-                                               stretch_palette = 1.25,
-                                               main_title = NULL, 
-                                               show_colorbar = T)
+    significant_eeg_channels <- plot_eeg_locations(df_filtered, 
+                                                   "significant_eeg_channels", 
+                                                   by = "study",
+                                                   divide.over = NULL,
+                                                   combined = T,
+                                                   colormap = "Greys",
+                                                   stretch_palette = 1.25,
+                                                   main_title = NULL, 
+                                                   show_colorbar = T)
   } else {
     significant_plot <- no_valid_data_stub("No valid data") +
       ggtitle("Significant effects") +
       theme(plot.title = element_text(size = 9, margin = margin(b = 5)))
     
-    significant_channels <- NULL
+    significant_eeg_channels <- NULL
   }
 
   # --- Create ECG Plot ---
@@ -273,12 +273,12 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
                   y = c(y_selected_legend, y_selected_legend + h_selected_legend))
     }
   }
-  if (!is.null(significant_channels)) {
-    significant_legend <- get_plot_component(significant_channels + adjust_legend,
+  if (!is.null(significant_eeg_channels)) {
+    significant_legend <- get_plot_component(significant_eeg_channels + adjust_legend,
                                              "guide-box", return_all = T)[[3]]
     
     final_plot <- final_plot + 
-      draw_plot(significant_channels + theme(legend.position = "none"),
+      draw_plot(significant_eeg_channels + theme(legend.position = "none"),
                 x = x_significant, y = y_significant, 
                 width = w_significant, height = h_significant) + 
       draw_plot(significant_legend,

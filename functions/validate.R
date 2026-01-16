@@ -16,28 +16,28 @@ validate_row <- function(row, col_names) {
   errors <- list()
   
   # Channels selected for HEP analysis should also be present in EEG locations
-  used_locations <- unlist(strsplit(row$eeg_locations, ", "))
-  selected_channels <- unlist(strsplit(row$hep_channels_selected, ", "))
-  significant_unknown <- row$significant_channels == "unknown"
-  significant_channels <- unlist(strsplit(row$significant_channels, ", "))
+  used_eeg_locations <- unlist(strsplit(row$eeg_locations, ", "))
+  selected_eeg_channels <- unlist(strsplit(row$hep_eeg_channels_selected, ", "))
+  significant_unknown <- row$significant_eeg_channels == "unknown"
+  significant_eeg_channels <- unlist(strsplit(row$significant_eeg_channels, ", "))
   
-  if (!all(selected_channels %in% used_locations)) {
-    missing <- setdiff(selected_channels, used_locations)
+  if (!all(selected_eeg_channels %in% used_eeg_locations)) {
+    missing <- setdiff(selected_eeg_channels, used_eeg_locations)
     errors <- append(errors, list(list(
       "PMID" = row$PMID,
-      "column" = "hep_channels_selected",
+      "column" = "hep_eeg_channels_selected",
       "error" = "Not mentioned in the EEG locations",
       "failure_case" = paste(missing, collapse = ", ")
     )))
   }
   
   # NOTE: should also be true if the list of significant channels is empty
-  all_mentioned <- all(significant_channels %in% used_locations)
+  all_mentioned <- all(significant_eeg_channels %in% used_eeg_locations)
   if (!significant_unknown & !all_mentioned) {
-    missing <- setdiff(significant_channels, used_locations)
+    missing <- setdiff(significant_eeg_channels, used_eeg_locations)
     errors <- append(errors, list(list(
       "PMID" = row$PMID,
-      "column" = "significant_channels",
+      "column" = "significant_eeg_channels",
       "error" = "Not mentioned in the EEG locations",
       "failure_case" = paste(missing, collapse = ", ")
     )))

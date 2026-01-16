@@ -1,6 +1,6 @@
 # Make sure that the dataset can be validated against the codebook
 
-name: codebook
+name: Codebook validation
 
 on:
   push:

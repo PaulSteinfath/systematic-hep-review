@@ -6,7 +6,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - .github/workflows/codebook.csv
+      - .github/workflows/codebook.yml
       - data/raw/codebook.csv
       - data/raw/manual.csv
       - data/raw/pubmed.csv
@@ -14,7 +14,7 @@ on:
   pull_request:
     branches: [ "main" ]
     paths:
-      - .github/workflows/codebook.csv
+      - .github/workflows/codebook.yml
       - data/raw/codebook.csv
       - data/raw/manual.csv
       - data/raw/pubmed.csv

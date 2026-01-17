@@ -5,6 +5,8 @@ plot_segments <- function(
   x_scale,
   custom_breaks,
   x_label,
+  rel_heights, 
+  labels,
   y_label = "Individual Studies",
   font_face = "plain",
   show_legend = TRUE 
@@ -136,8 +138,8 @@ plot_segments <- function(
     ncol = 1,
     align = "v",
     axis = "lr",
-    rel_heights = c(7, 0.7, 0.05, 0.8, 0.2),
-    labels = c('E', '', '', '', ''),
+    rel_heights = rel_heights,
+    labels = labels,
     label_x = c(-0.05, 0, 0, 0, 0)
   )
 

@@ -111,13 +111,13 @@ preprocess_channels <- function(df) {
                                          \(x) paste(ch_names[[x]], collapse = ", "))
   
   # If all channels were selected, copy from EEG Locations
-  all_selected <- df$hep_channels_selected == "All"
-  df$hep_channels_selected[all_selected] <- df$eeg_locations[all_selected]
+  all_selected <- df$hep_eeg_channels_selected == "All"
+  df$hep_eeg_channels_selected[all_selected] <- df$eeg_locations[all_selected]
   
   # Resolve All except XX, XX
-  all_except <- grepl("All except", df$hep_channels_selected)
-  df$hep_channels_selected[all_except] <- 
-    apply(X = df[all_except, c("eeg_locations", "hep_channels_selected")], 
+  all_except <- grepl("All except", df$hep_eeg_channels_selected)
+  df$hep_eeg_channels_selected[all_except] <- 
+    apply(X = df[all_except, c("eeg_locations", "hep_eeg_channels_selected")], 
           MARGIN = 1, FUN = resolve_all_except)
   
   df
@@ -256,11 +256,11 @@ preprocess_hep_significant <- function(df) {
   
   df <- df %>%
     mutate(
-      significant_channels = if_else(
+      significant_eeg_channels = if_else(
         df$hep_approach == "Averaging" & df$significant_test == 1, 
-        df$hep_channels_selected,
-        df$significant_channels,
-        missing = df$significant_channels
+        df$hep_eeg_channels_selected,
+        df$significant_eeg_channels,
+        missing = df$significant_eeg_channels
       )
     )
   
@@ -409,6 +409,9 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   df_included <- df_full %>%
     filter(PMID %in% included_pmids)
   
+  # Add journal columns
+  df_included <- add_journal_column(df_included)
+  
   if (drop_cols){
     df_included <- df_included %>%
       mutate(across(all_of(columns_to_drop), ~ NULL))
@@ -466,7 +469,7 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
     str_detect(df_included$statistics, regex("anova", ignore_case = TRUE)) ~ "ANOVA", 
     TRUE ~ df_included$statistics
   )
-  
+
   if (output_screening){
     list(df_screening, df_included)
   } else {

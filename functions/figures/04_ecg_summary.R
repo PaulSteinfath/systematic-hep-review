@@ -4,6 +4,8 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
   df <- df %>%
     mutate(ecg_num_electrodes = replace(ecg_num_electrodes,
                                         ecg_num_electrodes == "unknown", 9))
+  
+  # ECG acquisition
   p_ecg_num_electrodes <- hist_panel(df, "ecg_num_electrodes", 
                                      force.numeric = T, binwidth = 1,
                                      x.label = "Number of ECG electrodes",
@@ -16,26 +18,101 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
                       na.value = common_colors$fill_default,
                       guide = "none") 
   p_ecg_locations <- plot_ecg_locations(df, leads_palette)
-  fig_AB = plot_grid(
+  
+  # ECG preprocessing
+  p_filter <- plot_segments(
+    df,
+    start_var = "ecg_high_pass",
+    end_var = "ecg_low_pass",
+    x_scale = "log",
+    custom_breaks = c(0.01, 0.1, 0.5, 1, 20, 40, 80),
+    x_label = "Filter cutoff (Hz)",
+    rel_heights = c(1, 0.2, 0.01, 0.2, 0.05),
+    labels = c('', '', '', '', '')
+  )
+  
+  methods_to_display <- df %>% 
+    distinct(PMID, ecg_event_method) %>% 
+    group_by(ecg_event_method) %>% 
+    summarize(count = n()) %>% 
+    filter(ecg_event_method != "unknown", count >= 2) %>%
+    pull(ecg_event_method)
+  p_method <- hist_panel(
+    df %>%
+      filter(ecg_event_method %in% methods_to_display),
+    "ecg_event_method",
+    title = "Method for detecting ECG events (R-/T-peak)",
+    custom_labels = c(
+      "Template matching" = "Template\nmatching",
+      "PanTompkins1985" = "Pan &\nTompkins (1985)",
+      "Niazy2005" = "Niazy et al.\n(2005)",
+      "deCarvalho2002" = "de Carvalho\net al. (2002)",
+      "Derivative sign" = "Derivative\nsign",
+      "Librow" = "Librow"
+    ),
+    discrete = T
+  )
+  
+  toolboxes_to_display <- df %>% 
+    distinct(PMID, ecg_event_toolbox) %>% 
+    group_by(ecg_event_toolbox) %>% 
+    summarize(count = n()) %>% 
+    filter(!(ecg_event_toolbox %in% c("none", "unknown")), count >= 3) %>%
+    pull(ecg_event_toolbox)
+  p_toolbox <- hist_panel(
+    df %>%
+      filter(ecg_event_toolbox %in% toolboxes_to_display),
+    "ecg_event_toolbox",
+    title = "Toolbox / function for detecting ECG events",
+    custom_labels = c(
+      "HEPLAB" = "HEPLAB",
+      "Peakfinder" = "Peakfinder",
+      "FMRIB" = "FMRIB",
+      "BrainVision Analyzer" = "BrainVision\nAnalyzer",
+      "Kubios" = "Kubios",
+      "WinCPRS" = "WinCPRS",
+      "Librow" = "Librow",
+      "Neurokit2" = "Neurokit2"
+    ),
+    discrete = T
+  )
+  
+  fig_ABD = plot_grid(
     p_ecg_num_electrodes,
     p_ecg_leads,
+    NULL,
+    p_filter,
     ncol = 1,
-    labels = c("A", "B")
+    align = "v",
+    axis = "lr",
+    rel_heights = c(0.475, 0.475, 0.05, 1),
+    labels = c("A", "B", "", "D")
+  )
+  
+  fig_CEF <- plot_grid(
+    p_ecg_locations,
+    NULL, 
+    p_method, 
+    p_toolbox, 
+    ncol = 1,
+    rel_heights = c(0.95, 0.05, 0.5, 0.5),
+    labels = c("C", "", "E", "F"),
+    align = 'v',
+    axis = 'l'
   )
   
   fig <- plot_grid(
-    fig_AB,
-    NULL, 
-    p_ecg_locations,
+    fig_ABD,
+    fig_CEF,
     nrow = 1,
-    rel_widths = c(1, 0.1, 1.4),
-    labels = c("", "C", ""),
-    label_x = c(0, -0.1, 0)
+    rel_widths = c(1, 1.55),
+    align = 'v',
+    axis = 'l'
   )
   
   if (!is.null(save_path)) {
     save_figure(fig,
-                aspect_ratio = 0.5,  # height / width
+                aspect_ratio = 1.0,  # height / width
                 save_path,
                 filename = "fig4_ecg_summary",
                 ext = ext)
@@ -43,65 +120,3 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
   
   return(fig)
 }
-
-
-# ecg preprocessing
-# df_included$ecg_highpass <- as.numeric(df_included$ecg_highpass)
-# df_included$ecg_lowpass <- as.numeric(df_included$ecg_lowpass)
-# 
-# df_included$ecg_detect_method <- case_when(
-#   df_included$ecg_detect_method == "PanTompkins1985, modified" ~ "PanTompkins85",
-#   df_included$ecg_detect_method == "PanTompkins1985" ~ "PanTompkins85",
-#   df_included$ecg_detect_method == "PanTompkins" ~ "PanTompkins85",
-#   df_included$ecg_detect_method == "template matching" ~ "Template matching",
-#   df_included$ecg_detect_method == "sym4 wavelet" ~ "Template matching",
-#   df_included$ecg_detect_method == "Template matching (Vehkaoja et al., 2013)" ~ "Template matching",
-#   .default = df_included$ecg_detect_method
-# )
-# 
-# df_included$ecg_detect_toolbox <- case_when(
-#   df_included$ecg_detect_toolbox == "Neurokit2" ~ "Neurokit",
-#   df_included$ecg_detect_toolbox == "AcqKnowledge, Kubios" ~ "AcqKnowledge",
-#   .default = df_included$ecg_detect_toolbox
-# )
-# 
-# p_filter <- plot_segments(
-#   df_included, 
-#   start_var = "ecg_highpass", 
-#   end_var = "ecg_lowpass", 
-#   x_scale = "log", 
-#   custom_breaks = c(0.01, 0.1, 0.5, 1, 20, 40, 80),
-#   x_label = "Filter cutoff (Hz)",
-#   rel_heights = c(1, 0.2, 0, 0, 0),
-#   labels = c('', '', '', '', '')
-# )
-# 
-# p_approach <- hist_panel(df_included, "ecg_detect_approach", title = "Approach", discrete = T)
-# p_method <- hist_panel(
-#   df_included[df_included$ecg_detect_method != "unknown",], 
-#   "ecg_detect_method", 
-#   title = "Detection method",
-#   allowed = c(
-#     "PanTompkins85" = "Pan &\nTompkins",
-#     "Template matching" = "Template\nmatching"
-#   ),
-#   discrete = T
-# )
-# p_toolbox <- hist_panel(
-#   df_included[!(df_included$ecg_detect_toolbox %in% c("none", "unknown")),], 
-#   "ecg_detect_toolbox", 
-#   title = "Toolbox / function for detecting ECG events",
-#   allowed = c(
-#     "HEPLAB" = "HEPLAB", 
-#     "FMRIB" = "FMRIB", 
-#     "Peakfinder" = "Peakfinder", 
-#     "Neurokit" = "Neurokit", 
-#     "Kubios" = "Kubios"
-#   ),
-#   discrete = T
-# )
-# 
-# p1 <- plot_grid(p_approach, p_method, nrow = 1, rel_widths = c(1.5, 1))
-# p2 <- plot_grid(p1, p_toolbox, ncol = 1)
-# p3 <- plot_grid(p_filter, p2, nrow = 1, rel_widths = c(1, 1.75))
-# p3

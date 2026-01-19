@@ -15,7 +15,10 @@ pipeline_steps <- list(
     "ecg_num_electrodes", 
     "ecg_lead", 
     "ecg_locations", 
-    "ecg_ground"
+    "ecg_ground",
+    "ecg_low_pass",
+    "ecg_high_pass",
+    "ecg_event_method" 
   ),
   "Preprocessing" = c(
     "reference_offline", 

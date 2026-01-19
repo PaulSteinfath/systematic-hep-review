@@ -36,7 +36,8 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
     distinct(PMID, ecg_event_method) %>% 
     group_by(ecg_event_method) %>% 
     summarize(count = n()) %>% 
-    filter(ecg_event_method != "unknown", count >= 2) %>%
+    filter(ecg_event_method != "unknown", 
+           count >= params$ecg_method_min_papers) %>%
     pull(ecg_event_method)
   p_method <- hist_panel(
     df %>%
@@ -58,7 +59,8 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
     distinct(PMID, ecg_event_toolbox) %>% 
     group_by(ecg_event_toolbox) %>% 
     summarize(count = n()) %>% 
-    filter(!(ecg_event_toolbox %in% c("none", "unknown")), count >= 3) %>%
+    filter(!(ecg_event_toolbox %in% c("none", "unknown")), 
+           count >= params$ecg_toolbox_min_papers) %>%
     pull(ecg_event_toolbox)
   p_toolbox <- hist_panel(
     df %>%

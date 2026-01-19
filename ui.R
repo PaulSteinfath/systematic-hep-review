@@ -29,6 +29,16 @@ ui <- page_navbar(
   ),
   nav_panel(
     "Data",
+    div(
+      style = "margin-bottom: 10px; font-size: 0.95em; color: #444;",
+      p(strong("Topic column uses regex patterns:"),
+        tags$ul(
+          tags$li(tags$code("Perception|Music"), " — match either (OR)"),
+          tags$li(tags$code("(?=.*Perception)(?=.*Music)"), " — match both (AND)"),
+          tags$li(tags$code("^(?!.*Auditory).*Perception"), " — has Perception, excludes Auditory (NOT)")
+        )
+      )
+    ),
     DTOutput("table")
   ),
   nav_panel(

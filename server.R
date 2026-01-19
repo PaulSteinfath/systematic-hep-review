@@ -10,11 +10,16 @@ source("init_workspace.R")
 df_included <- read.csv("data/derivatives/included.csv", stringsAsFactors = FALSE)
 
 function(input, output) {
-  output$table <- renderDT(
-    df_included,
-    filter = "top",
-    options = list(pageLength = 25)
-  )
+  
+  output$table <- renderDT({
+    datatable(
+      df_included,
+      filter = "top",
+      options = list(
+        pageLength = 25,
+        search = list(regex = TRUE, caseInsensitive = TRUE)
+      )
+    )})
   
   # Wrap df_selected in a reactive
   df_selected <- reactive({
@@ -81,7 +86,7 @@ function(input, output) {
   # HER Estimation Summary Plot
   output$herEstimationPlot <- renderPlot({
     tryCatch({
-      figure_her_estimation_summary(df_selected(), save_path = NULL)
+      figure_hep_estimation_summary(df_selected(), save_path = NULL)
     }, error = function(e) {
       ggplot() + 
         geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +

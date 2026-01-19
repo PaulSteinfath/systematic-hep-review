@@ -409,7 +409,7 @@ preprocess_age <- function(df) {
     mutate(age_mean = age_mean,
            age_min = sapply(df$age_range, get_min_age),
            age_max = sapply(df$age_range, get_max_age),
-            age_group = get_age_group(age_mean))
+           age_group = get_age_group(age_mean))
 }
 
 # Nicely formatted refs

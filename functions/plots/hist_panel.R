@@ -63,11 +63,22 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
 
       df_auth <- df %>%
         distinct(!!sym(group_col), !!sym(col), authors) %>%
-        mutate(.first = stringr::word(authors, 1, sep = " ")) %>%
-        mutate(.last = {
-          last_chunk <- stringr::str_trim(stringr::word(authors, -1, sep = ","))
-          stringr::word(last_chunk, 1, sep = " ")
-        })
+        mutate(.first = stringr::word(authors, 1, sep = ",")) %>%
+        mutate(.last = stringr::str_trim(stringr::word(authors, -1, sep = ",")))
+      
+      # Fix minor inconsistencies
+      df_auth$.first <- case_when(
+        df_auth$.first == "G Dirlich" ~ "Dirlich G",
+        df_auth$.first == "Villena-González M" ~ "Villena-Gonzalez M",
+        df_auth$.first == "Yoris A" ~ "Yoris AE",
+        .default = df_auth$.first
+      )
+      df_auth$.last <- case_when(
+        df_auth$.last == "F Strian" ~ "Strian F.",
+        df_auth$.last == "Ibañez A." ~ "Ibanez A.",
+        df_auth$.last == "Ibáñez A." ~ "Ibanez A.",
+        .default = df_auth$.last
+      )
 
       # Top first author per category
       top_first <- df_auth %>%

@@ -37,7 +37,7 @@ pipeline_steps <- list(
     "baseline_start_ms", 
     "baseline_end_ms", 
     "value", 
-    "hep_channels_selected",
+    "hep_eeg_channels_selected",
     "averaging_channels", 
     "averaging_time", 
     "hep_window_type"

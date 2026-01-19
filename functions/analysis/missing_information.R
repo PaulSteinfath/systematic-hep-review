@@ -16,7 +16,7 @@ opt_columns <- c("other_cfa_removal_strategy", "other_cleaning_strategy")
 eeg_columns <- c(
   "reference_online",
   "reference_offline",
-  "hep_channels_selected"
+  "hep_eeg_channels_selected"
 )
 
 

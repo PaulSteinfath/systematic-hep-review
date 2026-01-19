@@ -7,9 +7,10 @@ plot_segments <- function(
   x_label,
   rel_heights, 
   labels,
-  y_label = "Individual Studies",
+  y_label = "Individual studies",
   font_face = "plain",
-  show_legend = TRUE 
+  show_legend = T,
+  combined = T
 ) {
 
   # Remove missing data and validate ranges
@@ -122,6 +123,11 @@ plot_segments <- function(
     p2 <- p2 + scale_x_log10(breaks = custom_breaks, labels = custom_label_function)
   }
 
+  # Return parts of the plot if the combined one is not required
+  if (!combined) {
+    return(list(p1, p2))
+  }
+  
   # Create the base combined plot
   legend <- get_plot_component(p2, "guide-box", return_all = T)[[3]]
   shifted_legend <- plot_grid(

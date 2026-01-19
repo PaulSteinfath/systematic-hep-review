@@ -20,7 +20,7 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
   p_ecg_locations <- plot_ecg_locations(df, leads_palette)
   
   # ECG preprocessing
-  p_filter <- plot_segments(
+  c(p_filter_ind, p_filter_density) %<-% plot_segments(
     df,
     start_var = "ecg_high_pass",
     end_var = "ecg_low_pass",
@@ -28,7 +28,8 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
     custom_breaks = c(0.01, 0.1, 0.5, 1, 20, 40, 80),
     x_label = "Filter cutoff (Hz)",
     rel_heights = c(1, 0.2, 0.01, 0.2, 0.05),
-    labels = c('', '', '', '', '')
+    labels = c('', '', '', '', ''),
+    combined = F
   )
   
   methods_to_display <- df %>% 
@@ -81,38 +82,41 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
     p_ecg_num_electrodes,
     p_ecg_leads,
     NULL,
-    p_filter,
+    p_filter_ind,
+    p_filter_density,
     ncol = 1,
     align = "v",
     axis = "lr",
-    rel_heights = c(0.475, 0.475, 0.05, 1),
-    labels = c("A", "B", "", "D")
+    rel_heights = c(0.45, 0.45, 0.05, 0.65, 0.35),
+    labels = c("A", "B", "", "D", "")
   )
   
   fig_CEF <- plot_grid(
     p_ecg_locations,
     NULL, 
     p_method, 
+    NULL,
     p_toolbox, 
     ncol = 1,
-    rel_heights = c(0.95, 0.05, 0.5, 0.5),
-    labels = c("C", "", "E", "F"),
+    rel_heights = c(0.9, 0.05, 0.485, 0.03, 0.485),
+    labels = c("C", "", "E", "", "F"),
     align = 'v',
     axis = 'l'
   )
   
   fig <- plot_grid(
     fig_ABD,
+    NULL, 
     fig_CEF,
     nrow = 1,
-    rel_widths = c(1, 1.55),
+    rel_widths = c(1, 0.05, 1.5),
     align = 'v',
     axis = 'l'
   )
   
   if (!is.null(save_path)) {
     save_figure(fig,
-                aspect_ratio = 1.0,  # height / width
+                aspect_ratio = 1.05,  # height / width
                 save_path,
                 filename = "fig4_ecg_summary",
                 ext = ext)

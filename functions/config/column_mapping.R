@@ -3,7 +3,7 @@ column_mapping_readable <- c(
   "ECG Lead" = "ecg_lead",
   "ECG Locations" = "ecg_locations",
   "ECG Ground" = "ecg_ground",
-  "ECG Event Method" = "ecg_event_method",
+  "ECG Peak Detection" = "ecg_event_method",
   "ECG High-Pass Filter (Hz)" = "ecg_high_pass",
   "ECG Low-Pass Filter (Hz)" = "ecg_low_pass",
   "HER Window Type" = "hep_window_type",

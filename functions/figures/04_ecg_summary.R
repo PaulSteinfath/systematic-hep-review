@@ -6,6 +6,8 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
                                         ecg_num_electrodes == "unknown", 9))
   
   # ECG acquisition
+  p_ecg_acquisition <- ggdraw() +
+    draw_label("ECG acquisition parameters", x = 0.5, y = 0.5, fontface = "bold")
   p_ecg_num_electrodes <- hist_panel(df, "ecg_num_electrodes", 
                                      force.numeric = T, binwidth = 1,
                                      x.label = "Number of ECG electrodes",
@@ -20,6 +22,8 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
   p_ecg_locations <- plot_ecg_locations(df, leads_palette)
   
   # ECG preprocessing
+  p_ecg_preproc <- ggdraw() +
+    draw_label("ECG preprocessing parameters", x = 0.5, y = 0.5, fontface = "bold")
   c(p_filter_ind, p_filter_density) %<-% plot_segments(
     df,
     start_var = "ecg_high_pass",
@@ -41,9 +45,9 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
     pull(ecg_event_method)
   p_method <- hist_panel(
     df %>%
-      filter(ecg_event_method %in% methods_to_display),
+      filter(ecg_event_method != "unknown"),
     "ecg_event_method",
-    title = "Method for detecting ECG events (R-/T-peak)",
+    title = "Algorithm for ECG peak detection",
     custom_labels = c(
       "Template matching" = "Template\nmatching",
       "PanTompkins1985" = "Pan &\nTompkins (1985)",
@@ -64,9 +68,9 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
     pull(ecg_event_toolbox)
   p_toolbox <- hist_panel(
     df %>%
-      filter(ecg_event_toolbox %in% toolboxes_to_display),
+      filter(!(ecg_event_toolbox %in% c("none", "unknown"))),
     "ecg_event_toolbox",
-    title = "Toolbox / function for detecting ECG events",
+    title = "Software for ECG peak detection",
     custom_labels = c(
       "HEPLAB" = "HEPLAB",
       "Peakfinder" = "Peakfinder",
@@ -80,45 +84,74 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
     discrete = T
   )
   
-  fig_ABD = plot_grid(
+  fig_AB = plot_grid(
     p_ecg_num_electrodes,
     p_ecg_leads,
-    NULL,
+    ncol = 1,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(0.5, 0.5),
+    labels = c("A", "B")
+  )
+  
+  fig_ABC <- plot_grid(
+    fig_AB,
+    NULL, 
+    p_ecg_locations,
+    nrow = 1,
+    labels = c('', 'C', ''),
+    rel_widths = c(1, 0.15, 1.4),
+    align = 'v',
+    axis = 'l'
+  )
+  
+  fig_D = plot_grid(
     p_filter_ind,
     p_filter_density,
     ncol = 1,
     align = "v",
     axis = "lr",
-    rel_heights = c(0.45, 0.45, 0.05, 0.65, 0.35),
-    labels = c("A", "B", "", "D", "")
+    rel_heights = c(0.65, 0.35)
   )
   
-  fig_CEF <- plot_grid(
-    p_ecg_locations,
-    NULL, 
+  fig_EF <- plot_grid(
     p_method, 
     NULL,
     p_toolbox, 
     ncol = 1,
-    rel_heights = c(0.9, 0.05, 0.485, 0.03, 0.485),
-    labels = c("C", "", "E", "", "F"),
+    rel_heights = c(0.485, 0.03, 0.485),
+    labels = c("E", "", "F"),
+    align = 'v',
+    axis = 'l'
+  )
+  
+  fig_DEF <- plot_grid(
+    NULL,
+    fig_D,
+    NULL, 
+    fig_EF,
+    nrow = 1,
+    rel_widths = c(0.075, 0.95, 0.075, 1.6),
+    labels = c("D", "", "", ""),
     align = 'v',
     axis = 'l'
   )
   
   fig <- plot_grid(
-    fig_ABD,
-    NULL, 
-    fig_CEF,
-    nrow = 1,
-    rel_widths = c(1, 0.05, 1.5),
+    p_ecg_acquisition,
+    fig_ABC,
+    NULL,
+    p_ecg_preproc,
+    fig_DEF,
+    ncol = 1,
+    rel_heights = c(0.1, 0.9, 0.05, 0.1, 1.0),
     align = 'v',
     axis = 'l'
   )
   
   if (!is.null(save_path)) {
     save_figure(fig,
-                aspect_ratio = 1.05,  # height / width
+                aspect_ratio = 1.1,  # height / width
                 save_path,
                 filename = "fig4_ecg_summary",
                 ext = ext)

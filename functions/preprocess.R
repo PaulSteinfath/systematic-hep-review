@@ -398,7 +398,7 @@ get_age_group <- function(age) {
     age >= 1  & age < 12 ~ "Children",
     age >= 12 & age < 18 ~ "Adolescents",
     age >= 18            ~ "Adults",
-    .default             = "Adults"
+    .default             = "unknown"
   )
 }
 

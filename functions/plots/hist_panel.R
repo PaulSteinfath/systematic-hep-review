@@ -4,7 +4,8 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
                        fill_as_aesthetic = F,
                        modality_filter = NULL, binwidth = NULL, bins = NULL, tilt_labels = F,
                        use_proportion = TRUE, y_limits = NULL, custom_labels = NULL,
-                       preserve_order = FALSE, decreasing = TRUE) { 
+                       preserve_order = FALSE, decreasing = TRUE,
+                       author_check = TRUE, author_threshold = 50) { 
   
   # Filter for EEG modality if specified
   if (!is.null(modality_filter)) {
@@ -54,6 +55,61 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
       counts_df[[col]] <- factor(counts_df[[col]], 
                                  levels = names(custom_labels),
                                  labels = custom_labels)
+    }
+
+    # Check author dominance
+    if (author_check) {
+      thr <- author_threshold
+
+      df_auth <- df %>%
+        distinct(!!sym(group_col), !!sym(col), authors) %>%
+        mutate(.first = stringr::word(authors, 1, sep = ",")) %>%
+        mutate(.last = stringr::str_trim(stringr::word(authors, -1, sep = ",")))
+      
+      # Fix minor inconsistencies
+      df_auth$.first <- case_when(
+        df_auth$.first == "G Dirlich" ~ "Dirlich G",
+        df_auth$.first == "Villena-González M" ~ "Villena-Gonzalez M",
+        df_auth$.first == "Yoris A" ~ "Yoris AE",
+        .default = df_auth$.first
+      )
+      df_auth$.last <- case_when(
+        df_auth$.last == "F Strian" ~ "Strian F.",
+        df_auth$.last == "Ibañez A." ~ "Ibanez A.",
+        df_auth$.last == "Ibáñez A." ~ "Ibanez A.",
+        .default = df_auth$.last
+      )
+
+      # Top first author per category
+      top_first <- df_auth %>%
+          count(!!sym(col), .first, name = "n") %>%
+          group_by(!!sym(col)) %>%
+          mutate(total = sum(n), pct = 100 * n / total) %>%
+          ungroup() %>%
+          filter(pct >= thr) %>%
+          mutate(position = "first", author = .first)
+
+      # Top last author per category
+      top_last <- df_auth %>%
+          count(!!sym(col), .last, name = "n") %>%
+          group_by(!!sym(col)) %>%
+          mutate(total = sum(n), pct = 100 * n / total) %>%
+          ungroup() %>%
+          filter(pct >= thr) %>%
+          mutate(position = "last", author = .last)
+
+      dominant <- bind_rows(top_first, top_last) %>%
+        select(!!sym(col), position, author, n, total, pct)
+
+      if (nrow(dominant) > 0) {
+        for (i in seq_len(nrow(dominant))) {
+          r <- dominant[i, ]
+          warning(sprintf(
+            "Category '%s' (column %s): %s author '%s' contributes %.1f%% (%d/%d)",
+            as.character(r[[1]]), col, r[["position"]], r[["author"]], as.numeric(r[["pct"]]), r[["n"]], r[["total"]]
+          ))
+        }
+      }
     }
     
     # Determine x-axis mapping based on preserve_order

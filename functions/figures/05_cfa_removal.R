@@ -2,7 +2,7 @@ figure_cfa_removal <- function(df, save_path = NULL, ext = "svg") {
   # Panel A: is ICA applied to continuous or epoched data?
   ica_usage_plot <- hist_panel(
     df %>% 
-      distinct(PMID, ICA, ica_on_epochs) %>%
+      distinct(PMID, ICA, ica_on_epochs, authors) %>%
       filter(ICA == 1),
     col = "ica_on_epochs",
     title = "ICA usage",

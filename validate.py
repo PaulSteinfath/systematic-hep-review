@@ -971,7 +971,7 @@ def validate_own(df, df_all, df_original, codebook,
     errors_non_ignored = len(report_disp)
     report_disp = report_disp[['line', 'PMID',
                                'column', 'failure_case',
-                               'error']]\
+                               'error', 'codebook']]\
                         .head(n=n)
     
     logger.info(f'{errors_total} errors total ({errors_non_ignored} for non-ignored columns)')

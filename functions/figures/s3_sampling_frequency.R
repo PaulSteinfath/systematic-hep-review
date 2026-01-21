@@ -65,7 +65,7 @@ figure_sampling_frequency <- function(df, save_path, ext = 'png') {
     save_figure(fig,
                 aspect_ratio = 0.7,  # height / width
                 save_path,
-                filename = "figR1_sampling_frequency",
+                filename = "figS3_sampling_frequency",
                 ext = ext)
   }
   

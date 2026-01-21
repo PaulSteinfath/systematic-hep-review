@@ -306,7 +306,7 @@ parse_number_or_range <- function(x, target = NULL) {
   if (is.null(x) || is.na(x) || x == "" || x == "unknown") return(NA_real_)
   
   # Handle median[IQR] format (e.g, "76[19]")
-  if (grepl("\\[", x) && grep("\\]$", x)) {
+  if (grepl("\\[", x) && grepl("\\]$", x)) {
     median_val <- as.numeric(sub("\\[.*$", "", x))
     iqr_val <- as.numeric(sub("\\]$", "", sub("^.*\\[", "", x)))
     
@@ -394,11 +394,11 @@ get_max_age <- function(age_str) {
 
 get_age_group <- function(age) {
   case_when(
-    age < 1             ~ "Infants",
-    age > 1  & age < 12 ~ "Children",
-    age > 12 & age < 18 ~ "Adolescents",
-    age > 18            ~ "Adults",
-    .default            = "Adults"
+    age < 1              ~ "Infants",
+    age >= 1  & age < 12 ~ "Children",
+    age >= 12 & age < 18 ~ "Adolescents",
+    age >= 18            ~ "Adults",
+    .default             = "Adults"
   )
 }
 

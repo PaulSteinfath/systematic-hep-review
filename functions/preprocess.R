@@ -318,31 +318,127 @@ preprocess_hep_significant <- function(df) {
 }
 
 
-# Clean cardiac IC rejection data
-clean_cardiac_ics <- function(x) {
-  # Return NA for NULL, NA, or empty strings
-  if (is.null(x) || is.na(x) || x == "") return(NA_real_)
+# Parse ranges: number of removed cardiac ICs, age range
+parsed_target <- function(parsed, target = NULL) {
+  if (!is.null(target)) {
+    return(parsed[target])
+  } else {
+    return(parsed)
+  }
+}
+
+parse_number_or_range <- function(x, target = NULL) {
+  # Return NA for NULL, NA, empty strings, or "unknown"
+  if (is.null(x) || is.na(x) || x == "" || x == "unknown") return(NA_real_)
+  
+  # Handle median[IQR] format (e.g, "76[19]")
+  if (grepl("\\[", x) && grepl("\\]$", x)) {
+    median_val <- as.numeric(sub("\\[.*$", "", x))
+    iqr_val <- as.numeric(sub("\\]$", "", sub("^.*\\[", "", x)))
+    
+    # Construct min and max using median +- IQR
+    min_val <- median_val - iqr_val
+    max_val <- median_val + iqr_val
+    
+    # NOTE: using mean = median as no other info is available
+    parsed <- c(
+      "mean" = median_val, 
+      "sd" = NA_real_, 
+      "min" = min_val, 
+      "max" = max_val
+    )
+    
+    return(parsed_target(parsed, target))
+  }
   
   # Handle mean ± SD format (e.g., "4.78+-1.13")
   if (grepl("\\+-", x)) {
     mean_val <- as.numeric(sub("\\+-.*$", "", x))
-    return(mean_val)
+    sd_val <- as.numeric(sub("^.*\\+-", "", x))
+    
+    # Construct min and max using mean +- SD
+    min_val <- mean_val - sd_val
+    max_val <- mean_val + sd_val
+    parsed <- c(
+      "mean" = mean_val, 
+      "sd" = sd_val, 
+      "min" = min_val, 
+      "max" = max_val
+    )
+    
+    return(parsed_target(parsed, target))
   }
   
   # Handle ranges (e.g., "0-3", "1–3", "2–4")
   if (grepl("-|–", x)) {
-    range_vals <- strsplit(x, "-|–")[[1]]
-    # Return mean of range
-    return(mean(as.numeric(range_vals)))
+    range_vals <- as.numeric(strsplit(x, "-|–")[[1]])
+    mean_val <- mean(range_vals)
+    min_val <- min(range_vals)
+    max_val <- max(range_vals)
+    
+    parsed <- c(
+      "mean" = mean_val, 
+      "sd" = NA_real_, 
+      "min" = min_val, 
+      "max" = max_val
+    )
+    
+    return(parsed_target(parsed, target))
   }
   
   # Handle single numbers
   if (grepl("^\\d+(\\.\\d+)?$", x)) {
-    return(as.numeric(x))
+    val <- as.numeric(x)
+    
+    parsed <- c(
+      "mean" = val, 
+      "sd" = 0, 
+      "min" = val, 
+      "max" = val
+    )
+    
+    return(parsed_target(parsed, target))
   }
-  
-  return(NA_real_)
 }
+
+# Age range and groups
+
+get_mean_age <- function(age_str) {
+  chunks <- strsplit(age_str, ",")[[1]]
+  mean(sapply(chunks, \(x) parse_number_or_range(trimws(x), target = "mean")))
+}
+
+get_min_age <- function(age_str) {
+  chunks <- strsplit(age_str, ",")[[1]]
+  min(sapply(chunks, \(x) parse_number_or_range(trimws(x), target = "min")))
+}
+
+get_max_age <- function(age_str) {
+  chunks <- strsplit(age_str, ",")[[1]]
+  max(sapply(chunks, \(x) parse_number_or_range(trimws(x), target = "max")))
+}
+
+get_age_group <- function(age) {
+  case_when(
+    age < 1              ~ "Infants",
+    age >= 1  & age < 12 ~ "Children",
+    age >= 12 & age < 18 ~ "Adolescents",
+    age >= 18            ~ "Adults",
+    .default             = "unknown"
+  )
+}
+
+preprocess_age <- function(df) {
+  age_mean <- sapply(df$age_range, get_mean_age)
+  
+  df %>%
+    mutate(age_mean = age_mean,
+           age_min = sapply(df$age_range, get_min_age),
+           age_max = sapply(df$age_range, get_max_age),
+           age_group = get_age_group(age_mean))
+}
+
+# Nicely formatted refs
 
 create_author_column <- function(data) {
   paper_vector <- data %>%
@@ -471,6 +567,7 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   
   # NOTE: apply steps one by one to get adequate messages in case of errors,
   # chaining with %>% mixes error messages from all calls
+  df_included <- preprocess_age(df_included)
   df_included <- preprocess_studies(df_included)
   df_included <- preprocess_ecg(df_included)
   df_included <- preprocess_cleaning(df_included)
@@ -480,7 +577,9 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   df_included <- preprocess_hep_significant(df_included)
   
   # transform included IC data
-  df_included$rejected_cardiac_ics <- sapply(df_included$rejected_cardiac_ics, clean_cardiac_ics)
+  df_included$rejected_cardiac_ics <- sapply(df_included$rejected_cardiac_ics, 
+                                             parse_number_or_range,
+                                             target = "mean")
   
   # add Paper column (readable unique identifier)
   df_included$paper <- create_author_column(df_included)

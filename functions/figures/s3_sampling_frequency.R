@@ -5,7 +5,9 @@ figure_sampling_frequency <- function(df, save_path, ext = 'png') {
     draw_label("M/EEG sampling frequency", fontface = "bold")
   
   df$meeg_sfreq_orig_log <- log10(df$meeg_sfreq_orig)
-  p_meeg_orig <- hist_panel(df, "meeg_sfreq_orig_log", discrete = F, 
+  p_meeg_orig <- hist_panel(df %>%
+                              filter(meeg_sfreq_orig != "unknown"), 
+                            "meeg_sfreq_orig_log", discrete = F, 
                             title = "During the recording", 
                             x.label = "Sampling frequency", bins = 12) + 
     scale_x_continuous(breaks = log10(c(10, 100, 1000, 10000)), 
@@ -13,7 +15,9 @@ figure_sampling_frequency <- function(df, save_path, ext = 'png') {
     expand_limits(x = c(2, 4))
   
   df$meeg_sfreq_final_log <- log10(df$meeg_sfreq_final)
-  p_meeg_final <- hist_panel(df, "meeg_sfreq_final_log", discrete = F, 
+  p_meeg_final <- hist_panel(df %>%
+                               filter(meeg_sfreq_final != "unknown"), 
+                             "meeg_sfreq_final_log", discrete = F, 
                              title = "In the offline analysis", 
                              x.label = "Sampling frequency", bins = 12) + 
     scale_x_continuous(breaks = log10(c(10, 100, 1000, 10000)), 
@@ -24,7 +28,9 @@ figure_sampling_frequency <- function(df, save_path, ext = 'png') {
     draw_label("ECG sampling frequency", fontface = "bold")
   
   df$ecg_sfreq_orig_log <- log10(df$ecg_sfreq_orig)
-  p_ecg_orig <- hist_panel(df, "ecg_sfreq_orig_log", discrete = F, 
+  p_ecg_orig <- hist_panel(df %>%
+                             filter(ecg_sfreq_orig != "unknown"), 
+                           "ecg_sfreq_orig_log", discrete = F, 
                            title = "During the recording", 
                            x.label = "Sampling frequency", bins = 12) + 
     scale_x_continuous(breaks = log10(c(10, 100, 1000, 10000)), 
@@ -32,7 +38,9 @@ figure_sampling_frequency <- function(df, save_path, ext = 'png') {
     expand_limits(x = c(2, 4))
   
   df$ecg_sfreq_final_log <- log10(df$ecg_sfreq_final)
-  p_ecg_final <- hist_panel(df, "ecg_sfreq_final_log", discrete = F, 
+  p_ecg_final <- hist_panel(df %>%
+                              filter(ecg_sfreq_final != "unknown"), 
+                            "ecg_sfreq_final_log", discrete = F, 
                             title = "In the offline analysis", 
                             x.label = "Sampling frequency", bins = 12) + 
     scale_x_continuous(breaks = log10(c(10, 100, 1000, 10000)), 

@@ -36,13 +36,8 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
     combined = F
   )
   
-  methods_to_display <- df %>% 
-    distinct(PMID, ecg_event_method) %>% 
-    group_by(ecg_event_method) %>% 
-    summarize(count = n()) %>% 
-    filter(ecg_event_method != "unknown", 
-           count >= params$ecg_method_min_papers) %>%
-    pull(ecg_event_method)
+  df$ecg_event_method <- merge_into_other(df, "PMID", "ecg_event_method",
+                                          params$ecg_method_min_papers)
   p_method <- hist_panel(
     df %>%
       filter(ecg_event_method != "unknown"),
@@ -54,18 +49,14 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
       "Niazy2005" = "Niazy et al.\n(2005)",
       "deCarvalho2002" = "de Carvalho\net al. (2002)",
       "Derivative sign" = "Derivative\nsign",
-      "Librow" = "Librow"
+      "Librow" = "Librow",
+      "Other" = "Other"
     ),
     discrete = T
   )
   
-  toolboxes_to_display <- df %>% 
-    distinct(PMID, ecg_event_toolbox) %>% 
-    group_by(ecg_event_toolbox) %>% 
-    summarize(count = n()) %>% 
-    filter(!(ecg_event_toolbox %in% c("none", "unknown")), 
-           count >= params$ecg_toolbox_min_papers) %>%
-    pull(ecg_event_toolbox)
+  df$ecg_event_toolbox <- merge_into_other(df, "PMID", "ecg_event_toolbox",
+                                           params$ecg_toolbox_min_papers)
   p_toolbox <- hist_panel(
     df %>%
       filter(!(ecg_event_toolbox %in% c("none", "unknown"))),
@@ -79,7 +70,8 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
       "Kubios" = "Kubios",
       "WinCPRS" = "WinCPRS",
       "Librow" = "Librow",
-      "Neurokit2" = "Neurokit2"
+      "Neurokit2" = "Neurokit2",
+      "Other" = "Other"
     ),
     discrete = T
   )
@@ -100,7 +92,7 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
     p_ecg_locations,
     nrow = 1,
     labels = c('', 'C', ''),
-    rel_widths = c(1, 0.15, 1.4),
+    rel_widths = c(1, 0.15, 1.25),
     align = 'v',
     axis = 'l'
   )
@@ -131,7 +123,7 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
     NULL, 
     fig_EF,
     nrow = 1,
-    rel_widths = c(0.075, 0.95, 0.075, 1.6),
+    rel_widths = c(0.075, 0.9, 0.05, 1.7),
     labels = c("D", "", "", ""),
     align = 'v',
     axis = 'l'
@@ -144,7 +136,7 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
     p_ecg_preproc,
     fig_DEF,
     ncol = 1,
-    rel_heights = c(0.1, 0.9, 0.05, 0.1, 1.0),
+    rel_heights = c(0.1, 0.9, 0.025, 0.1, 1.025),
     align = 'v',
     axis = 'l'
   )

@@ -113,7 +113,7 @@ plot_segments <- function(
     if (is.null(breaks) || length(breaks) == 0) return(NULL)
     sapply(breaks, function(x) {
       if (is.na(x) || is.null(x)) return("")
-      if (x < 1) sprintf("%.2f", x) else sprintf("%.0f", x)
+      if (x < 1) sprintf("%.1g", x) else sprintf("%.0f", x)
     })
   }
 

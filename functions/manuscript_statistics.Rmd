@@ -271,7 +271,7 @@ common_highpass <- filter_data %>%
   head(3)
 ```
 
-* Most common high-pass cutoffs: **`r paste(sort(common_highpass$high_pass), collapse = ", ")` Hz**
+* Most common high-pass cutoffs for M/EEG: **`r paste(sort(common_highpass$high_pass), collapse = ", ")` Hz**
 
 ### Artifact removal
 
@@ -312,7 +312,7 @@ for (i in 1:3) {
 }
 ```
 
-## 3.4. ECG Acquisition
+## 3.4. ECG acquisition and preprocessing
 
 ```{r ecg-as-control}
 controls_df <- control_counts(df_pipelines, level = "variable") %>%
@@ -321,6 +321,8 @@ ecg_as_control <- get_row(controls_df, "variable", "ECG")
 ```
 
 Studies that use ECG as a control variable: **`r ecg_as_control$percentage`%** (**`r ecg_as_control$count`** / **`r ecg_as_control$total`**) `r ecg_as_control$level`
+
+### ECG acquisition
 
 ```{r ecg_num_electrodes}
 # Map "unknown" to 9 so that it isn't lost during conversion to numeric
@@ -351,6 +353,65 @@ Number of studies that use different ECG leads:
 * Lead I: **`r ecg_lead_i$percentage`%** (**`r ecg_lead_i$n`** / **`r ecg_lead_i$total`** `r ecg_lead_i$level`)
 * Lead III: **`r ecg_lead_iii$percentage`%** (**`r ecg_lead_iii$n`** / **`r ecg_lead_iii$total`** `r ecg_lead_iii$level`)
 * Unclassified: **`r ecg_lead_nc$percentage`%** (**`r ecg_lead_nc$n`** / **`r ecg_lead_nc$total`** `r ecg_lead_nc$level`)
+
+### ECG preprocessing
+
+```{r common-ecg-high-pass}
+# Filter statistics
+ecg_filter_data <- df_pipelines %>%
+  mutate(across(c('ecg_high_pass', 'ecg_low_pass'), as.numeric)) %>%
+  filter(!is.na(ecg_high_pass) & !is.na(ecg_low_pass)) %>%
+  distinct(PMID, ecg_high_pass, ecg_low_pass, .keep_all = TRUE)
+
+# Most common high-pass filter values (studies)
+common_ecg_highpass <- ecg_filter_data %>%
+  count(ecg_high_pass, sort = TRUE) %>%
+  head(3)
+```
+
+Most common high-pass cutoffs for ECG: **`r paste(sort(common_ecg_highpass$ecg_high_pass), collapse = ", ")` Hz**
+
+Methods for peak detection in the ECG:
+
+```{r ecg-method}
+ecg_method_df <- hist_discrete(df_pipelines %>%
+                                 filter(ecg_event_method != "unknown"), 
+                               "ecg_event_method") %>%
+  mutate(percentage = round_custom(percentage)) %>%
+  arrange(-percentage)
+
+for (i in 1:nrow(ecg_method_df)) {
+  row <- ecg_method_df[i, ]
+  cat(
+    paste0(
+      '  * ', row$ecg_event_method, ': ',
+      '**', row$percentage, '%**', 
+      ' (**', row$n, '** / **', row$total, '** ', row$level, ')\n'
+    )
+  )
+}
+```
+
+Toolboxes for peak detection in the ECG:
+
+```{r ecg-toolbox}
+ecg_toolbox_df <- hist_discrete(df_pipelines %>%
+                                 filter(!(ecg_event_toolbox %in% c("none", "unknown"))),
+                                "ecg_event_toolbox") %>%
+  mutate(percentage = round_custom(percentage)) %>%
+  arrange(-percentage)
+
+for (i in 1:nrow(ecg_toolbox_df)) {
+  row <- ecg_toolbox_df[i, ]
+  cat(
+    paste0(
+      '  * ', row$ecg_event_toolbox, ': ',
+      '**', row$percentage, '%**', 
+      ' (**', row$n, '** / **', row$total, '** ', row$level, ')\n'
+    )
+  )
+}
+```
 
 ## 3.5. Dealing with cardiac artifacts
 

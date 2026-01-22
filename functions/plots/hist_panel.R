@@ -64,7 +64,8 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
     if (author_check) {
       thr <- author_threshold
 
-      df_auth <- df %>%
+      df_auth <- df_distinct %>%
+        left_join(df %>% select(!!sym(group_col), authors) %>% distinct(), by = group_col) %>%
         distinct(!!sym(group_col), !!sym(col), authors) %>%
         mutate(.first = stringr::word(authors, 1, sep = ",")) %>%
         mutate(.last = stringr::str_trim(stringr::word(authors, -1, sep = ",")))

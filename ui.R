@@ -31,7 +31,7 @@ ui <- page_navbar(
     "Data",
     div(
       style = "margin-bottom: 10px; font-size: 0.95em; color: #444;",
-      p(strong("Topic column uses regex patterns:"),
+      p(strong("Search columns  using regex patterns:"),
         tags$ul(
           tags$li(tags$code("Perception|Music"), " — match either (OR)"),
           tags$li(tags$code("(?=.*Perception)(?=.*Music)"), " — match both (AND)"),

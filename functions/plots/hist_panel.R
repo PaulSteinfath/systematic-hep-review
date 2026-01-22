@@ -12,6 +12,9 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
     df <- df %>% filter(modality == modality_filter)
   }
   
+  # Initialize dominant_marks
+  dominant_marks <- NULL
+  
   # Get unique (group_col, col) combinations to avoid overestimating the weight
   # of papers with multiple rows
   df_distinct <- distinct(df, !!sym(group_col), !!sym(col))
@@ -109,6 +112,13 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
             as.character(r[[1]]), col, r[["position"]], r[["author"]], as.numeric(r[["pct"]]), r[["n"]], r[["total"]]
           ))
         }
+        #Generate marker positions - 3% above bar height
+        max_bar <- if (use_proportion) max(counts_df$prop, na.rm = TRUE) else max(counts_df$n, na.rm = TRUE)
+        fixed_offset <- max_bar * 0.03
+        dominant_marks <- dominant %>%
+          distinct(!!sym(col)) %>%
+          left_join(counts_df, by = col) %>%
+          mutate(mark_y = (if (use_proportion) prop else n) + fixed_offset)
       }
     }
     
@@ -130,6 +140,14 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
       p <- p + 
         geom_bar(stat = "identity", fill = common_colors$fill_default, 
                  color = 'white', linewidth = 0.5)
+    }
+
+    # Add markers above flagged bars
+    if (!is.null(dominant_marks) && nrow(dominant_marks) > 0) {
+      p <- p +
+        geom_point(data = dominant_marks,
+                   aes(x = !!sym(col), y = mark_y),
+                   shape = 23, size = 1.5, fill = "black", color = "black")
     }
     
     p <- p + theme_classic(base_family = "sans")
@@ -177,9 +195,10 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
   }
   
   # Add percent signs to labels, remove empty space below the bars, apply y-axis
-  # limits if provided
+  # limits if provided; add extra headroom when dominance marks are present
+  top_expand <- if (!is.null(dominant_marks) && nrow(dominant_marks) > 0) 0.15 else 0.10
   p <- p + scale_y_continuous(labels = if (use_proportion) scales::percent else waiver(),
-                              expand = expansion(mult = c(0, .1)),
+                              expand = expansion(mult = c(0, top_expand)),
                               limits = y_limits)
   
   # Update y-axis label to use the same label_type

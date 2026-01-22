@@ -1,7 +1,8 @@
 """
 Validation of the review table against the codebook.
 
-prerequisites: pip install numpy pandas
+tested with Python 3.11.5
+prerequisites: pip install numpy==1.26.0 pandas==2.1.1
 
 usage: python ./validate.py [-h] 
            [--coverage] [--debug] [--no-cols NO_COLS] [--no-rows NO_ROWS]
@@ -971,7 +972,7 @@ def validate_own(df, df_all, df_original, codebook,
     errors_non_ignored = len(report_disp)
     report_disp = report_disp[['line', 'PMID',
                                'column', 'failure_case',
-                               'error']]\
+                               'error', 'codebook']]\
                         .head(n=n)
     
     logger.info(f'{errors_total} errors total ({errors_non_ignored} for non-ignored columns)')

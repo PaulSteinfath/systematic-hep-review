@@ -1103,3 +1103,17 @@ for (i in 1:nrow(detecting_df_full)) {
   )
 }
 ```
+
+# Response to reviewers
+
+```{r new-data}
+new_data <- df_included %>% 
+  distinct(PMID, new_data) %>% 
+  group_by(PMID) %>% 
+  # NOTE: if more than one value per study, taking the product
+  # (i.e., logical AND) to get studies that use only new data
+  summarize(new_data = prod(new_data)) %>%
+  pull(new_data)
+```
+
+Studies using newly collected data: `r sum(new_data)` / `r length(new_data)`

@@ -11,7 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
-<meta name="date" content="2025-08-06" />
+<meta name="date" content="2026-01-22" />
 
 <title>Manuscript Summary</title>
 
@@ -58,7 +58,7 @@ if (window.hljs) {
 <h1 class="title toc-ignore">Manuscript Summary</h1>
 <h3 class="subtitle">A Systematic Review of Methods Used for Studying
 Heartbeat Evoked Responses</h3>
-<h4 class="date">2025-08-06</h4>
+<h4 class="date">2026-01-22</h4>
 
 
 
@@ -185,10 +185,22 @@ time windows, or statistical approaches).</li>
 <td align="right">71</td>
 </tr>
 <tr class="odd">
+<td align="left">ecg_low_pass</td>
+<td align="right">80</td>
+<td align="right">132</td>
+<td align="right">61</td>
+</tr>
+<tr class="even">
 <td align="left">length_min</td>
 <td align="right">78</td>
 <td align="right">132</td>
 <td align="right">59</td>
+</tr>
+<tr class="odd">
+<td align="left">ecg_high_pass</td>
+<td align="right">76</td>
+<td align="right">132</td>
+<td align="right">58</td>
 </tr>
 <tr class="even">
 <td align="left">trials_original</td>
@@ -197,12 +209,18 @@ time windows, or statistical approaches).</li>
 <td align="right">55</td>
 </tr>
 <tr class="odd">
+<td align="left">ecg_event_method</td>
+<td align="right">69</td>
+<td align="right">132</td>
+<td align="right">52</td>
+</tr>
+<tr class="even">
 <td align="left">baseline_end_ms</td>
 <td align="right">59</td>
 <td align="right">132</td>
 <td align="right">45</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">baseline_start_ms</td>
 <td align="right">58</td>
 <td align="right">132</td>
@@ -233,7 +251,8 @@ time windows, or statistical approaches).</li>
 <div id="filter-settings" class="section level3">
 <h3>Filter settings</h3>
 <ul>
-<li>Most common high-pass cutoffs: <strong>0.1, 0.5, 1 Hz</strong></li>
+<li>Most common high-pass cutoffs for M/EEG: <strong>0.1, 0.5, 1
+Hz</strong></li>
 </ul>
 </div>
 <div id="artifact-removal" class="section level3">
@@ -259,10 +278,12 @@ time windows, or statistical approaches).</li>
 </ul>
 </div>
 </div>
-<div id="ecg-acquisition" class="section level2">
-<h2>3.4. ECG Acquisition</h2>
+<div id="ecg-acquisition-and-preprocessing" class="section level2">
+<h2>3.4. ECG acquisition and preprocessing</h2>
 <p>Studies that use ECG as a control variable: <strong>45%</strong>
 (<strong>59</strong> / <strong>132</strong>) studies</p>
+<div id="ecg-acquisition" class="section level3">
+<h3>ECG acquisition</h3>
 <p>Studies that use 2 ECG electrodes: <strong>67</strong>%
 (<strong>89</strong> / <strong>132</strong>) studies</p>
 <p>Number of studies that use different ECG leads:</p>
@@ -276,6 +297,82 @@ time windows, or statistical approaches).</li>
 <li>Unclassified: <strong>27%</strong> (<strong>35</strong> /
 <strong>132</strong> studies)</li>
 </ul>
+</div>
+<div id="ecg-preprocessing" class="section level3">
+<h3>ECG preprocessing</h3>
+<p>Most common high-pass cutoffs for ECG: <strong>0.1, 0.5, 1
+Hz</strong></p>
+<p>Methods for peak detection in the ECG:</p>
+<ul>
+<li>PanTompkins1985: <strong>24%</strong> (<strong>15</strong> /
+<strong>63</strong> studies)</li>
+<li>Derivative sign: <strong>21%</strong> (<strong>13</strong> /
+<strong>63</strong> studies)</li>
+<li>Template matching: <strong>17%</strong> (<strong>11</strong> /
+<strong>63</strong> studies)</li>
+<li>Niazy2005: <strong>14%</strong> (<strong>9</strong> /
+<strong>63</strong> studies)</li>
+<li>Librow: <strong>4.8%</strong> (<strong>3</strong> /
+<strong>63</strong> studies)</li>
+<li>deCarvalho2002: <strong>3.2%</strong> (<strong>2</strong> /
+<strong>63</strong> studies)</li>
+<li>sym4: <strong>3.2%</strong> (<strong>2</strong> /
+<strong>63</strong> studies)</li>
+<li>Afonso1999: <strong>1.6%</strong> (<strong>1</strong> /
+<strong>63</strong> studies)</li>
+<li>Brammer2020: <strong>1.6%</strong> (<strong>1</strong> /
+<strong>63</strong> studies)</li>
+<li>Elgendi2013: <strong>1.6%</strong> (<strong>1</strong> /
+<strong>63</strong> studies)</li>
+<li>Hamilton2002: <strong>1.6%</strong> (<strong>1</strong> /
+<strong>63</strong> studies)</li>
+<li>Schmitt: <strong>1.6%</strong> (<strong>1</strong> /
+<strong>63</strong> studies)</li>
+<li>Varanini2014: <strong>1.6%</strong> (<strong>1</strong> /
+<strong>63</strong> studies)</li>
+<li>Varon2015: <strong>1.6%</strong> (<strong>1</strong> /
+<strong>63</strong> studies)</li>
+<li>Zhang2006: <strong>1.6%</strong> (<strong>1</strong> /
+<strong>63</strong> studies)</li>
+</ul>
+<p>Toolboxes for peak detection in the ECG:</p>
+<ul>
+<li>HEPLAB: <strong>18%</strong> (<strong>11</strong> /
+<strong>60</strong> studies)</li>
+<li>Peakfinder: <strong>18%</strong> (<strong>11</strong> /
+<strong>60</strong> studies)</li>
+<li>FMRIB: <strong>15%</strong> (<strong>9</strong> /
+<strong>60</strong> studies)</li>
+<li>BrainVision Analyzer: <strong>6.7%</strong> (<strong>4</strong> /
+<strong>60</strong> studies)</li>
+<li>Kubios: <strong>6.7%</strong> (<strong>4</strong> /
+<strong>60</strong> studies)</li>
+<li>WinCPRS: <strong>6.7%</strong> (<strong>4</strong> /
+<strong>60</strong> studies)</li>
+<li>Librow: <strong>5%</strong> (<strong>3</strong> /
+<strong>60</strong> studies)</li>
+<li>Neurokit2: <strong>5%</strong> (<strong>3</strong> /
+<strong>60</strong> studies)</li>
+<li>AcqKnowledge: <strong>3.3%</strong> (<strong>2</strong> /
+<strong>60</strong> studies)</li>
+<li>MNE-Python: <strong>3.3%</strong> (<strong>2</strong> /
+<strong>60</strong> studies)</li>
+<li>ARTiiFACT: <strong>1.7%</strong> (<strong>1</strong> /
+<strong>60</strong> studies)</li>
+<li>Brainstorm: <strong>1.7%</strong> (<strong>1</strong> /
+<strong>60</strong> studies)</li>
+<li>Curry: <strong>1.7%</strong> (<strong>1</strong> /
+<strong>60</strong> studies)</li>
+<li>LibRASCH: <strong>1.7%</strong> (<strong>1</strong> /
+<strong>60</strong> studies)</li>
+<li>R-DECO: <strong>1.7%</strong> (<strong>1</strong> /
+<strong>60</strong> studies)</li>
+<li>findpeaks: <strong>1.7%</strong> (<strong>1</strong> /
+<strong>60</strong> studies)</li>
+<li>peakdetect: <strong>1.7%</strong> (<strong>1</strong> /
+<strong>60</strong> studies)</li>
+</ul>
+</div>
 </div>
 <div id="dealing-with-cardiac-artifacts" class="section level2">
 <h2>3.5. Dealing with cardiac artifacts</h2>
@@ -660,6 +757,10 @@ pipelines)</li>
 (<strong>91</strong> / <strong>222</strong> pipelines)</li>
 </ul>
 </div>
+</div>
+<div id="response-to-reviewers" class="section level1">
+<h1>Response to reviewers</h1>
+<p>Studies using newly collected data: 120 / 132</p>
 </div>
 
 

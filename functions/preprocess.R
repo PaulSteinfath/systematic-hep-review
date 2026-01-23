@@ -7,6 +7,7 @@ columns_to_drop <- c("DOI", "include", "comment", "citation")
 convert_to_numeric <- c("year", "sample_size", "meeg_num_electrodes", 
                         "length_min", "high_pass", "low_pass", "groups", 
                         "conditions", "hep_start", "hep_end", 
+                        "ecg_high_pass", "ecg_low_pass",
                         "baseline_start_ms", "baseline_end_ms", "permutations", 
                         "significant_start_ms", "significant_end_ms")
 convert_to_factors <- c("setting", "modality", "ICA", "ica_on_epochs", 
@@ -201,7 +202,11 @@ preprocess_ecg <- function(df) {
                              "Multiple leads" = "Multiple\nleads",
                              "Multiple leads (Lead II)" = "Lead II",
                              "Unclassified" = "N/C",
-                             "unknown" = "N/M"))
+                             "unknown" = "N/M")) %>%
+    # NOTE: sym4 wavelet also serves as a data-independent template of a 
+    # cardiac cycle, merging into one category
+    mutate(ecg_event_method = recode(ecg_event_method,
+                                     "sym4" = "Template matching"))
 }
 
 

@@ -47,3 +47,24 @@ safe_merge <- function(df1, df2, by, sort) {
   assert("number of rows should not change due to merge", n_before == n_after)
   df_merged
 }
+
+
+merge_into_other <- function(df, group_col, col, thresh) {
+  # Merge all values that appear in less than `thresh` studies
+  # into 'Other'
+  # 
+  # NOTE: better to apply right before plotting to not interfere with
+  # entropy calculations
+  values_to_merge <- df %>% 
+    distinct(!!sym(group_col), !!sym(col)) %>% 
+    group_by(!!sym(col)) %>% 
+    summarize(count = n()) %>% 
+    filter(count < thresh) %>%
+    pull(!!sym(col))
+  
+  all_values <- df %>% pull(!!sym(col))
+  case_when(
+    all_values %in% values_to_merge ~ "Other",
+    .default = all_values
+  )
+}

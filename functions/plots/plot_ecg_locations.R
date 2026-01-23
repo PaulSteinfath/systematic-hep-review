@@ -5,8 +5,8 @@ aspect <- body_image_info$height / body_image_info$width
 
 # Assign coordinates to different ECG locations
 pos <- data.frame(
-  x = c(0.335, 0.62, 0.075, 0.9, 0.15, 0.65, 0.65, 0.625),
-  y = c(0.875, 0.8675, 0.125, 0.175, 0.8, 0.075, 0.25, 0.55), 
+  x = c(0.335, 0.62, 0.05, 0.925, 0.15, 0.65, 0.65, 0.625),
+  y = c(0.875, 0.8675, 0.125, 0.175, 0.825, 0.075, 0.25, 0.55), 
   label = c('RC', 'LC', 'RW', 'LW', 'RS', 'LL', 'LAb', 'LCh'),
   name = c('right clavicle', 'left clavicle', 'right wrist', 'left wrist',
            'right shoulder', 'left leg', 'left abdomen', 'left chest')

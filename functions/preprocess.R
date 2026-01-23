@@ -168,6 +168,32 @@ preprocess_reference <- function(df) {
     )
 }
 
+preprocess_sfreq <- function(df) {
+  # Assumptions:
+  #  - if downsampling was not mentioned, assume that original sampling
+  # frequency was used in the offline analysis
+  #  - if the sampling frequency of ECG is not mentioned, assume that it
+  # was the same as for M/EEG
+  df$meeg_sfreq_final <- case_when(
+    df$meeg_sfreq_final == "unknown" ~ df$meeg_sfreq_orig,
+    .default = df$meeg_sfreq_final
+  )
+  df$ecg_sfreq_orig <- case_when(
+    df$ecg_sfreq_orig == "unknown" ~ df$meeg_sfreq_orig,
+    .default = df$ecg_sfreq_orig
+  )
+  df$ecg_sfreq_final <- case_when(
+    df$ecg_sfreq_final == "unknown" ~ df$ecg_sfreq_orig,
+    .default = df$ecg_sfreq_final
+  )
+  
+  # Convert to numeric, thereby setting all remaining unknowns to NA
+  df %>%
+    mutate(across(c('meeg_sfreq_orig', 'meeg_sfreq_final', 
+                  'ecg_sfreq_orig', 'ecg_sfreq_final'), 
+                  as.numeric))
+}
+
 preprocess_ecg <- function(df) {
   df %>%
     mutate(ecg_lead = recode(ecg_lead,
@@ -545,6 +571,7 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   df_included <- preprocess_studies(df_included)
   df_included <- preprocess_ecg(df_included)
   df_included <- preprocess_cleaning(df_included)
+  df_included <- preprocess_sfreq(df_included)
   df_included <- preprocess_cfa_removal(df_included)
   df_included <- preprocess_channels(df_included)
   df_included <- preprocess_hep_significant(df_included)

@@ -179,7 +179,7 @@ preprocess_sfreq <- function(df) {
     .default = df$meeg_sfreq_final
   )
   df$ecg_sfreq_orig <- case_when(
-    df$ecg_sfreq_orig == "unknown" ~ df$ecg_sfreq_orig,
+    df$ecg_sfreq_orig == "unknown" ~ df$meeg_sfreq_orig,
     .default = df$ecg_sfreq_orig
   )
   df$ecg_sfreq_final <- case_when(

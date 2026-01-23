@@ -47,7 +47,6 @@
 "ecg_sfreq_final",TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,"numeric","",""
 "ecg_high_pass",TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,"numeric","",""
 "ecg_low_pass",TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,"numeric","",""
-"ecg_event_approach",TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,"character","should be one of the codebook options","Automatic, Semi-automatic"
 "ecg_event_method",TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,"character","should be one of the codebook options","PanTompkins1985, Afonso1999, deCarvalho2002, Hamilton2002, Niazy2005, Zhang2006, Elgendi2013, Varanini2014, Varon2015, Brammer2020, Derivative sign, Template matching, sym4, Schmitt, Librow"
 "ecg_event_toolbox",TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,"character","should be one of the codebook options","HEPLAB, Kubios, AcqKnowledge, Neurokit2, R-DECO, MNE-Python, BrainVision Analyzer, findpeaks, peakdetect, FMRIB, Librow, Brainstorm, ARTiiFACT, peakfinder, Curry, WinCPRS, LibRASCH"
 "hep_eeg_channels_selected",TRUE,TRUE,FALSE,FALSE,TRUE,TRUE,FALSE,"character","should belong to the layout (selected)",""

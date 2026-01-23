@@ -1,7 +1,8 @@
 """
 Validation of the review table against the codebook.
 
-prerequisites: pip install numpy pandas
+tested with Python 3.11.5
+prerequisites: pip install numpy==1.26.0 pandas==2.1.1
 
 usage: python ./validate.py [-h] 
            [--coverage] [--debug] [--no-cols NO_COLS] [--no-rows NO_ROWS]

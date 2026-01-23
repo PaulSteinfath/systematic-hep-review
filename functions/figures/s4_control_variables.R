@@ -2,7 +2,7 @@ figure_control_variables <- function(df, save_path, ext = 'svg') {
   fig <- plot_control_variables(df)
   
   ggsave(
-    filename = file.path(save_path, paste0("figS3_control_variables.", ext)),
+    filename = file.path(save_path, paste0("figS4_control_variables.", ext)),
     plot = fig,
     width = 150,
     height = 210,

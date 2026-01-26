@@ -5,7 +5,8 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
                        modality_filter = NULL, binwidth = NULL, bins = NULL, tilt_labels = F,
                        use_proportion = TRUE, y_limits = NULL, custom_labels = NULL,
                        preserve_order = FALSE, decreasing = TRUE,
-                       author_check = TRUE, author_threshold = 50) { 
+                       author_check = TRUE, author_threshold = 50,
+                       mark_offset = 0.03) { 
   
   # Filter for EEG modality if specified
   if (!is.null(modality_filter)) {
@@ -66,7 +67,6 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
 
       df_auth <- df_distinct %>%
         left_join(df %>% select(!!sym(group_col), authors) %>% distinct(), by = group_col) %>%
-        distinct(!!sym(group_col), !!sym(col), authors) %>%
         mutate(.first = stringr::word(authors, 1, sep = ",")) %>%
         mutate(.last = stringr::str_trim(stringr::word(authors, -1, sep = ",")))
       
@@ -113,9 +113,9 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
             as.character(r[[1]]), col, r[["position"]], r[["author"]], as.numeric(r[["pct"]]), r[["n"]], r[["total"]]
           ))
         }
-        #Generate marker positions - 3% above bar height
+        #Generate marker positions - offset above bar height
         max_bar <- if (use_proportion) max(counts_df$prop, na.rm = TRUE) else max(counts_df$n, na.rm = TRUE)
-        fixed_offset <- max_bar * 0.03
+        fixed_offset <- max_bar * mark_offset
         dominant_marks <- dominant %>%
           distinct(!!sym(col)) %>%
           left_join(counts_df, by = col) %>%

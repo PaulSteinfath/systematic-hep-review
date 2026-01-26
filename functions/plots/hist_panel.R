@@ -105,6 +105,12 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
       dominant <- bind_rows(top_first, top_last) %>%
         select(!!sym(col), position, author, n, total, pct)
 
+      if (!is.null(custom_labels)) {
+        dominant[[col]] <- factor(dominant[[col]], 
+                                  levels = names(custom_labels),
+                                  labels = custom_labels)
+      }
+      
       if (nrow(dominant) > 0) {
         for (i in seq_len(nrow(dominant))) {
           r <- dominant[i, ]

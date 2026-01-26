@@ -5,12 +5,16 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
                        modality_filter = NULL, binwidth = NULL, bins = NULL, tilt_labels = F,
                        use_proportion = TRUE, y_limits = NULL, custom_labels = NULL,
                        preserve_order = FALSE, decreasing = TRUE,
-                       author_check = TRUE, author_threshold = 50) { 
+                       author_check = TRUE, author_threshold = 50,
+                       mark_offset = 0.05) { 
   
   # Filter for EEG modality if specified
   if (!is.null(modality_filter)) {
     df <- df %>% filter(modality == modality_filter)
   }
+  
+  # Initialize dominant_marks
+  dominant_marks <- NULL
   
   # Get unique (group_col, col) combinations to avoid overestimating the weight
   # of papers with multiple rows
@@ -61,8 +65,8 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
     if (author_check) {
       thr <- author_threshold
 
-      df_auth <- df %>%
-        distinct(!!sym(group_col), !!sym(col), authors) %>%
+      df_auth <- df_distinct %>%
+        left_join(df %>% select(!!sym(group_col), authors) %>% distinct(), by = group_col) %>%
         mutate(.first = stringr::word(authors, 1, sep = ",")) %>%
         mutate(.last = stringr::str_trim(stringr::word(authors, -1, sep = ",")))
       
@@ -101,6 +105,12 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
       dominant <- bind_rows(top_first, top_last) %>%
         select(!!sym(col), position, author, n, total, pct)
 
+      if (!is.null(custom_labels)) {
+        dominant[[col]] <- factor(dominant[[col]], 
+                                  levels = names(custom_labels),
+                                  labels = custom_labels)
+      }
+      
       if (nrow(dominant) > 0) {
         for (i in seq_len(nrow(dominant))) {
           r <- dominant[i, ]
@@ -109,6 +119,13 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
             as.character(r[[1]]), col, r[["position"]], r[["author"]], as.numeric(r[["pct"]]), r[["n"]], r[["total"]]
           ))
         }
+        #Generate marker positions - offset above bar height
+        max_bar <- if (use_proportion) max(counts_df$prop, na.rm = TRUE) else max(counts_df$n, na.rm = TRUE)
+        fixed_offset <- max_bar * mark_offset
+        dominant_marks <- dominant %>%
+          distinct(!!sym(col)) %>%
+          left_join(counts_df, by = col) %>%
+          mutate(mark_y = (if (use_proportion) prop else n) + fixed_offset)
       }
     }
     
@@ -130,6 +147,14 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
       p <- p + 
         geom_bar(stat = "identity", fill = common_colors$fill_default, 
                  color = 'white', linewidth = 0.5)
+    }
+
+    # Add markers above flagged bars
+    if (!is.null(dominant_marks) && nrow(dominant_marks) > 0) {
+      p <- p +
+        geom_point(data = dominant_marks,
+                   aes(x = !!sym(col), y = mark_y),
+                   shape = 23, size = 1.5, fill = "black", color = "black")
     }
     
     p <- p + theme_classic(base_family = "sans")
@@ -177,9 +202,10 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
   }
   
   # Add percent signs to labels, remove empty space below the bars, apply y-axis
-  # limits if provided
+  # limits if provided; add extra headroom when dominance marks are present
+  top_expand <- if (!is.null(dominant_marks) && nrow(dominant_marks) > 0) 0.15 else 0.10
   p <- p + scale_y_continuous(labels = if (use_proportion) scales::percent else waiver(),
-                              expand = expansion(mult = c(0, .1)),
+                              expand = expansion(mult = c(0, top_expand)),
                               limits = y_limits)
   
   # Update y-axis label to use the same label_type

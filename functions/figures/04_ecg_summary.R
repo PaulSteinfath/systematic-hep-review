@@ -15,7 +15,7 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
     scale_x_continuous(breaks = seq(0, 9),
                        labels = c(seq(0, 8), "N/M"))
   p_ecg_leads <- hist_panel(df, "ecg_lead", fill_as_aesthetic = T,
-                            discrete = T, title = "ECG lead") +
+                            discrete = T, title = "ECG lead", mark_offset = 0.08) +
     scale_fill_manual(values = leads_palette,
                       na.value = common_colors$fill_default,
                       guide = "none") 
@@ -52,7 +52,8 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
       "Librow" = "Librow",
       "Other" = "Other"
     ),
-    discrete = T
+    discrete = T,
+    mark_offset = 0.07
   )
   
   df$ecg_event_toolbox <- merge_into_other(df, "PMID", "ecg_event_toolbox",
@@ -73,7 +74,8 @@ figure_ecg_summary <- function(df, save_path = NULL, ext = 'png') {
       "Neurokit2" = "Neurokit2",
       "Other" = "Other"
     ),
-    discrete = T
+    discrete = T,
+    mark_offset = 0.07
   )
   
   fig_AB = plot_grid(

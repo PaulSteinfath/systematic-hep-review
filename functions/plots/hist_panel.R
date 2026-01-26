@@ -6,7 +6,7 @@ hist_panel <- function(df, col, group_col = 'PMID', title = NULL, discrete = F,
                        use_proportion = TRUE, y_limits = NULL, custom_labels = NULL,
                        preserve_order = FALSE, decreasing = TRUE,
                        author_check = TRUE, author_threshold = 50,
-                       mark_offset = 0.03) { 
+                       mark_offset = 0.05) { 
   
   # Filter for EEG modality if specified
   if (!is.null(modality_filter)) {

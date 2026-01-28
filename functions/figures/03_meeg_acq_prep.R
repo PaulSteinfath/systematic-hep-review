@@ -35,6 +35,8 @@ figure_meeg_acq_prep <- function(df, save_path = NULL, ext = 'png') {
     custom_breaks = c(0.01, 0.1, 0.5, 1, 20, 40, 80),
     x_label = "Filter cutoff (Hz)",
     y_label = "Individual studies",
+    rel_heights = c(7, 0.7, 0.05, 0.8, 0.2),
+    labels = c('E', '', '', '', ''),
     show_legend = TRUE 
   )
   

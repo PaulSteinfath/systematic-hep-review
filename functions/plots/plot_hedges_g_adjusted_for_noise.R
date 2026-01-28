@@ -3,7 +3,8 @@ plot_hedges_g_adjusted_for_noise <- function(df,
                                              sigma_t_vals = c(0.1, 0.2, 0.5),
                                              r_thresh = NULL,
                                              with_clustering=FALSE, 
-                                             with_regression=FALSE) {
+                                             with_regression=FALSE,
+                                             with_correlation=FALSE) {
   
   hedges_column <- compute_effect_columns(df, 
                                           test_type_col = statistics, 
@@ -16,6 +17,7 @@ plot_hedges_g_adjusted_for_noise <- function(df,
   
   if (!with_clustering) {df <- df[df$clustering==0,]}
   if (!with_regression) {df <- df[df$statistics!='Regression',]}
+  if (!with_correlation) {df <- df[df$statistics!='Correlation',]}
   
   # 0. clean data -----------------------------------------------------------
   df_clean <- df %>% 

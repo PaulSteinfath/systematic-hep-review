@@ -5,9 +5,12 @@ plot_segments <- function(
   x_scale,
   custom_breaks,
   x_label,
-  y_label = "Individual Studies",
+  rel_heights, 
+  labels,
+  y_label = "Individual studies",
   font_face = "plain",
-  show_legend = TRUE 
+  show_legend = T,
+  combined = T
 ) {
 
   # Remove missing data and validate ranges
@@ -110,7 +113,7 @@ plot_segments <- function(
     if (is.null(breaks) || length(breaks) == 0) return(NULL)
     sapply(breaks, function(x) {
       if (is.na(x) || is.null(x)) return("")
-      if (x < 1) sprintf("%.2f", x) else sprintf("%.0f", x)
+      if (x < 1) sprintf("%.1g", x) else sprintf("%.0f", x)
     })
   }
 
@@ -120,6 +123,11 @@ plot_segments <- function(
     p2 <- p2 + scale_x_log10(breaks = custom_breaks, labels = custom_label_function)
   }
 
+  # Return parts of the plot if the combined one is not required
+  if (!combined) {
+    return(list(p1, p2))
+  }
+  
   # Create the base combined plot
   legend <- get_plot_component(p2, "guide-box", return_all = T)[[3]]
   shifted_legend <- plot_grid(
@@ -136,8 +144,8 @@ plot_segments <- function(
     ncol = 1,
     align = "v",
     axis = "lr",
-    rel_heights = c(7, 0.7, 0.05, 0.8, 0.2),
-    labels = c('E', '', '', '', ''),
+    rel_heights = rel_heights,
+    labels = labels,
     label_x = c(-0.05, 0, 0, 0, 0)
   )
 

@@ -7,6 +7,7 @@ columns_to_drop <- c("DOI", "include", "comment", "citation")
 convert_to_numeric <- c("year", "sample_size", "meeg_num_electrodes", 
                         "length_min", "high_pass", "low_pass", "groups", 
                         "conditions", "hep_start", "hep_end", 
+                        "ecg_high_pass", "ecg_low_pass",
                         "baseline_start_ms", "baseline_end_ms", "permutations", 
                         "significant_start_ms", "significant_end_ms")
 convert_to_factors <- c("setting", "modality", "ICA", "ica_on_epochs", 
@@ -168,6 +169,32 @@ preprocess_reference <- function(df) {
     )
 }
 
+preprocess_sfreq <- function(df) {
+  # Assumptions:
+  #  - if downsampling was not mentioned, assume that original sampling
+  # frequency was used in the offline analysis
+  #  - if the sampling frequency of ECG is not mentioned, assume that it
+  # was the same as for M/EEG
+  df$meeg_sfreq_final <- case_when(
+    df$meeg_sfreq_final == "unknown" ~ df$meeg_sfreq_orig,
+    .default = df$meeg_sfreq_final
+  )
+  df$ecg_sfreq_orig <- case_when(
+    df$ecg_sfreq_orig == "unknown" ~ df$meeg_sfreq_orig,
+    .default = df$ecg_sfreq_orig
+  )
+  df$ecg_sfreq_final <- case_when(
+    df$ecg_sfreq_final == "unknown" ~ df$ecg_sfreq_orig,
+    .default = df$ecg_sfreq_final
+  )
+  
+  # Convert to numeric, thereby setting all remaining unknowns to NA
+  df %>%
+    mutate(across(c('meeg_sfreq_orig', 'meeg_sfreq_final', 
+                  'ecg_sfreq_orig', 'ecg_sfreq_final'), 
+                  as.numeric))
+}
+
 preprocess_ecg <- function(df) {
   df %>%
     mutate(ecg_lead = recode(ecg_lead,
@@ -175,7 +202,11 @@ preprocess_ecg <- function(df) {
                              "Multiple leads" = "Multiple\nleads",
                              "Multiple leads (Lead II)" = "Lead II",
                              "Unclassified" = "N/C",
-                             "unknown" = "N/M"))
+                             "unknown" = "N/M")) %>%
+    # NOTE: sym4 wavelet also serves as a data-independent template of a 
+    # cardiac cycle, merging into one category
+    mutate(ecg_event_method = recode(ecg_event_method,
+                                     "sym4" = "Template matching"))
 }
 
 
@@ -545,6 +576,7 @@ preprocess <- function(df_full, output_screening = T, drop_cols = T, adjust_data
   df_included <- preprocess_studies(df_included)
   df_included <- preprocess_ecg(df_included)
   df_included <- preprocess_cleaning(df_included)
+  df_included <- preprocess_sfreq(df_included)
   df_included <- preprocess_cfa_removal(df_included)
   df_included <- preprocess_channels(df_included)
   df_included <- preprocess_hep_significant(df_included)

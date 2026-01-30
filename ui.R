@@ -8,13 +8,13 @@ ui <- page_navbar(
       class = "container-fluid",
       h2("Heartbeat-evoked responses in M/EEG: A systematic review of methods with suggestions for analysis and reporting"),
       
-      div(
-        class = "alert alert-info",
-        style = "margin: 20px 0;",
-        h4("🚧 Work in Progress"),
-        p("This systematic review and web application are under development. 
-          Data and analyses may be updated as the review progresses.")
-      ),
+      # div(
+      #   class = "alert alert-info",
+      #   style = "margin: 20px 0;",
+      #   h4("🚧 Work in Progress"),
+      #   p("This systematic review and web application are under development. 
+      #     Data and analyses may be updated as the review progresses.")
+      # ),
       
       h3("Overview"),
       p("This systematic review examines methodological approaches in heartbeat-evoked responses (HER) research 
@@ -31,12 +31,16 @@ ui <- page_navbar(
     "Data",
     div(
       style = "margin-bottom: 10px; font-size: 0.95em; color: #444;",
-      p(strong("Search columns  using regex patterns:"),
+      p(strong("Search columns using regex patterns:"),
         tags$ul(
           tags$li(tags$code("Perception|Music"), " — match either (OR)"),
           tags$li(tags$code("(?=.*Perception)(?=.*Music)"), " — match both (AND)"),
           tags$li(tags$code("^(?!.*Auditory).*Perception"), " — has Perception, excludes Auditory (NOT)")
         )
+      ),
+      p(
+        strong("Tip:"),
+        " Hover your mouse over a column name in the table to see more information about that column."
       )
     ),
     DTOutput("table")

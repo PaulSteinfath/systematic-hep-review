@@ -10,7 +10,8 @@ df_included <- read.csv("data/derivatives/included.csv", stringsAsFactors = FALS
 
 # Prepare table-friendly versions of columns so filters pick the right input type
 prepare_filter_data <- function(df) {
-  df_out <- df
+  na_tokens <- c("na", "unknown")
+  
   binary_map <- list(
     ICA = c("0" = "No", "1" = "Yes"),
     ica_on_epochs = c("0" = "No", "1" = "Yes"),
@@ -19,69 +20,58 @@ prepare_filter_data <- function(df) {
     patients = c("0" = "No", "1" = "Yes"),
     new_data = c("0" = "No", "1" = "Yes"),
     clustering = c("0" = "No", "1" = "Yes"),
-    significant_test = c("0" = "No", "1" = "Yes")
-
+    significant_test = c("0" = "No", "1" = "Yes"),
+    averaging_channels = c("0" = "No", "1" = "Yes"),
+    averaging_time = c("0" = "No", "1" = "Yes"),
+    clean_noisy_epochs = c("false" = "No", "true" = "Yes"),
+    clean_bad_channels = c("false" = "No", "true" = "Yes"),
+    has_resting = c("FALSE" = "No", "TRUE" = "Yes"),
+    has_task = c("FALSE" = "No", "TRUE" = "Yes"),
+    clean_noisy_epochs = c("FALSE" = "No", "TRUE" = "Yes"),
+    clean_bad_channels = c("FALSE" = "No", "TRUE" = "Yes"),
+    reject_cfa_ics = c("FALSE" = "No", "TRUE" = "Yes"),
+    cfa_use_minimal_rr = c("FALSE" = "No", "TRUE" = "Yes"),
+    cfa_use_minimal_artifact_window = c("FALSE" = "No", "TRUE" = "Yes"),
+    cfa_csd = c("FALSE" = "No", "TRUE" = "Yes"),
+    cfa_regress = c("FALSE" = "No", "TRUE" = "Yes"),
+    cfa_pca = c("FALSE" = "No", "TRUE" = "Yes"),
+    cfa_subtract_rest = c("FALSE" = "No", "TRUE" = "Yes")
   )
-
-  # Coerce columns to factor
-  factor_prefer <- c(
-    "ecg_event_method", "ecg_event_toolbox", "reference_online",
-    "cfa_rej_criteria", "journal", "journal_full")
-
-  # Tokens to treat as NA
-  na_tokens <- c("na", "unknown")
-
-  # List of columns that should be numeric
-  numeric_prefer <- c(
+  
+  numeric_cols <- c(
     "year", "sample_size", "meeg_num_electrodes", "meeg_sfreq_orig", 
-    "meeg_sfreq_final","meg_num_grad", "meg_num_mag",
-    "ecg_num_electrodes",  "ecg_sfreq_orig", "ecg_sfreq_final",
-    "length_min", "high_pass", "low_pass", "groups",
-    "conditions", "hep_start", "hep_end", "ecg_high_pass",
-    "ecg_low_pass", "baseline_start_ms", "baseline_end_ms",
-    "permutations", "significant_start_ms", "significant_end_ms",
-    "cfa_minimal_rr"
+    "meeg_sfreq_final", "meg_num_grad", "meg_num_mag", "ecg_num_electrodes",
+    "ecg_sfreq_orig", "ecg_sfreq_final", "length_min", "high_pass", "low_pass",
+    "groups", "conditions", "hep_start", "hep_end", "ecg_high_pass",
+    "ecg_low_pass", "baseline_start_ms", "baseline_end_ms", "permutations",
+    "significant_start_ms", "significant_end_ms", "cfa_minimal_rr"
   )
-
-  numeric_cols <- intersect(numeric_prefer, names(df_out))
+  
+  # Numeric columns: replace na tokens, convert to numeric
   for (nm in numeric_cols) {
-    vals <- as.character(df_out[[nm]])
-    vals[tolower(vals) %in% na_tokens] <- NA_character_
-    df_out[[nm]] <- as.numeric(vals)
+    vals <- as.character(df[[nm]])
+    vals[tolower(vals) %in% na_tokens] <- NA
+    df[[nm]] <- as.numeric(vals)
   }
-
-  for (nm in factor_prefer) {
-    if (nm %in% names(df_out)) {
-      if (!is.factor(df_out[[nm]])) {
-        df_out[[nm]] <- factor(df_out[[nm]])
-      }
-    }
-  }
-
+  
+  # Binary columns: map 0/1 to No/Yes, convert to factor
   for (nm in names(binary_map)) {
-      col_chr <- ifelse(is.na(df_out[[nm]]), NA_character_, as.character(df_out[[nm]]))
-      mapped <- case_when(
-        col_chr %in% names(binary_map[[nm]]) ~ binary_map[[nm]][col_chr],
-        TRUE ~ col_chr
-      )
-      level_candidates <- mapped[!is.na(mapped) & mapped != ""]
-      df_out[[nm]] <- factor(mapped, levels = unique(level_candidates))
+    vals <- as.character(df[[nm]])
+    mapped <- binary_map[[nm]][vals]
+    mapped[is.na(mapped)] <- vals[is.na(mapped)]  # keep unmapped values as-is
+    df[[nm]] <- factor(mapped)
   }
-  low_card_cols <- names(df_out)[sapply(df_out, function(x) {
-    vals <- x[!is.na(x)]
-    if (is.character(vals)) {
-      vals <- vals[vals != ""]
-    }
-    length(unique(vals)) <= 20
-  })]
-  low_card_cols <- setdiff(low_card_cols, c(names(binary_map), numeric_cols, factor_prefer))
-  for (nm in low_card_cols) {
-    if (!is.factor(df_out[[nm]])) {
-      df_out[[nm]] <- factor(df_out[[nm]])
+  
+  # Convert all other character columns to factor
+  for (nm in names(df)) {
+    if (is.character(df[[nm]])) {
+      df[[nm]] <- factor(df[[nm]])
     }
   }
-  df_out
+  
+  df
 }
+
 df_included_table <- prepare_filter_data(df_included)
 
 function(input, output) {
@@ -119,7 +109,6 @@ function(input, output) {
         ecg_sfreq_final = "If reported, the sampling frequency (in Hz) of the ECG data in the offline analysis (e.g., after downsampling), otherwise 'unknown'.",
         ecg_high_pass = "If specified, the cutoff frequency of the high-pass filter that was applied to the ECG data, in Hz. Otherwise, 'unknown'.",
         ecg_low_pass = "If specified, the cutoff frequency of the low-pass filter that was applied to the ECG data, in Hz. Otherwise, 'unknown'.",
-        #ecg_event_approach = "", # to be removed
         ecg_event_method = "Algorithm that was used for automatic detection of R-/T-peaks in the ECG.",
         ecg_event_toolbox = "Software that was used for automatic detection of R-/T-peaks in the ECG.",
         reference_online = "The channel that was used as reference during the recording of the EEG data.",
@@ -152,7 +141,7 @@ function(input, output) {
         statistics = "A statistical test that was used for analysis. For brevity, we joined them into larger families of tests.",
         clustering = "'Yes' - permutations were used, 'No' - permutations were not used. ",
         permutations = "The number of permutations used for clustering, if applicable. Unknown if permutations were performed but their number was not stated.",
-        significant_test = "'Yes'1 if the result of the performed statistical test was significant, 0 otherwise. None if not applicable (e.g., if no statistical tests were performed). Unknown if a test was performed but its significance was not stated.",
+        significant_test = "'Yes'1 if the result of the performed statistical test was significant, 'No' otherwise. None if not applicable (e.g., if no statistical tests were performed). Unknown if a test was performed but its significance was not stated.",
         significant_eeg_channels = "If applicable, names of EEG channels that belong to any significant cluster. If the names could not be derived from the text or the figures of the paper, “unknown” was used.",
         significant_relative_to = "Part of the ECG signal that the significant cluster is referenced to.",
         significant_start_ms = "If specified, the earliest time point of the earliest significant cluster (in ms).",
@@ -161,14 +150,14 @@ function(input, output) {
         trial_estimation = "Description of how we approximated the number of trials per participant, per group, per condition if this number was not explicitly provided in a paper.",
         source = "Source of the publication, either PubMed or manual identification from reference lists of papers.",
         baseline_defined = "If baseline correction was performed.",
-        has_resting = "True if the study included resting-state recordings, False otherwise.",
-        has_task = "True if the study included task recordings, False otherwise.",
+        has_resting = "'Yes' if the study included resting-state recordings, 'No' otherwise.",
+        has_task = "'Yes' if the study included task recordings, 'No' otherwise.",
         study_category = "Only resting-state, only task, or both performed in the study.",
         clean_noisy_epochs = "Were noisy epochs removed from the data before HER analysis?",
         clean_bad_channels = "Were bad channels removed from the data before HER analysis?",
         reject_cfa_ics = "Were CFA-related ICA components removed from the data before HER analysis?",
-        cfa_minimal_rr = "Minimal R-R interval used for HER analysis, in seconds.",
-        cfa_use_minimal_rr = "True if minimal R-R interval was used for HER analysis",
+        cfa_minimal_rr = "Minimal R-R interval used for HER analysis, in milliseconds",
+        cfa_use_minimal_rr = "'Yes' if minimal R-R interval was used for HER analysis",
         cfa_use_minimal_artifact_window = "Analysis limited to time of minimal artifact",
         cfa_csd = "CSD transformation applied to reduce CFA",
         cfa_regress = "Regression-based CFA removal",
@@ -177,17 +166,14 @@ function(input, output) {
         reference_category = "Analysis referenced to R- or T-peak",
         baseline_category = "Baseline correction performed or not",
         determination_category = "In the study, was averaging or clustering or both (or none ) used",
-        #hep_approach = "In the pipeline, was averaging or clustering used",
         window_type_category = "In the study, were only primary analyses performed or primary and secondary (both). See also explanation for 'hep_window_type'",
         trials_Mean = "Average number of trials per study. Contains estimated trial counts. See also 'trial_estimation' column for details on estimation procedure.",
         trials_SD = "Standard deviation of number of trials per study",
         trials_original = "Number of trials as reported in the study.",
-        #journal = "Journal name abbreviation",
         journal_full = "Full journal name",
         paper = "Publication title in citation style",
         PMID = "PMID of the publication",
         method_category = "Categorization of analysis approach into averaging or clustering. If unclear 'other' is used."
-        #method_numeric = "Same as method_category but encoded as numeric (1 = averaging, 0 = clustering / other)."
       )
 
   # Render the datatable with header tooltips

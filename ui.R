@@ -6,7 +6,7 @@ ui <- page_navbar(
     "About",
     div(
       class = "container-fluid",
-      h2("Heartbeat-evoked responses in M/EEG: A systematic review of methods with suggestions for analysis and reporting"),
+      h2("Heartbeat-evoked responses in M/EEG: A systematic review of methods with suggestions for analysis and reporting", style = "margin-bottom: 24px;"),
       
       # div(
       #   class = "alert alert-info",

@@ -183,6 +183,7 @@ function(input, output) {
       filter = "top",
       options = list(
         pageLength = 25,
+        dom = 'lrtip',
         headerCallback = JS(
           "function(thead, data, start, end, display){",
           "  var tips = ", jsonlite::toJSON(col_explanations), ";",
@@ -193,7 +194,7 @@ function(input, output) {
           "}"
         )
       )
-    ), escape = FALSE
+    )
   )
 
   

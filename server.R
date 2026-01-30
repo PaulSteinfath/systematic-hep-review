@@ -262,9 +262,6 @@ function(input, output) {
   }, res = 96)
   
 
-  # HER Estimation Summary Plot
-  output$herEstimationPlot <- renderPlot({
-
   # CFA Approaches Plot
   output$cfaApproachesPlot <- renderPlot({
     tryCatch({
@@ -278,9 +275,9 @@ function(input, output) {
   
 
   # HER Estimation Summary Plot
-  output$herEstimationPlot <- renderPlot({
+  output$hepEstimationPlot <- renderPlot({
     tryCatch({
-      figure_her_estimation_summary(df_selected(), save_path = NULL)
+      figure_hep_estimation_summary(df_selected(), save_path = NULL)
     }, error = function(e) {
       ggplot() + 
         geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +

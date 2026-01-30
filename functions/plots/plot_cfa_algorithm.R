@@ -1,13 +1,11 @@
 plot_cfa_algorithm <- function(df) {
   # Create algorithm inset data
-  algo_counts <- tryCatch(
-    cfa_criteria_counts(df, 
+  algo_counts <-  cfa_criteria_counts(df, 
                        mapping = c("iclabel" = "ICLabel", 
                                    "sasica" = "SASICA", 
-                                   "corrmap" = "CORRMAP")),
-    error = function(e) data.frame()
-  )
-  
+                                   "corrmap" = "CORRMAP")
+                                   )
+
   # Exit immediately if not enough info for algo_plot
   if (nrow(algo_counts) == 0) {
     return(ggplot() + theme_void())

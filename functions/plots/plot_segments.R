@@ -129,7 +129,7 @@ plot_segments <- function(
   }
   
   # Create the base combined plot
-  legend <- get_plot_component(p2, "guide-box", return_all = T)[[3]]
+  legend <- get_plot_component(p2, "guide-box", return_all = FALSE)
   shifted_legend <- plot_grid(
     NULL, legend,
     nrow = 1,

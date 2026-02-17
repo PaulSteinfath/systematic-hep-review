@@ -19,7 +19,7 @@ postprocess_included <- function(df) {
 
 	# Drop any unwanted columns
     # remove hep_approach in favor of method_category because its used for plotting. 
-	cols_to_remove <- c("hep_approach", "method_numeric", "ecg_event_approach", "journal")  
+	cols_to_remove <- c("hep_approach", "method_numeric", "ecg_event_approach")  
 	df <- df[, !(names(df) %in% cols_to_remove)]
 
 	return(df)

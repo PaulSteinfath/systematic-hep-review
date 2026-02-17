@@ -255,7 +255,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
 
   if (!is.null(selected_channels)) {
     selected_legend <- get_plot_component(selected_channels + adjust_legend,
-                                          "guide-box", return_all = T)[[3]]
+                                          "guide-box", return_all = FALSE)
     
     final_plot <- final_plot + 
       draw_plot(selected_channels + theme(legend.position = "none"),
@@ -275,7 +275,7 @@ create_single_ecg_plot <- function(df, avg_value = NULL, # takes "Averaging", "C
   }
   if (!is.null(significant_eeg_channels)) {
     significant_legend <- get_plot_component(significant_eeg_channels + adjust_legend,
-                                             "guide-box", return_all = T)[[3]]
+                                             "guide-box", return_all = FALSE)
     
     final_plot <- final_plot + 
       draw_plot(significant_eeg_channels + theme(legend.position = "none"),

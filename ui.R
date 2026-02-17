@@ -6,20 +6,16 @@ ui <- page_navbar(
     "About",
     div(
       class = "container-fluid",
-      h2("Heartbeat-evoked responses in M/EEG: A systematic review of methods with suggestions for analysis and reporting", style = "margin-bottom: 24px;"),
-      
-      # div(
-      #   class = "alert alert-info",
-      #   style = "margin: 20px 0;",
-      #   h4("🚧 Work in Progress"),
-      #   p("This systematic review and web application are under development. 
-      #     Data and analyses may be updated as the review progresses.")
-      # ),
-      
+      h2("Heartbeat-evoked responses in M/EEG: A systematic review of methods with suggestions for analysis and reporting"),
+      em(class = "text-muted", "Paul Steinfath*, Maria Azanova*, Nikolai Kapralov*, Thomas Loesche, Lioba Enk, Vadim Nikulin, Arno Villringer"),
+      br(),
+      em(class = "text-muted", "*equal contribution"),
+      br(),br(),
       h3("Overview"),
       p("This systematic review examines methodological approaches in heartbeat-evoked responses (HER) research 
         using EEG and MEG. The interactive visualizations allow exploration of data acquisition, 
         preprocessing, analysis methods, and reporting practices across studies."),
+       
       
       hr(),
       p(class = "text-muted", 

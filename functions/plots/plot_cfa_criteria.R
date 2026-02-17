@@ -1,13 +1,10 @@
 plot_cfa_criteria <- function(df) {
   # Get counts and handle errors
-  main_counts <- tryCatch(
-    cfa_criteria_counts(df, mapping = allowed$cfa_criteria),
-    error = function(e) data.frame()
-  )
+  main_counts <- cfa_criteria_counts(df, mapping = allowed$cfa_criteria) 
   
   # Return empty plot if no data
   if (nrow(main_counts) == 0) {
-    return(ggplot() + theme_void())
+    return(no_valid_data_stub("No CFA criteria data"))
   }
   
   level <- unique(main_counts$level)

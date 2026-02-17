@@ -13,6 +13,8 @@ The data is structured in the following way:
    * `included.csv` - extracted information for all studies included in the review
    * `PRISMA.csv` - data used to generate the PRISMA diagram
 
-For more details, please see the corresponding paper (TODO: link) and the repository with analysis scripts (https://github.com/PaulSteinfath/systematic-hep-review). If you used the data in your project, please consider citing the review:
+For more details, please see the corresponding paper (https://www.biorxiv.org/content/10.1101/2025.08.08.668923v1) and the repository with analysis scripts (https://github.com/PaulSteinfath/systematic-hep-review). An interactive Shiny app (https://paulsteinfath.shinyapps.io/her-systematic-review/) allows exploring the dataset online.
 
-> TODO: citation
+If you used the data in your project, please consider citing the review:
+
+> Steinfath, P., Azanova, M., Kapralov, N., Loesche, T., Enk, L., Nikulin, V., & Villringer, A. (2025). Heartbeat-evoked responses in M/EEG: A systematic review of methods with suggestions for analysis and reporting. bioRxiv. https://doi.org/10.1101/2025.08.08.668923.

@@ -276,7 +276,7 @@ function(input, output) {
   
 
   # HER Estimation Summary Plot
-  output$hepEstimationPlot <- renderPlot({
+  output$herEstimationPlot <- renderPlot({
     tryCatch({
       figure_hep_estimation_summary(df_selected(), save_path = NULL)
     }, error = function(e) {

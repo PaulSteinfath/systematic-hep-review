@@ -62,9 +62,15 @@ prepare_filter_data <- function(df) {
     df[[nm]] <- factor(mapped)
   }
   
-  # Convert all other character columns to factor
+  # Convert character columns with few unique values to factor & with many unique values keep as character
+  text_cols <- c("title", "authors", "topic", "age_range", "eeg_locations",
+                 "ecg_locations", "rejected_components",
+                 "cfa_rej_criteria", "other_cleaning_strategy",
+                 "hep_eeg_channels_selected", "trials", "trial_estimation",
+                 "significant_eeg_channels", "controls", "journal",
+                 "journal_full", "paper")
   for (nm in names(df)) {
-    if (is.character(df[[nm]])) {
+    if (is.character(df[[nm]]) && !(nm %in% text_cols)) {
       df[[nm]] <- factor(df[[nm]])
     }
   }
@@ -181,10 +187,11 @@ function(input, output) {
   output$table <- DT::renderDataTable(
     DT::datatable(
       df_included_table,
-      filter = "top",
+      filter = list(position = "top", clear = TRUE, plain = FALSE),
       options = list(
         pageLength = 25,
         dom = 'lrtip',
+        search = list(regex = TRUE, caseInsensitive = TRUE),
         headerCallback = JS(
           "function(thead, data, start, end, display){",
           "  var tips = ", jsonlite::toJSON(col_explanations), ";",

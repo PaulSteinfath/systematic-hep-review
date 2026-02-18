@@ -41,13 +41,13 @@ figure_control_variables(df_included, results_path, ext = ext)
 df_included <- postprocess_included(df_included)
 
 write.csv(df_included, 
-        file.path(derivatives_path, 'included.csv'), 
-        row.names = F,
-        na = "")
+          file.path(derivatives_path, 'included.csv'), 
+          row.names = F,
+          na = "")
 write.csv(df_screening, 
-        file.path(derivatives_path, 'screening.csv'), 
-        row.names = F,
-        na = "")
+          file.path(derivatives_path, 'screening.csv'), 
+          row.names = F,
+          na = "")
 
 # R Markdown report with data from global environment
 rmarkdown::render(file.path(func_path, 'manuscript_statistics.Rmd'), 

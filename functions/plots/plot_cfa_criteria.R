@@ -12,8 +12,8 @@ plot_cfa_criteria <- function(df) {
   
   # Create main plot
   main_plot <- ggplot(main_counts, 
-         aes(x = reorder(cfa_rej_criteria, count, decreasing = TRUE), 
-             y = percentage)) +
+                      aes(x = reorder(cfa_rej_criteria, count, decreasing = TRUE), 
+                          y = percentage)) +
     geom_bar(stat = "identity", 
              fill = common_colors$fill_default, 
              color = "white", 

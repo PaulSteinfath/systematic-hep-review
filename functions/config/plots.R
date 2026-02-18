@@ -26,11 +26,9 @@ plot_theme_default <- theme(panel.grid = element_blank(),
                             plot.title = element_text(size = font_setup$title), 
                             plot.subtitle = element_text(size = font_setup$subtitle),
                             axis.title.x = element_text(size = font_setup$axis.title),
-                            axis.text.x = element_text(size = font_setup$axis.text, color = "#4d4d4d"),
-                            axis.ticks.x = element_line(color = "#4d4d4d"),
+                            axis.text.x = element_text(size = font_setup$axis.text),
                             axis.title.y = element_text(size = font_setup$axis.title),
-                            axis.text.y = element_text(size = font_setup$axis.text, color = "#4d4d4d"),
-                            axis.ticks.y = element_line(color = "#4d4d4d"),
+                            axis.text.y = element_text(size = font_setup$axis.text),
                             legend.title = element_text(size = font_setup$legend.title),
                             legend.text = element_text(size = font_setup$legend.text))
 

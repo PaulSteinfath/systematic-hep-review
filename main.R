@@ -1,5 +1,6 @@
 # Initialize the workspace: load dependencies and functions
 source('init_workspace.R')
+sessionInfo()
 
 # Paths
 data_path <- file.path(getwd(), 'data')

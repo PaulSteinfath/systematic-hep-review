@@ -86,7 +86,6 @@ function(input, output) {
         theme_void()
     })
   }, res = 96)
-  
 
   # CFA Approaches Plot
   output$cfaApproachesPlot <- renderPlot({
@@ -98,19 +97,6 @@ function(input, output) {
         theme_void()
     })
   }, res = 96)
-  
-
-  # CFA Approaches Plot
-  output$cfaApproachesPlot <- renderPlot({
-    tryCatch({
-      figure_cfa_removal(df_selected(), save_path = NULL)
-    }, error = function(e) {
-      ggplot() + 
-        geom_text(aes(x = 0, y = 0, label = paste("Error:", e$message)), size = 4) +
-        theme_void()
-    })
-  }, res = 96)
-  
 
   # HER Estimation Summary Plot
   output$herEstimationPlot <- renderPlot({

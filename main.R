@@ -37,7 +37,9 @@ figure_epoch_simulation(df_included, results_path, ext = ext)
 figure_sampling_frequency(df_included, results_path, ext = ext)
 figure_control_variables(df_included, results_path, ext = ext)
 
-# Save the results
+# Postprocess for shiny app and save the results
+df_included <- postprocess_included(df_included)
+
 write.csv(df_included, 
           file.path(derivatives_path, 'included.csv'), 
           row.names = F,

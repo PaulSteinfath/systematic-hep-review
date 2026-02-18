@@ -7,19 +7,15 @@ ui <- page_navbar(
     div(
       class = "container-fluid",
       h2("Heartbeat-evoked responses in M/EEG: A systematic review of methods with suggestions for analysis and reporting"),
-      
-      div(
-        class = "alert alert-info",
-        style = "margin: 20px 0;",
-        h4("🚧 Work in Progress"),
-        p("This systematic review and web application are under development. 
-          Data and analyses may be updated as the review progresses.")
-      ),
-      
+      em(class = "text-muted", "Paul Steinfath*, Maria Azanova*, Nikolai Kapralov*, Thomas Loesche, Lioba Enk, Vadim Nikulin, Arno Villringer"),
+      br(),
+      em(class = "text-muted", "*equal contribution"),
+      br(),br(),
       h3("Overview"),
       p("This systematic review examines methodological approaches in heartbeat-evoked responses (HER) research 
         using EEG and MEG. The interactive visualizations allow exploration of data acquisition, 
         preprocessing, analysis methods, and reporting practices across studies."),
+       
       
       hr(),
       p(class = "text-muted", 
@@ -29,6 +25,20 @@ ui <- page_navbar(
   ),
   nav_panel(
     "Data",
+    div(
+      style = "margin-bottom: 10px; font-size: 0.95em; color: #444;",
+      p(strong("Search columns using regex patterns:"),
+        tags$ul(
+          tags$li(tags$code("Perception|Music"), " — match either (OR)"),
+          tags$li(tags$code("(?=.*Perception)(?=.*Music)"), " — match both (AND)"),
+          tags$li(tags$code("^(?!.*Auditory).*Perception"), " — has Perception, excludes Auditory (NOT)")
+        )
+      ),
+      p(
+        strong("Tip:"),
+        " Hover your mouse over a column name in the table to see more information about that column."
+      )
+    ),
     DTOutput("table")
   ),
   nav_panel(
@@ -52,9 +62,14 @@ ui <- page_navbar(
     plotOutput("ecgSummaryPlot", height = "600px")
   ),
   nav_panel(
-    "HEP Estimation",
-    h3("HEP Estimation Methods"),
-    plotOutput("hepEstimationPlot", height = "800px")
+    "CFA approaches",
+    h3("CFA Approaches"),
+    plotOutput("cfaApproachesPlot", height = "600px")
+  ),
+  nav_panel(
+    "HER Estimation",
+    h3("HER Estimation Methods"),
+    plotOutput("herEstimationPlot", height = "800px")
   ),
   nav_panel(
     "Statistics",
@@ -66,5 +81,5 @@ ui <- page_navbar(
     h3("Control Variables Analysis"),
     plotOutput("controlsPlot", height = "800px")
   ),
-  title = "Methods in HEP research"
+  title = "Methods in HER research"
 )

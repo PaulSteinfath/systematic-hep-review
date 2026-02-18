@@ -12,21 +12,19 @@ cfa_criteria_counts <- function(df, mapping = NULL, group_col = "PMID") {
   criteria_expanded <- df_filt %>%
     separate_rows(cfa_rej_criteria, sep = ", ") %>%
     mutate(cfa_rej_criteria = str_trim(cfa_rej_criteria, side = "both"))
-  if (!is.null(mapping)) {
-    criteria_expanded <- criteria_expanded %>%
-      mutate(
-        cfa_rej_criteria = case_when(
-          tolower(cfa_rej_criteria) %in% names(mapping) ~ mapping[tolower(cfa_rej_criteria)],
-          TRUE ~ NA
-        )
+  criteria_expanded <- criteria_expanded %>%
+    mutate(
+      cfa_rej_criteria = case_when(
+        tolower(cfa_rej_criteria) %in% names(mapping) ~ mapping[tolower(cfa_rej_criteria)],
+        TRUE ~ NA_character_
       )
-    
-    if (any(is.na(criteria_expanded$cfa_rej_criteria))) {
-      message("cfa_criteria: some criteria are missing from the provided mapping, dropping")
-      criteria_expanded <- criteria_expanded %>%
-        filter(!is.na(cfa_rej_criteria))
-    }
-  } 
+    )
+  
+  if (any(is.na(criteria_expanded$cfa_rej_criteria))) {
+    message("cfa_criteria: some criteria are missing from the provided mapping, dropping")
+    criteria_expanded <- criteria_expanded %>%
+      filter(!is.na(cfa_rej_criteria))
+  }
   
   criteria_expanded <- criteria_expanded %>%
     distinct(pipeline_id, cfa_rej_criteria, .keep_all = TRUE)

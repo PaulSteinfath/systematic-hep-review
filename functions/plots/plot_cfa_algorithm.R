@@ -4,10 +4,10 @@ plot_cfa_algorithm <- function(df) {
                                      mapping = c("iclabel" = "ICLabel", 
                                                  "sasica" = "SASICA", 
                                                  "corrmap" = "CORRMAP"))
-  
+
   # Exit immediately if not enough info for algo_plot
   if (nrow(algo_counts) == 0) {
-    return(main_plot)
+    return(ggplot() + theme_void())
   }
   
   # Create algorithm inset plot

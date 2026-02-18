@@ -1,5 +1,5 @@
 plot_other_cfa_strategy <- function(df) {
-  strategy_df <- get_usage_studies(df_included, names(allowed$other_cfa_removal)) %>%
+  strategy_df <- get_usage_studies(df, names(allowed$other_cfa_removal)) %>%
     arrange(-percentage)
   strategy_df$column <- allowed$other_cfa_removal[strategy_df$column]
   ordered_columns <- strategy_df$column

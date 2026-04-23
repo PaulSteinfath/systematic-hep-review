@@ -18,9 +18,13 @@ ui <- page_navbar(
        
       
       hr(),
-      p(class = "text-muted", 
-        em("Citation information will be provided upon publication. Last updated: "), 
-        format(Sys.Date(), "%B %Y"))
+      p(class = "text-muted",
+        em("Citation: Steinfath, P., Azanova, M., Kapralov, N., Loesche, T., Enk, L., Nikulin, V., & Villringer, A. (2026). Heartbeat-evoked responses in M/EEG: A systematic review of methods with suggestions for analysis and reporting. ",
+           tags$em("Psychophysiology"),
+           ", 63(4), e70297. ",
+           tags$a("https://doi.org/10.1111/psyp.70297", href = "https://doi.org/10.1111/psyp.70297", target = "_blank")
+        )
+      )
     )
   ),
   nav_panel(
